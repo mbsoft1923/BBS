@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bahar Beauty Studio - Detaylı Maliyet & Kar Analizi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background-color: #f4f7f9; 
+            padding: 25px 20px; 
+            font-family: 'Playfair Display', serif; 
+            min-height: 100vh; 
+            color: #1e293b; 
+        }
+        
+        .wrapper { max-width: 1200px; margin: 0 auto; width: 100%; }
+        
+        .global-page-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 20px; background-color: white; padding: 15px 30px; 
+            border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); 
+            border-left: 6px solid #00a8b5; 
+        }
+        .global-header-title-area { display: flex; flex-direction: column; text-align: left; }
+        .global-header-brand { font-family: 'Great Vibes', cursive; font-size: 2.2rem; color: #00a8b5; line-height: 1.1; margin-bottom: 2px; }
+        .global-header-sub { font-family: 'Playfair Display', serif; font-size: 0.9rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; }
+        .global-btn-back { background-color: #e0f7fa; color: #00a8b5; border: 1px solid #b2ebf2; padding: 8px 18px; border-radius: 10px; font-weight: 700; text-decoration: none; transition: all 0.25s; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; font-family: 'Plus Jakarta Sans', sans-serif;}
+        .global-btn-back:hover { background-color: #00a8b5; color: white; transform: translateY(-1px); }
+
+        .card { 
+            background-color: white; border-radius: 14px; padding: 25px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;
+            position: relative; margin-bottom: 20px;
+        }
+        .card-title { 
+            font-family: 'Playfair Display', serif; font-size: 1.1rem; color: #0f172a; 
+            margin-bottom: 15px; font-weight: 800; border-bottom: 2px dashed #f1f5f9; 
+            padding-bottom: 10px; display: flex; align-items: center; gap: 8px;
+        }
+
+        .stat-card {
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px 20px;
+            display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02); transition: transform 0.2s ease;
+            position: relative; overflow: hidden;
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); }
+        .stat-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; margin-bottom: 8px; }
+        
+        .theme-teal .stat-icon { background: #ccfbf1; color: #0d9488; }
+        .theme-indigo .stat-icon { background: #e0e7ff; color: #4f46e5; }
+        .theme-rose .stat-icon { background: #ffe4e6; color: #e11d48; }
+        .theme-emerald .stat-icon { background: #d1fae5; color: #059669; }
+
+        .stat-label { font-size: 0.7rem; font-family: 'Plus Jakarta Sans', sans-serif; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .stat-val { font-size: 1.5rem; font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.5px; }
+        
+        .theme-teal .stat-val { color: #0f766e; }
+        .theme-indigo .stat-val { color: #4f46e5; }
+        .theme-rose .stat-val { color: #be123c; }
+        .theme-emerald .stat-val { color: #047857; }
+
+        .stat-desc { font-size: 0.65rem; color: #94a3b8; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; margin-top: 4px; }
+
+        select, input[type="date"] { 
+            width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; 
+            border-radius: 8px; font-size: 0.85rem; outline: none; background: #f8fafc;
+            transition: all 0.2s; font-weight: 600; color: #334155; cursor: pointer;
+            font-family: 'Plus Jakarta Sans', sans-serif; height: 40px;
+        }
+        select:focus, input[type="date"]:focus { border-color: #00a8b5; background: white; box-shadow: 0 0 0 3px rgba(0, 168, 181, 0.1); }
+        
+        .btn-hesapla {
+            background-color: #0f766e; color: white; border: none; border-radius: 8px;
+            font-size: 0.85rem; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer; transition: all 0.2s; height: 40px; width: 100%;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            box-shadow: 0 4px 10px rgba(15, 118, 110, 0.2);
+        }
+        .btn-hesapla:hover { background-color: #115e59; transform: translateY(-1px); }
+
+        .loader-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 10; border-radius: 14px;
+        }
+        .spinner { border: 4px solid #f1f5f9; border-top: 4px solid #00a8b5; border-radius: 50%; width: 36px; height: 36px; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #chartsArea { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <div class="global-page-header">
+            <div class="global-header-title-area">
+                <span class="global-header-brand">Bahar Beauty Studio</span>
+                <span class="global-header-sub">✨ Dinamik Maliyet ve Kar Analizi</span>
+            </div>
+            <a href="dashboard.html" class="global-btn-back"><i class="fas fa-home"></i> Ana Yönetim Paneli</a>
+        </div>
+
+        <div class="card">
+            <div id="chartLoader" class="loader-overlay">
+                <div class="spinner"></div>
+                <p class="mt-3 font-bold text-slate-500 font-sans text-sm">Veriler Buluttan Çekiliyor...</p>
+            </div>
+            
+            <div class="card-title">
+                <span><i class="fas fa-filter text-teal-500"></i> Analiz Filtreleri ve Performans Dağılımı</span>
+            </div>
+            
+            <div class="bg-slate-50 p-5 rounded-xl border border-slate-100 mb-5">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-4">
+                    <div>
+                        <label class="block text-[0.7rem] font-bold font-sans text-slate-500 mb-1"><i class="fas fa-tags text-teal-500 mr-1"></i> Hizmet Kategorisi</label>
+                        <select id="filterHizmet" onchange="resetOtherFilter('hizmet')">
+                            <option value="ALL">-- Seçim Yapınız --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[0.7rem] font-bold font-sans text-slate-500 mb-1"><i class="fas fa-boxes text-rose-400 mr-1"></i> Stok Kategorisi</label>
+                        <select id="filterStokKategori" onchange="resetOtherFilter('stok')">
+                            <option value="ALL">-- Seçim Yapınız --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[0.7rem] font-bold font-sans text-slate-500 mb-1"><i class="fas fa-user-tie text-emerald-500 mr-1"></i> Uzman Seçimi</label>
+                        <select id="filterUzman">
+                            <option value="ALL">-- Tüm Uzmanlar --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-end pt-4 border-t border-slate-200">
+                    <div>
+                        <label class="block text-[0.7rem] font-bold font-sans text-slate-500 mb-1"><i class="far fa-calendar-alt text-indigo-400 mr-1"></i> Başlangıç Tarihi</label>
+                        <input type="date" id="startDate" title="Başlangıç Tarihi">
+                    </div>
+                    <div>
+                        <label class="block text-[0.7rem] font-bold font-sans text-slate-500 mb-1"><i class="far fa-calendar-check text-indigo-400 mr-1"></i> Bitiş Tarihi</label>
+                        <input type="date" id="endDate" title="Bitiş Tarihi">
+                    </div>
+                    <div>
+                        <button class="btn-hesapla" onclick="updateChart()">
+                            <i class="fas fa-calculator"></i> Raporu Hesapla
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="stat-card theme-teal">
+                    <div class="stat-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div class="stat-label">Toplam Satış Fiyatı</div>
+                    <div class="stat-val" id="valTotalSales">₺0.00</div>
+                    <div class="stat-desc">Toplam brüt üretim hacmi</div>
+                </div>
+
+                <div class="stat-card theme-indigo">
+                    <div class="stat-icon"><i class="fas fa-wallet"></i></div>
+                    <div class="stat-label">Toplam Ödenen</div>
+                    <div class="stat-val" id="valTotalPaid">₺0.00</div>
+                    <div class="stat-desc">Kasaya giren tahsilat miktarı</div>
+                </div>
+                
+                <div class="stat-card theme-rose">
+                    <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="stat-label">Stok Maliyeti</div>
+                    <div class="stat-val" id="valTotalCost">₺0.00</div>
+                    <div class="stat-desc">Kullanılan sarf ürün masrafı</div>
+                </div>
+                
+                <div class="stat-card theme-emerald">
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-label">Net Analiz Kârı</div>
+                    <div class="stat-val" id="valNetProfit">₺0.00</div>
+                    <div class="stat-desc">Satış Fiyatı - Maliyet</div>
+                </div>
+            </div>
+
+            <div id="chartsArea"></div>
+        </div>
+    </div>
+
+    <script>
+        // 🚨 KENDİ GOOGLE APPS SCRIPT URL'NİZİ BURAYA YAPIŞTIRIN:
+        const API_URL = "https://script.google.com/macros/s/AKfycbx6fWf_rPacPSY0VdKaq5DAMuT6EQTFu5CA7GK9qRwQTNep3eMMwA0jZcIT9OQz76EH8g/exec";
+
+        let rawPaketler = []; 
+        let rawSeanslar = []; 
+        let rawStoklar = [];  
+        let rawUzmanlar = []; 
+        let stokUnitCostMap = {}; 
+        let chartInstances = []; 
+
+        // Datalabels (Yüzde yazdırma) eklentisini Global olarak kaydediyoruz
+        Chart.register(ChartDataLabels);
+
+        window.onload = () => {
+            let aktifKullanici = JSON.parse(localStorage.getItem('aktifKullanici'));
+            if (!aktifKullanici) {
+                window.location.href = "index.html";
+                return;
+            }
+            let rol = String(aktifKullanici.rol).toLowerCase().trim();
+            if (!rol.includes("admin") && !rol.includes("müdür")) {
+                alert("Yetkisiz Erişim!");
+                window.location.href = "dashboard.html";
+                return; 
+            }
+            fetchBulutData();
+        };
+
+        function getSafeArray(val) {
+            if (!val) return [];
+            if (Array.isArray(val)) return val;
+            if (val.data && Array.isArray(val.data)) return val.data;
+            return [];
+        }
+
+        function normalizeStr(str) {
+            return String(str || "").trim().toLowerCase();
+        }
+
+        function safeFloat(val) {
+            if (!val) return 0;
+            let cleanVal = String(val).replace(/\s/g, '').replace(',', '.');
+            let parsed = parseFloat(cleanVal);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function resetOtherFilter(source) {
+            if (source === 'hizmet') {
+                document.getElementById('filterStokKategori').value = "ALL";
+            } else if (source === 'stok') {
+                document.getElementById('filterHizmet').value = "ALL";
+            }
+        }
+
+        function jsonpFetch(action, callbackBaseName) {
+            return new Promise((resolve) => {
+                const uniqueHash = Math.random().toString(36).substring(2, 10);
+                const callbackName = callbackBaseName + "_" + uniqueHash;
+                const scriptId = "jsonp_script_" + uniqueHash;
+
+                window[callbackName] = function(response) {
+                    resolve(getSafeArray(response));
+                    const s = document.getElementById(scriptId);
+                    if(s) s.remove();
+                    delete window[callbackName];
+                };
+
+                const script = document.createElement('script');
+                script.id = scriptId;
+                script.src = `${API_URL}?action=${action}&callback=${callbackName}&_=${new Date().getTime()}`;
+                script.onerror = () => { resolve([]); };
+                document.body.appendChild(script);
+            });
+        }
+
+        async function fetchBulutData() {
+            document.getElementById('chartLoader').style.display = 'flex';
+            const [paketRes, seansRes, stokRes, uzmanRes] = await Promise.all([
+                jsonpFetch("getpaketler", "cb_paket"),
+                jsonpFetch("getseanslar", "cb_seans"),
+                jsonpFetch("getstok", "cb_stok"),
+                jsonpFetch("getkullanicilar", "cb_uzman")
+            ]);
+            rawPaketler = paketRes;
+            rawSeanslar = seansRes;
+            rawStoklar = stokRes;
+            rawUzmanlar = uzmanRes;
+            processGlobalSetup();
+            document.getElementById('chartLoader').style.display = 'none';
+        }
+
+        function processGlobalSetup() {
+            rawStoklar.forEach(s => {
+                const vals = Object.values(s);
+                const urunAdi = String(s.urunadi || s["Ürün Adı"] || vals[1] || "").trim();
+                const kat = String(s.kategori || s["Kategori"] || vals[2] || "Bilinmiyor").trim();
+                stokUnitCostMap[normalizeStr(urunAdi)] = { kategori: kat };
+            });
+            populateDropdowns();
+            updateChart();
+        }
+
+        function populateDropdowns() {
+            const selHizmet = document.getElementById('filterHizmet');
+            const selStokKat = document.getElementById('filterStokKategori');
+            const selUzman = document.getElementById('filterUzman');
+            const hizmetSet = new Set();
+            const stokKatSet = new Set();
+            const uzmanSet = new Set();
+
+            rawPaketler.forEach(p => {
+                const vals = Object.values(p);
+                const u = String(p.hizmetUzman || p.uzman || vals[1] || "").trim();
+                const h = String(p.hizmetPaketTercihi || p.hizmettercihi || p.hizmetTercihi || vals[3] || vals[4] || "").trim();
+                if (u && u !== "undefined") uzmanSet.add(u);
+                if (h && h !== "undefined" && h !== "") hizmetSet.add(h);
+            });
+
+            rawSeanslar.forEach(s => {
+                const vals = Object.values(s);
+                const u = String(s.uzman || vals[2] || "").trim();
+                const k = String(s.kategori || vals[4] || "").trim();
+                if (u && u !== "undefined") uzmanSet.add(u);
+                if (k && k !== "undefined" && k !== "") stokKatSet.add(k);
+            });
+
+            Array.from(hizmetSet).sort().forEach(h => selHizmet.add(new Option(h, h)));
+            Array.from(stokKatSet).sort().forEach(k => selStokKat.add(new Option(k, k)));
+            Array.from(uzmanSet).sort().forEach(u => selUzman.add(new Option(u, u)));
+        }
+
+        function createChartCanvas(id, wrapperClass) {
+            const wrapper = document.createElement('div');
+            wrapper.className = wrapperClass;
+            const canvas = document.createElement('canvas');
+            canvas.id = id;
+            wrapper.appendChild(canvas);
+            document.getElementById('chartsArea').appendChild(wrapper);
+            return canvas;
+        }
+
+        function isDateInRange(dateValue, startObj, endObj) {
+            if (!startObj && !endObj) return true; 
+            if (!dateValue) return true; 
+            let d;
+            if (dateValue instanceof Date) { d = dateValue; } 
+            else if (typeof dateValue === 'string') {
+                if (dateValue.includes('.')) {
+                    let parts = dateValue.split('.');
+                    if(parts.length >= 3) d = new Date(parts[2], parts[1]-1, parts[0]);
+                } else if (dateValue.includes('/')) {
+                     let parts = dateValue.split('/');
+                     if(parts.length >= 3) d = new Date(parts[2], parts[1]-1, parts[0]);
+                } else { d = new Date(dateValue); }
+            }
+            if (!d || isNaN(d.getTime())) return true; 
+            d.setHours(0,0,0,0);
+            if (startObj) {
+                let s = new Date(startObj); s.setHours(0,0,0,0);
+                if (d < s) return false;
+            }
+            if (endObj) {
+                let e = new Date(endObj); e.setHours(23,59,59,999);
+                if (d > e) return false;
+            }
+            return true;
+        }
+
+        function updateChart() {
+            const filtHizmet = document.getElementById('filterHizmet').value;
+            const filtStokKat = document.getElementById('filterStokKategori').value;
+            const filtUzman = document.getElementById('filterUzman').value;
+            
+            const startStr = document.getElementById('startDate').value;
+            const endStr = document.getElementById('endDate').value;
+            const startDateObj = startStr ? new Date(startStr) : null;
+            const endDateObj = endStr ? new Date(endStr) : null;
+
+            chartInstances.forEach(c => c.destroy());
+            chartInstances = [];
+            document.getElementById('chartsArea').innerHTML = '';
+
+            let globalSatis = 0;
+            let globalOdenen = 0;
+            let globalMaliyet = 0;
+            let uzmanStats = {}; 
+
+            if (filtStokKat === "ALL") { 
+                rawPaketler.forEach(p => {
+                    const vals = Object.values(p);
+                    const u = String(p.hizmetUzman || p.uzman || vals[1] || "Bilinmeyen Uzman").trim();
+                    const h = String(p.hizmetPaketTercihi || p.hizmettercihi || p.hizmetTercihi || vals[3] || vals[4] || "").trim();
+                    
+                    const satis = safeFloat(p.toplamTutar || p.hizmetToplamOdeme || vals[6]);
+                    const odenen = safeFloat(p.hizmetAraOdeme || p.odenenMiktar || p.odenenmiktar || vals[7]);
+                    
+                    let pDate = p.paketTarihi || p.pakettarihi || p.kayitTarihi || vals[11];
+                    if (!isDateInRange(pDate, startDateObj, endDateObj)) return;
+                    if (filtHizmet !== "ALL" && h !== filtHizmet) return;
+                    if (filtUzman !== "ALL" && u !== filtUzman) return;
+
+                    if (!uzmanStats[u]) uzmanStats[u] = { satis: 0, odenen: 0, maliyet: 0 };
+                    uzmanStats[u].satis += satis;
+                    uzmanStats[u].odenen += odenen;
+                    
+                    globalSatis += satis;
+                    globalOdenen += odenen;
+                });
+            }
+
+            if (filtHizmet === "ALL") { 
+                rawSeanslar.forEach(s => {
+                    const vals = Object.values(s);
+                    const u = String(s.uzman || vals[2] || "Bilinmeyen Uzman").trim();
+                    const kKat = String(s.kategori || vals[4] || "").trim();
+                    
+                    const satis = safeFloat(s.satisFiyati || s.satis || vals[6]);
+                    const odenen = safeFloat(s.odenenMiktar || s.ciro || s.odenen || vals[7]);
+                    const maliyet = safeFloat(s.masraflar || s.masraf || s.maliyet || vals[8]);
+
+                    let sDate = s.islemTarihi || s.islemtarihi || s.tarih || vals[1];
+                    if (!isDateInRange(sDate, startDateObj, endDateObj)) return;
+                    if (filtStokKat !== "ALL" && kKat !== filtStokKat) return;
+                    if (filtUzman !== "ALL" && u !== filtUzman) return;
+
+                    if (!uzmanStats[u]) uzmanStats[u] = { satis: 0, odenen: 0, maliyet: 0 };
+                    uzmanStats[u].satis += satis;
+                    uzmanStats[u].odenen += odenen;
+                    uzmanStats[u].maliyet += maliyet;
+                    
+                    globalSatis += satis;
+                    globalOdenen += odenen;
+                    globalMaliyet += maliyet;
+                });
+            }
+
+            document.getElementById('valTotalSales').innerText = `₺${globalSatis.toLocaleString('tr-TR', {minimumFractionDigits: 2})}`;
+            document.getElementById('valTotalPaid').innerText = `₺${globalOdenen.toLocaleString('tr-TR', {minimumFractionDigits: 2})}`;
+            document.getElementById('valTotalCost').innerText = `₺${globalMaliyet.toLocaleString('tr-TR', {minimumFractionDigits: 2})}`;
+            
+            const netProfit = globalSatis - globalMaliyet;
+            const elProfit = document.getElementById('valNetProfit');
+            elProfit.innerText = `₺${netProfit.toLocaleString('tr-TR', {minimumFractionDigits: 2})}`;
+            elProfit.style.color = netProfit < 0 ? "#be123c" : "#047857"; 
+
+            let dateSubtitle = " (Tüm Zamanlar)";
+            if (startStr && endStr) dateSubtitle = ` (${startStr} ile ${endStr} Arası)`;
+
+            const satisColors = ['#14b8a6', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6'];
+            const maliyetColors = ['#f43f5e', '#ef4444', '#f97316', '#f59e0b', '#eab308'];
+            const karColors = ['#10b981', '#22c55e', '#84cc16', '#a3e635', '#bef264'];
+
+            if (filtStokKat !== "ALL") {
+                const labels = Object.keys(uzmanStats).filter(u => uzmanStats[u].satis > 0 || uzmanStats[u].maliyet > 0);
+                const satisData = labels.map(u => uzmanStats[u].satis);
+                const maliyetData = labels.map(u => uzmanStats[u].maliyet);
+                const karData = labels.map(u => Math.max(0, uzmanStats[u].satis - uzmanStats[u].maliyet)); 
+                
+                let c1 = createChartCanvas('ch1', "w-full md:w-[31%] h-[260px] bg-white border border-slate-100 p-2 rounded-xl");
+                chartInstances.push(drawPie(c1, labels, satisData, `[${filtStokKat}] Satış Fiyatı Dağılımı` + dateSubtitle, satisColors));
+                
+                let c2 = createChartCanvas('ch2', "w-full md:w-[31%] h-[260px] bg-white border border-slate-100 p-2 rounded-xl");
+                chartInstances.push(drawPie(c2, labels, maliyetData, `[${filtStokKat}] Maliyet Dağılımı` + dateSubtitle, maliyetColors));
+                
+                let c3 = createChartCanvas('ch3', "w-full md:w-[31%] h-[260px] bg-white border border-slate-100 p-2 rounded-xl");
+                chartInstances.push(drawPie(c3, labels, karData, `[${filtStokKat}] Uzman Kar Dağılımı` + dateSubtitle, karColors));
+
+            } else if (filtHizmet !== "ALL") {
+                const labels = Object.keys(uzmanStats).filter(u => uzmanStats[u].satis > 0);
+                const satisData = labels.map(u => uzmanStats[u].satis);
+                
+                let otherSatis = 0;
+                rawPaketler.forEach(p => {
+                    const h = String(p.hizmetPaketTercihi || p.hizmettercihi || p.hizmetTercihi || Object.values(p)[3]).trim();
+                    let pDate = p.paketTarihi || p.pakettarihi || Object.values(p)[11];
+                    if (!isDateInRange(pDate, startDateObj, endDateObj)) return;
+                    const satis = safeFloat(p.toplamTutar || p.hizmetToplamOdeme || Object.values(p)[6]);
+                    if (h !== filtHizmet) otherSatis += satis;
+                });
+                
+                let c1 = createChartCanvas('ch1', "w-full md:w-[45%] h-[300px] bg-white border border-slate-100 p-3 rounded-xl");
+                chartInstances.push(drawPie(c1, labels, satisData, `[${filtHizmet}] Uzman Satış Dağılımı` + dateSubtitle, satisColors));
+                
+                let c2 = createChartCanvas('ch2', "w-full md:w-[45%] h-[300px] bg-white border border-slate-100 p-3 rounded-xl");
+                chartInstances.push(drawPie(c2, [filtHizmet, 'Diğer Tüm Hizmetler'], [globalSatis, otherSatis], `Genel Satış İçindeki Payı` + dateSubtitle, ['#f59e0b', '#cbd5e1']));
+
+            } else {
+                const labels = Object.keys(uzmanStats).filter(u => uzmanStats[u].satis > 0 || uzmanStats[u].maliyet > 0);
+                const satisData = labels.map(u => uzmanStats[u].satis);
+                const maliyetData = labels.map(u => uzmanStats[u].maliyet);
+                let titleStr = "Salonun Genel Performans Toplamı" + dateSubtitle;
+                
+                let c1 = createChartCanvas('ch1', "w-full h-[350px] bg-white border border-slate-100 p-4 rounded-xl");
+                chartInstances.push(drawNestedPie(c1, labels, satisData, maliyetData, titleStr));
+            }
+        }
+
+        // 🚨 TEKLİ PASTA GRAFİĞİ (YÜZDE YAZDIRMA ENTEGRELİ)
+        function drawPie(canvas, labels, data, title, colors) {
+            return new Chart(canvas.getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: labels.length > 0 ? labels : ["Veri Yok"],
+                    datasets: [{
+                        data: data.length > 0 ? data : [1],
+                        backgroundColor: data.length > 0 ? colors : ['#e2e8f0'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: "'Plus Jakarta Sans', sans-serif", size: 10 } } },
+                        title: { display: true, text: title, font: {family: "'Plus Jakarta Sans', sans-serif", size: 12} },
+                        datalabels: {
+                            color: '#ffffff',
+                            font: { weight: 'bold', size: 11, family: "'Plus Jakarta Sans', sans-serif" },
+                            formatter: (value, context) => {
+                                if(data.length === 0 || labels[0] === "Veri Yok") return "";
+                                const total = context.chart._metasets[context.datasetIndex].total;
+                                const percentage = Math.round((value / total) * 100);
+                                // Küçük dilimlerde karmaşayı önlemek için %4 ve üzerini gösterir
+                                return percentage > 4 ? percentage + '%' : '';
+                            },
+                            textStrokeColor: 'rgba(0,0,0,0.2)',
+                            textStrokeWidth: 2
+                        },
+                        tooltip: { 
+                            callbacks: { 
+                                label: function(c) { 
+                                    if(data.length === 0) return "Veri Yok";
+                                    return c.label + ': ' + new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY'}).format(c.raw); 
+                                } 
+                            } 
+                        }
+                    }
+                }
+            });
+        }
+
+        // 🚨 ÇİFT KATMANLI İÇ İÇE PASTA GRAFİĞİ (YÜZDE YAZDIRMA ENTEGRELİ)
+        function drawNestedPie(canvas, labels, satisData, maliyetData, title) {
+            const modernColors = ['#14b8a6', '#f43f5e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981'];
+            return new Chart(canvas.getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: labels.length > 0 ? labels : ["Veri Yok"],
+                    datasets: [
+                        { label: 'Satış Fiyatı (Hacim)', data: satisData.length > 0 ? satisData : [1], backgroundColor: satisData.length > 0 ? modernColors : ['#e2e8f0'], borderColor: '#fff', borderWidth: 2 },
+                        { label: 'Kullanılan Maliyet', data: maliyetData.length > 0 ? maliyetData : [0], backgroundColor: maliyetData.length > 0 ? modernColors.map(c=>c+'99') : ['#e2e8f0'], borderColor: '#fff', borderWidth: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 } } },
+                        title: { display: true, text: title + ' (Dış Halka: Satış | İç Halka: Maliyet)', font: {family: "'Plus Jakarta Sans', sans-serif", size: 13}, padding: { bottom: 15 } },
+                        datalabels: {
+                            color: '#ffffff',
+                            font: { weight: 'bold', size: 10, family: "'Plus Jakarta Sans', sans-serif" },
+                            formatter: (value, context) => {
+                                if(satisData.length === 0 || labels[0] === "Veri Yok") return "";
+                                const total = context.chart._metasets[context.datasetIndex].total;
+                                const percentage = Math.round((value / total) * 100);
+                                // İç içe grafikte alan daha dar olduğu için %5 ve üzerini gösterir
+                                return percentage > 5 ? percentage + '%' : '';
+                            },
+                            textStrokeColor: 'rgba(0,0,0,0.2)',
+                            textStrokeWidth: 2
+                        },
+                        tooltip: { 
+                            callbacks: { 
+                                label: function(c) { 
+                                    if(satisData.length === 0) return "Veri Yok";
+                                    return c.dataset.label + ': ' + new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY'}).format(c.raw); 
+                                } 
+                            } 
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

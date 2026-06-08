@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bahar Beauty Studio - Yönetim Girişi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;700&family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background-color: #f0f4f8; 
+            font-family: 'Playfair Display', serif; 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px; 
+        }
+
+        /* Çift Renkli Büyük Konteyner Yapısı */
+        .main-container {
+            display: flex;
+            width: 100%;
+            max-width: 1100px;
+            min-height: 600px;
+            background: #00a8b5; /* Görseldeki Turkuaz Sol Arka Plan */
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+            position: relative;
+        }
+
+        /* Sol Taraf: BBS Logo ve Dinamik Hareket Eden Görsel Alanı */
+        .left-banner {
+            flex: 1.1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+        }
+
+        /* Orijinal Yazı Karakteri Korunan Başlık */
+        .brand-name-left {
+            font-family: 'Great Vibes', cursive;
+            font-size: 3.8rem;
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* İstediğiniz Dinamik Hareket Eden bbs.jpg Alanı */
+        .floating-image-container {
+            width: 100%;
+            max-width: 360px;
+            height: 250px;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            background: url('bbs.jpg') no-repeat center center;
+            background-size: cover;
+            animation: suzulmeEfekti 4s ease-in-out infinite;
+        }
+
+        /* Aşağı Yukarı Süzülme Animasyon Kodları */
+        @keyframes suzulmeEfekti {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Sağ Taraf: Beyaz Giriş Kart Alanı */
+        .right-form-side {
+            flex: 1;
+            background: white;
+            padding: 50px 45px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-top-left-radius: 30px;
+            border-bottom-left-radius: 30px;
+        }
+
+        .form-title {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 400;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .subtitle { 
+            font-family: 'Segoe UI', sans-serif; 
+            font-size: 0.9rem; 
+            color: #64748b; 
+            margin-bottom: 35px; 
+        }
+        
+        .form-group { margin-bottom: 22px; text-align: left; }
+        .form-group label { 
+            display: block; 
+            font-family: 'Segoe UI', sans-serif; 
+            font-weight: 600; 
+            font-size: 0.85rem; 
+            color: #334155; 
+            margin-bottom: 8px; 
+        }
+        .input-wrapper { position: relative; }
+        .input-wrapper i { 
+            position: absolute; 
+            left: 15px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            color: #94a3b8; 
+            font-size: 1.1rem; 
+        }
+        .input-wrapper input { 
+            width: 100%; 
+            padding: 13px 12px 13px 45px; 
+            border: 1.5px solid #e2e8f0; 
+            border-radius: 10px; 
+            font-family: 'Segoe UI', sans-serif; 
+            font-size: 0.95rem; 
+            color: #1e293b; 
+            outline: none; 
+            transition: all 0.2s; 
+            background-color: #f8fafc;
+        }
+        .input-wrapper input:focus { 
+            border-color: #00a8b5; 
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(0, 168, 181, 0.1); 
+        }
+        
+        .btn-login { 
+            width: auto;
+            align-self: flex-end;
+            background: #00a8b5; 
+            color: white; 
+            border: none; 
+            padding: 12px 25px; 
+            border-radius: 10px; 
+            font-family: 'Segoe UI', sans-serif; 
+            font-weight: 600; 
+            font-size: 0.95rem; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            margin-top: 10px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        .btn-login:hover { background: #008c96; transform: translateY(-1px); }
+        .btn-login:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        /* Yeni Eklenen İmza Alanı - Büyütüldü ve Ortalama Kodları Eklendi */
+        .powered-by-area {
+            margin-top: 50px;
+            text-align: center; /* Sağ taraftan orta alana alındı */
+            font-family: 'Times New Roman', Times, serif;
+            color: #00a8b5;
+            font-size: 1rem; /* Yazı boyutu biraz daha büyütüldü */
+            line-height: 1.5;
+            font-style: italic;
+            letter-spacing: 0.5px;
+            opacity: 0.95;
+            width: 100%;
+        }
+        
+        .dashboard-container { display: none; }
+
+        @media (max-width: 850px) {
+            .main-container { flex-direction: column; max-width: 450px; }
+            .left-banner { padding: 30px 20px; }
+            .right-form-side { border-radius: 0; padding: 40px 25px; }
+            .powered-by-area { margin-top: 35px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container" id="loginCard">
+        
+        <div class="left-banner">
+            <div class="brand-name-left">Bahar Beauty Studio</div>
+            <div class="floating-image-container"></div>
+        </div>
+
+        <div class="right-form-side">
+            <h2 class="form-title">Giriş Yap</h2>
+            <p class="subtitle">Yönetici paneline erişmek için e-posta adresinizi ve şifrenizi girin.</p>
+            
+            <div class="form-group">
+                <label>E-Posta / Kullanıcı Adı</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-envelope"></i>
+                    <input type="text" id="username" placeholder="Kullanıcı adınızı girin" required autocomplete="off">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Şifre</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+            </div>
+            
+            <button class="btn-login" id="btnLogin" onclick="guvenliGirisTetikle()">
+                Giriş Yap
+            </button>
+
+            <div class="powered-by-area">
+                Powered by Melik Çandar<br>
+                Dr.s1m0ne software technologies   2026
+            </div>
+        </div>
+    </div>
+
+    <div class="wrapper dashboard-container" id="dashboardArea">
+        <div class="welcome-header">
+            <h2 id="tebrikYazisi">🌸 Hoş Geldiniz</h2>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx6fWf_rPacPSY0VdKaq5DAMuT6EQTFu5CA7GK9qRwQTNep3eMMwA0jZcIT9OQz76EH8g/exec";
+
+        async function guvenliGirisTetikle() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const submitBtn = document.getElementById('btnLogin');
+
+            if(!user || !pass) {
+                alert("⚠️ Lütfen kullanıcı adı ve şifre alanlarını doldurun!");
+                return;
+            }
+
+            // Butonu yükleniyor durumuna alıyoruz
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Doğrulanıyor...';
+
+            try {
+                // İstek URL'si oluşturuluyor
+                const fetchUrl = `${SCRIPT_URL}?action=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
+                
+                // Güvenli ve modern Fetch API ile istek atıyoruz (JSONP sorunları geride kaldı)
+                const response = await fetch(fetchUrl);
+                const res = await response.json();
+
+                // Backend verileri nerede gönderiyorsa ona göre yakalama (mevcut mantığınız korundu)
+                if(res && res.status === "success") {
+                    
+                    let userData = res.user || res;
+
+                    localStorage.setItem('aktifKullanici', JSON.stringify({
+                        id: userData.id || "Bilinmiyor",
+                        adSoyad: userData.adSoyad || "İsimsiz",
+                        eposta: userData.eposta || user,
+                        rol: userData.rol || "Kullanıcı"
+                    }));
+
+                    alert(`👋 Giriş Başarılı! Hoş geldiniz, ${userData.adSoyad || 'Kullanıcı'}`);
+                    
+                    // Admin rol kontrolü
+                    let userRole = String(userData.rol).toLowerCase();
+                    if(userRole.includes("admin") || userRole.includes("müdür") || String(user).toLowerCase() === "admin") {
+                        window.location.href = "kullanici-yonetimi.html";
+                    } 
+                    else {
+                        window.location.href = "dashboard.html";
+                    }
+                } else {
+                    alert(res.message || "❌ Giriş bilgileri hatalı veya kullanıcı bulunamadı!");
+                }
+            } catch (error) {
+                console.error("Giriş işlemi sırasında bağlantı hatası oluştu:", error);
+                alert("❌ Sunucuya bağlanılamadı. Lütfen internet bağlantınızı ve sistem durumunu kontrol edin.");
+            } finally {
+                // Hata olsa da olmasa da butonu eski aktif durumuna çevir
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Giriş Yap';
+            }
+        }
+
+        window.onload = function() {
+            // Sayfa yüklendiğinde eski oturum verilerini temizle
+            localStorage.removeItem('aktifKullanici');
+        };
+    </script>
+</body>
+</html>

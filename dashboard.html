@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bahar Beauty Studio - Ana Yönetim Paneli</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #f4f7fc; font-family: 'Plus Jakarta Sans', sans-serif; padding: 30px 50px; color: #1e293b; }
+        .container { max-width: 1440px; margin: 0 auto; }
+
+        /* Üst Header Alanı */
+        .header-bar {
+            background: white; border-radius: 24px; padding: 20px 45px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02); border-left: 6px solid #00a8b5;
+            margin-bottom: 35px;
+        }
+        .brand-logo { font-family: 'Great Vibes', cursive; font-size: 3.2rem; color: #00a8b5; line-height: 1; }
+        .brand-sub { font-family: 'Playfair Display', serif; font-size: 1rem; color: #64748b; margin-top: 5px; font-weight: 600; }
+        .btn-logout {
+            background: #fff1f2; color: #ef4444; border: 1px solid #fca5a5;
+            padding: 12px 24px; border-radius: 14px; font-weight: 700; font-size: 0.85rem;
+            text-decoration: none; display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+        }
+        .btn-logout:hover { background: #ef4444; color: white; }
+
+        /* Menü Düzeni ve Simgeler */
+        .menu-grid {
+            display: grid; grid-template-columns: repeat(8, 1fr); gap: 16px; margin-bottom: 35px;
+        }
+        .menu-card {
+            background: white; border-radius: 20px; padding: 30px 10px;
+            text-align: center; text-decoration: none; color: #2d3748;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 14px; transition: all 0.2s ease;
+        }
+        .menu-card:hover { transform: translateY(-4px); box-shadow: 0 12px 25px rgba(0,168,181,0.1); border-color: #00a8b5; }
+        .menu-card .icon { font-size: 2.2rem; line-height: 1; display: block; }
+        .menu-card span { font-family: 'Playfair Display', serif; font-size: 0.85rem; font-weight: 900; color: #1a202c; }
+
+        /* Alt İki Kolonlu Yapı */
+        .dashboard-row { display: grid; grid-template-columns: 1.6fr 1fr; gap: 30px; }
+
+        .panel-card {
+            background: white; border-radius: 24px; padding: 35px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;
+        }
+        .panel-title-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .panel-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 900; display: flex; align-items: center; gap: 10px; color: #1a202c; }
+        .panel-title .shield-icon { color: #3182ce; font-size: 1.3rem; }
+        .btn-clear { background: none; border: none; color: #ef4444; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+
+        /* Log Listesi Konteyneri */
+        .log-stream { height: 340px; overflow-y: auto; padding-right: 5px; }
+        .log-item {
+            background: #fff; border: 1px solid #edf2f7; border-left: 4px solid #48bb78;
+            border-radius: 12px; padding: 14px 20px; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: #4a5568;
+        }
+        .log-item.failed { border-left-color: #f56565; }
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; font-family: monospace; }
+        .badge-success { background: #e6fffa; color: #234e52; border: 1px solid #b2f5ea; }
+        .badge-failed { background: #fff5f5; color: #742a2a; border: 1px solid #fed7d7; }
+        .log-time { color: #718096; font-family: monospace; }
+        .log-text strong { color: #1a202c; }
+
+        /* Aktif Personel Kartı Tasarımı */
+        .personnel-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 15px; }
+        .avatar-circle {
+            width: 85px; height: 85px; background: #00a8b5; color: white;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; font-weight: bold; font-family: 'Playfair Display', serif; margin-bottom: 15px;
+        }
+        .personnel-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 900; color: #1a202c; margin-bottom: 6px; }
+        .personnel-role { background: #e6fffa; color: #00a8b5; padding: 4px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; margin-bottom: 30px; letter-spacing: 0.5px; }
+        
+        .info-line {
+            width: 100%; display: flex; justify-content: space-between; padding: 14px 0;
+            border-top: 1px dashed #edf2f7; font-size: 0.85rem;
+        }
+        .info-label { color: #718096; }
+        .info-value { font-weight: 600; color: #2d3748; }
+        .status-online { color: #38a169; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header-bar">
+            <div class="brand-area">
+                <span class="brand-logo">Bahar Beauty Studio</span>
+                <span class="brand-sub">| Ana Yönetim Paneli</span>
+            </div>
+            <a href="index.html" class="btn-logout">🔒 Güvenli Çıkış</a>
+        </header>
+
+        <section class="menu-grid">
+            
+            <a href="danisanRandevu.html" class="menu-card" style="background: #faf5ff; border-color: #00a8b5;">
+                <span class="icon">👥📅</span>
+                <span>Danışanlar & Randevular</span>
+            </a>
+            <a href="hizmet-paket-giris.html" class="menu-card" ;">
+                <span class="icon">💼</span>
+                <span>Hizmet & Paket</span>
+            </a>
+            <a href="kabin-giris.html" class="menu-card">
+                <span class="icon">💆‍♀️</span>
+                <span>Kabin Tüketim</span>
+            </a>
+            <a href="urun-giris.html" class="menu-card">
+                <span class="icon">📦</span>
+                <span>Ürün/Çeşit Girişi</span>
+            </a>
+            <a href="stok-kontrol.html" class="menu-card">
+                <span class="icon">📊</span>
+                <span>Stok Kontrol</span>
+            </a>
+            <a href="kullanici-yonetimi.html" class="menu-card">
+                <span class="icon">👥</span>
+                <span>Personel Yetki</span>
+            </a>
+            <a href="maliyetKarAnalizi.html" class="menu-card">
+                <span class="icon">💰</span>
+                <span>Maliyet & Kâr</span>
+            </a>
+            <a href="raporlar.html" class="menu-card">
+                <span class="icon">🔒</span>
+                <span> Gider & Performans</span>
+                <span> Analizi</span>
+            </a>
+        </section>
+
+        <div class="dashboard-row">
+            <div class="panel-card">
+                <div class="panel-title-bar">
+                    <div class="panel-title"><span class="shield-icon">🛡️</span> Güvenlik & Sistem Giriş Logları</div>
+                    <button class="btn-clear" onclick="clearSystemLogs()">Geçmişi Temizle</button>
+                </div>
+                <div class="log-stream" id="logContainer">
+                    <p style="text-align:center; color:#a0aec0; padding:40px;">Bulut verileri senkronize ediliyor...</p>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-title">🔑 Aktif Personel Bilgileri</div>
+                <div class="personnel-wrapper">
+                    <div class="avatar-circle">S</div>
+                    <div class="personnel-name">Sistem Kurucusu</div>
+                    <div class="personnel-role">ADMIN</div>
+                    
+                    <div class="info-line">
+                        <span class="info-label">Sistem E-Posta:</span>
+                        <span class="info-value">admin</span>
+                    </div>
+                    <div class="info-line">
+                        <span class="info-label">Stüdyo Yetkisi:</span>
+                        <span class="info-value">Tam Yetkili Yönetim</span>
+                    </div>
+                    <div class="info-line">
+                        <span class="info-label">Giriş Durumu:</span>
+                        <span class="status-online">● Aktif Çevrimiçi</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbx6fWf_rPacPSY0VdKaq5DAMuT6EQTFu5CA7GK9qRwQTNep3eMMwA0jZcIT9OQz76EH8g/exec";
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // --- 1. GÜVENLİK KONTROLÜ ---
+            let aktifKullanici = JSON.parse(localStorage.getItem('aktifKullanici'));
+            
+            // Bilet yoksa dışarı at
+            if (!aktifKullanici) {
+                window.location.href = "index.html"; 
+                return; 
+            }
+
+            // --- 2. ROL KONTROLÜ VE BUTON GİZLEME (YENİ EKLENEN KISIM) ---
+            let rol = String(aktifKullanici.rol).toLowerCase();
+            let yetkiliMi = rol.includes('admin') || rol.includes('müdür');
+
+            if (!yetkiliMi) {
+                // Kullanıcı Admin veya Müdür DEĞİLSE (örneğin Uzmansa), o 3 menüyü gizle
+                let yetkiBtn = document.querySelector('a[href="kullanici-yonetimi.html"]');
+                let maliyetBtn = document.querySelector('a[href="maliyetKarAnalizi.html"]');
+                let raporBtn = document.querySelector('a[href="raporlar.html"]');
+                
+                if (yetkiBtn) yetkiBtn.style.display = 'none';
+                if (maliyetBtn) maliyetBtn.style.display = 'none';
+                if (raporBtn) raporBtn.style.display = 'none';
+                
+                // 8 buton yerine 5 buton kaldığı için, kalan butonların ekrana şık ve ortalı yayılması için ızgarayı (grid) düzeltelim:
+                let menuGrid = document.querySelector('.menu-grid');
+                if (menuGrid) {
+                    menuGrid.style.gridTemplateColumns = 'repeat(5, 1fr)';
+                    menuGrid.style.maxWidth = '1120px'; 
+                    menuGrid.style.margin = '0 auto 35px auto';
+                }
+            }
+
+            // --- 3. DİNAMİK PERSONEL BİLGİLERİ DOLDURMA ---
+            document.querySelector('.personnel-name').innerText = aktifKullanici.adSoyad;
+            document.querySelector('.personnel-role').innerText = String(aktifKullanici.rol).toUpperCase();
+            
+            const emailFields = document.querySelectorAll('.info-value');
+            if(emailFields.length > 0) emailFields[0].innerText = aktifKullanici.eposta; 
+            if(emailFields.length > 1) emailFields[1].innerText = yetkiliMi ? 'Tam Yetkili Yönetim' : 'Standart Kullanıcı (Uzman)';
+            
+            // İsim baş harfini Avatar'a yazdır
+            let basHarf = String(aktifKullanici.adSoyad).charAt(0).toUpperCase();
+            document.querySelector('.avatar-circle').innerText = basHarf;
+
+            // --- 4. LOGLARI GETİR ---
+            fetchLogs();
+        });
+
+        function fetchLogs() {
+            const callbackName = "parseCloudLogs";
+            window[callbackName] = function(response) {
+                const container = document.getElementById('logContainer');
+                container.innerHTML = "";
+                
+                const logs = response.data || response;
+                
+                if(!logs || logs.length === 0) {
+                    container.innerHTML = "<p style='text-align:center;color:#a0aec0;padding:20px;'>Kayıt bulunamadı.</p>";
+                    return;
+                }
+                
+                // girisLoglari yapısına uyumlu alan eşitlemeleri
+                [...logs].reverse().forEach(log => {
+                    const statusStr = String(log.durum || log.Status || '').toUpperCase();
+                    const isSuccess = statusStr === "SUCCESS" || statusStr === "BAŞARILI";
+                    
+                    container.innerHTML += `
+                        <div class="log-item ${isSuccess ? '' : 'failed'}">
+                            <span class="badge ${isSuccess ? 'badge-success' : 'badge-failed'}">${isSuccess ? 'SUCCESS' : 'FAILED'}</span>
+                            <span class="log-time">[${log.tarihSaat || log.Timestamp || '-'}]</span>
+                            <span class="log-text">Kullanıcı <strong>"${log.kullaniciAdi || log.User || '-'}"</strong> ${log.aciklama || log.Action || '-'}</span>
+                        </div>
+                    `;
+                });
+                
+                const scrElement = document.getElementById(callbackName);
+                if(scrElement) scrElement.remove();
+            };
+
+            let script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${API_URL}?action=getlogs&callback=${callbackName}`;
+            document.body.appendChild(script);
+        }
+
+        function clearSystemLogs() {
+            // Sadece Admin log silsin güvenliği:
+            let aktifKullanici = JSON.parse(localStorage.getItem('aktifKullanici'));
+            let rol = String(aktifKullanici.rol).toLowerCase();
+            if(!rol.includes('admin')) {
+                alert("Sistem günlüklerini sadece Admin silebilir.");
+                return;
+            }
+
+            if(!confirm("Sistem günlük verilerini temizlemek istediğinize emin misiniz?")) return;
+            const cb = "clearLogsCallback";
+            window[cb] = function(res) {
+                if(res.status === "success" || res.result === "success") {
+                    alert("Sistem günlükleri başarıyla sıfırlandı.");
+                    fetchLogs();
+                }
+                const scrElement = document.getElementById(cb);
+                if(scrElement) scrElement.remove();
+            };
+            let script = document.createElement('script');
+            script.id = cb;
+            script.src = `${API_URL}?action=clearlogs&callback=${cb}`;
+            document.body.appendChild(script);
+        }
+    </script>
+</body>
+</html>

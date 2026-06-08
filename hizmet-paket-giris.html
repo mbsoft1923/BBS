@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bahar Beauty Studio - Hizmet & Paket Yönetimi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background-color: #f0f4f8; 
+            padding: 30px 20px; 
+            font-family: 'Playfair Display', serif; 
+            min-height: 100vh; 
+            color: #1e293b; 
+            font-size: 0.85rem;
+        }
+        .wrapper { max-width: 1650px; margin: 0 auto; width: 100%; }
+        
+        .global-page-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 25px; 
+            background-color: white; 
+            padding: 15px 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02); 
+            border-left: 6px solid #00a8b5; 
+        }
+        .global-header-title-area { display: flex; flex-direction: column; text-align: left; }
+        .global-header-brand { font-family: 'Great Vibes', cursive; font-size: 2.6rem; color: #00a8b5; line-height: 1.1; margin-bottom: 2px; }
+        .global-header-sub { font-family: 'Playfair Display', serif; font-size: 1rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; }
+        .global-btn-back { background-color: #e0f7fa; color: #00a8b5; border: 1px solid #b2ebf2; padding: 10px 22px; border-radius: 12px; font-weight: 700; text-decoration: none; transition: all 0.25s; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+        .global-btn-back:hover { background-color: #00a8b5; color: white; transform: translateY(-1px); }
+
+        .card { 
+            background-color: white; 
+            border-radius: 14px; 
+            padding: 20px; 
+            box-shadow: 0 4px 18px rgba(0,0,0,0.02); 
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            position: relative;
+        }
+        .card-title { 
+            font-family: 'Playfair Display', serif;
+            font-size: 1.05rem; 
+            color: #0f172a; 
+            margin-bottom: 14px; 
+            font-weight: 800; 
+            border-bottom: 2px dashed #f1f5f9; 
+            padding-bottom: 10px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+        }
+
+        .search-box, input, select { 
+            width: 100%; 
+            padding: 6px 10px; 
+            border: 1.5px solid #cbd5e1; 
+            border-radius: 6px; 
+            font-size: 0.8rem; 
+            outline: none;
+            background: #f8fafc;
+            transition: all 0.2s;
+        }
+        input:focus, select:focus, .search-box:focus { border-color: #00a8b5; background: white; }
+        
+        .list-scroll-area { 
+            flex-grow: 1;
+            height: 180px; 
+            overflow-y: auto; 
+            border: 1px solid #f1f5f9; 
+            border-radius: 8px; 
+            padding: 5px;
+            background: #fafbfb;
+        }
+        
+        .list-item-row { 
+            padding: 6px 10px; 
+            border-radius: 6px;
+            margin-bottom: 4px;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            transition: all 0.2s; 
+            background: white;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+        }
+        .list-item-row:hover { background-color: #f0fdfa; border-color: #ccfbf1; }
+        .list-item-row.active { background-color: #e0f7fa; border-color: #00a8b5; }
+        
+        .item-primary-text { font-weight: 700; color: #334155; font-size: 0.8rem; }
+        
+        .toggle-container { display: flex; gap: 6px; margin-bottom: 10px; }
+        .toggle-btn { flex: 1; padding: 6px; border: 1.5px solid #e2e8f0; border-radius: 6px; cursor: pointer; text-align: center; font-weight: 700; font-size: 0.75rem; background: #f8fafc; }
+        .toggle-btn.active { border-color: #00a8b5; background: #e0f7fa; color: #00a8b5; }
+
+        .btn-submit { padding: 8px 12px; border: none; background: #00a8b5; color: white; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-submit:hover { background: #008c96; }
+
+        .package-item { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 15px; border-top: 4px solid #00a8b5; }
+        .session-grid { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
+        .session-bubble { 
+            width: 32px; height: 32px; border-radius: 6px; border: 2px solid #e2e8f0; 
+            display: flex; align-items: center; justify-content: center; font-weight: 800; 
+            font-size: 0.75rem; cursor: pointer; transition: all 0.25s; background: white; user-select: none;
+        }
+        .session-bubble.active-bubble { border-color: #00a8b5; border-width: 3px; box-shadow: 0 0 0 2px rgba(0, 168, 181, 0.3); }
+        .session-bubble.geldi { background: #00a8b5; border-color: #00a8b5; color: white; }
+        .session-bubble.gelmedi { background: #ef4444; border-color: #ef4444; color: white; }
+        .session-bubble.iptal { background: #64748b; border-color: #64748b; color: white; }
+
+        .payment-summary { 
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+            background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 10px; 
+        }
+        .pay-box { text-align: left; min-width: 100px; }
+        .pay-label { font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
+        .pay-val { font-weight: 800; font-size: 0.9rem; }
+
+        .archive-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; }
+        .archive-table th { background-color: #f8fafc; color: #475569; font-weight: 700; text-align: left; padding: 8px 10px; border-bottom: 2px solid #e2e8f0; }
+        .archive-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        
+        /* 🎫 BILET / ADISYON MODAL STYLES */
+        #biletModal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none; justify-content: center; align-items: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+        .bilet-container {
+            background: white;
+            width: 380px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+            color: #000;
+        }
+        .bilet-body {
+            padding: 25px;
+            background: #fffdf7;
+            border-bottom: 2px dashed #cbd5e1;
+        }
+        .bilet-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 15px;
+        }
+        .bilet-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .bilet-subtitle {
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+        .bilet-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+        .bilet-divider {
+            border-top: 1px dashed #000;
+            margin: 15px 0;
+        }
+        .bilet-total {
+            font-size: 1.05rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+        .bilet-footer {
+            text-align: center;
+            font-size: 0.75rem;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        .bilet-actions {
+            background: #f8fafc;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 🖨️ PRINT RULES */
+        @media print {
+            body * { visibility: hidden; }
+            #biletModal, #biletModal * { visibility: visible; }
+            #biletModal { position: absolute; top: 0; left: 0; width: 100%; background: white; display: flex !important; }
+            .bilet-container { box-shadow: none; border: none; width: 100%; max-width: 100%; }
+            .bilet-actions { display: none !important; }
+        }
+</style>
+</head>
+<body>
+
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <div class="wrapper">
+        <div class="global-page-header">
+            <div class="global-header-title-area">
+                <span class="global-header-brand">Bahar Beauty Studio</span>
+                <span class="global-header-sub">✨ Hizmet & Paket Yönetim Paneli</span>
+            </div>
+            <a href="dashboard.html" class="global-btn-back"><i class="fas fa-home"></i> Ana Yönetim Paneli</a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-5 items-stretch">
+            
+            <div class="lg:col-span-3 card flex flex-col justify-between">
+                <div>
+                    <div class="card-title">
+                        <span><i class="fas fa-users" style="color: #00a8b5;"></i> Danışan Seçimi</span>
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" class="search-box" id="danisanSearch" placeholder="Danışan Ara..." oninput="filtreleList('danisanSearch', 'danisanListe')">
+                    </div>
+                    <div class="list-scroll-area" id="danisanListe">
+                        <p class="text-xs text-center text-slate-400 py-6">Yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3 card flex flex-col justify-between">
+                <div>
+                    <div class="card-title">
+                        <span><i class="fas fa-user-shield" style="color: #00a8b5;"></i> Estetisyen / Uzman</span>
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" class="search-box" id="uzmanSearch" placeholder="Uzman Ara..." oninput="filtreleList('uzmanSearch', 'uzmanListe')">
+                    </div>
+                    <div class="list-scroll-area" id="uzmanListe">
+                        <p class="text-xs text-center text-slate-400 py-6">Yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3 card flex flex-col justify-between">
+                <div>
+                    <div class="card-title">
+                        <span><i class="fas fa-tags" style="color: #00a8b5;"></i> Yeni Hizmet Tanımla</span>
+                    </div>
+                    <div class="mb-1 mt-3">
+                        <label class="block text-[0.7rem] font-bold text-slate-500 mb-0.5">Hizmet / Kategori Adı</label>
+                        <input type="text" id="libHizmetKategori" placeholder="Örn: Lazer Epilasyon">
+                    </div>
+                    <div class="mb-2 mt-2">
+                        <label class="block text-[0.7rem] font-bold text-slate-500 mb-0.5">İşlem Süresi (Dk)</label>
+                        <input type="number" id="libHizmetSuresi" placeholder="Örn: 45">
+                    </div>
+                    <button class="btn-submit w-full mb-2 mt-2" onclick="hizmetKutuphaneKaydet()">
+                        <i class="fas fa-plus text-xs"></i> Kütüphaneye Ekle
+                    </button>
+                    <div class="list-scroll-area !h-[80px]" id="kutuphaneListesi">
+                        <p class="text-xs text-center text-slate-400 py-2">Kütüphane boş.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3 card flex flex-col justify-between">
+                <div>
+                    <div class="card-title">
+                        <span><i class="fas fa-magic" style="color: #00a8b5;"></i> Paket Tanımlama</span>
+                    </div>
+                    <div class="toggle-container">
+                        <div id="btnTek" class="toggle-btn active" onclick="setPkgType('tek')">Tek Seans</div>
+                        <div id="btnCok" class="toggle-btn" onclick="setPkgType('cok')">Çoklu Paket</div>
+                    </div>
+                    <div class="mb-1">
+                        <label class="block text-[0.7rem] font-bold text-slate-500 mb-0.5">Hizmet Türü</label>
+                        <select id="hizmetSecimi" onchange="otomatikSureGetir()"></select>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1 mb-2">
+                        <div>
+                            <label class="block text-[0.7rem] font-bold text-slate-500 mb-0.5">Seans S.</label>
+                            <input type="number" id="seansSayisi" value="1" disabled class="disabled:opacity-50">
+                        </div>
+                        <div>
+                            <label class="block text-[0.7rem] font-bold text-slate-500 mb-0.5">Toplam (₺)</label>
+                            <input type="number" id="toplamUcret" placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-[0.7rem] font-bold text-slate-500 mb-0.5">Peşinat (₺)</label>
+                            <input type="number" id="ilkOdeme" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="mb-2 grid grid-cols-2 gap-1">
+                        <div>
+                            <label class="block text-[0.7rem] font-bold text-slate-500 mb-0.5">Paket Başlangıç Tarihi</label>
+                            <input type="date" id="paketIlkGirisTarihi">
+                        </div>
+                        <div class="opacity-40">
+                            <label class="block text-[0.7rem] font-bold text-slate-500 mb-0.5">Paket Türü Kod</label>
+                            <input type="text" value="OTOMATİK" disabled class="text-center bg-slate-100">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-1 mt-1">
+                        <button class="bg-slate-700 text-white text-[0.7rem] p-2 rounded font-bold hover:bg-slate-800 transition" onclick="sonPaketiGetirUretici()">
+                            <i class="fas fa-sync-alt"></i> Son Paketi Getir
+                        </button>
+                        <button class="btn-submit w-full !p-2 !text-[0.7rem]" onclick="danisanaPaketAtarla()">
+                            <i class="fas fa-check-circle"></i> Karta Yansıt
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-5">
+            <div class="card-title">
+                <span><i class="fas fa-box-open" style="color: #00a8b5;"></i> <span id="activePkgTitle">Paket ve Seans Takip Kartı</span></span>
+            </div>
+            <div id="paketlerListesi">
+                <p class="text-center text-slate-400 py-4">Listelemek veya yeni işlem başlatmak için sol taraftan bir danışan seçiniz.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <span><i class="fas fa-archive" style="color: #00a8b5;"></i> Danışan İşlem Arşivi & Dökümü</span>
+                <div class="flex items-center gap-2">
+                    <input type="date" id="archiveBaslangic" class="!w-32" onchange="arsivDokumuYap()">
+                    <span class="text-slate-400 font-bold">-</span>
+                    <input type="date" id="archiveBitis" class="!w-32" onchange="arsivDokumuYap()">
+                    <button onclick="arsivDokumuYap()" class="bg-slate-600 hover:bg-slate-700 text-white text-xs px-3 py-1.5 rounded font-bold transition">
+                        <i class="fas fa-filter"></i> Filtrele
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="archive-table">
+                    <thead>
+                        <tr>
+                            <th>Paket ID (A)</th>
+                            <th>Kayıt Tarihi (B)</th>
+                            <th>Uzman (C)</th>
+                            <th>Danışan (D)</th>
+                            <th>Hizmet Tercihi (E)</th>
+                            <th>Süre (F)</th>
+                            <th>Toplam Seans (G)</th>
+                            <th>Toplam Tutar (H)</th>
+                            <th>Ödenen Miktar (I)</th>
+                            <th>Seans Durumu & Tarih (J)</th>
+                            <th>Kalan S. (K)</th>
+                            <th>Paket Tarihi (L)</th>
+                            <th>Randevu Tarihi (M)</th>
+                            <th>Randevu Saati (N)</th>
+                            <th style="text-align: right; padding-right: 25px;">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="arsivTabloGövde">
+                        <tr>
+                            <td colspan="15" class="text-center text-slate-400 py-4">Lütfen listelemek için danışan seçiniz.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div id="biletModal">
+        <div class="bilet-container">
+            <div class="bilet-body" id="biletIcerik"></div>
+            <div class="bilet-actions">
+                <button onclick="window.print()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded text-center text-xs"><i class="fas fa-print mr-1"></i> Yazdır</button>
+                <button onclick="biletKapat()" class="flex-1 bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 rounded text-center text-xs">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            let aktifKullanici = JSON.parse(localStorage.getItem('aktifKullanici'));
+            if (!aktifKullanici) {
+                window.location.href = "index.html";
+                return;
+            }
+            const bugun = new Date().toISOString().slice(0, 10);
+            document.getElementById('paketIlkGirisTarihi').value = bugun;
+            veriYukleleriGeriCagır();
+        });
+        
+        const API_URL = "https://script.google.com/macros/s/AKfycbx6fWf_rPacPSY0VdKaq5DAMuT6EQTFu5CA7GK9qRwQTNep3eMMwA0jZcIT9OQz76EH8g/exec";
+        
+        let danisanlar = [];
+        let uzmanlar = [];
+        let hizmetKutuphanesi = [];
+        let aktifDanisan = null;
+        let aktifUzman = null;
+        let aktifTip = 'tek';
+        let aktifArsivListesi = []; 
+        let genelArsivTumu = [];
+
+        let kartDurumState = {
+            hizmetNo: "",
+            hizmetUzman: "",
+            hizmetDanisan: "",
+            hizmetPaketTercihi: "",
+            hizmetPaketSuresi: 0,
+            hizmetSeansSayisi: 0,
+            hizmetToplamOdeme: 0,
+            hizmetAraOdeme: 0,
+            hizmetKalanBorc: 0,
+            hizmetGelmeDurumu: "gelmedi",
+            kalanSeans: 0,
+            paketTarihi: "",
+            sonrakiSeansTarihi: "",
+            sonrakiSeansSaati: "",
+            seciliSeansNo: 1,
+            seansGecmisi: {} 
+        };
+
+        function showToast(msg) {
+            const container = document.getElementById('toastContainer');
+            container.innerHTML = ''; 
+            const toast = document.createElement('div');
+            toast.className = "bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg flex items-center gap-2 border-l-4 border-teal-500";
+            toast.innerHTML = `<i class="fas fa-info-circle text-teal-400"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { if(toast.parentElement) toast.remove() }, 3000);
+        }
+
+        function safeGet(val1, val2, fallback = "-") {
+            if (val1 !== undefined && val1 !== null && String(val1).trim() !== "undefined" && String(val1).trim() !== "null" && String(val1).trim() !== "") return val1;
+            if (val2 !== undefined && val2 !== null && String(val2).trim() !== "undefined" && String(val2).trim() !== "null" && String(val2).trim() !== "") return val2;
+            return fallback;
+        }
+
+        function getSafeArray(val) {
+            if (!val) return [];
+            if (Array.isArray(val)) return val;
+            if (val.data && Array.isArray(val.data)) return val.data;
+            return [];
+        }
+
+        function jsonpFetch(action, callbackBaseName) {
+            return new Promise((resolve, reject) => {
+                const uniqueHash = Math.random().toString(36).substring(2, 10);
+                const callbackName = callbackBaseName + "_" + uniqueHash;
+                const scriptId = "jsonp_script_" + uniqueHash;
+
+                window[callbackName] = function(response) {
+                    resolve(response);
+                    const s = document.getElementById(scriptId);
+                    if(s) s.remove();
+                    delete window[callbackName];
+                };
+
+                const script = document.createElement('script');
+                script.id = scriptId;
+                script.src = `${API_URL}?action=${action}&callback=${callbackName}&_=${new Date().getTime()}`;
+                script.onerror = () => {
+                    console.error(`${action} isteği başarısız oldu.`);
+                    resolve([]); 
+                    const s = document.getElementById(scriptId);
+                    if(s) s.remove();
+                    delete window[callbackName];
+                };
+                document.body.appendChild(script);
+            });
+        }
+
+        function veriYukleleriGeriCagır() {
+            jsonpFetch("getdanisanlar", "cb_danisanlar").then(res => {
+                danisanlar = getSafeArray(res);
+                renderDanisanlar();
+                if(aktifDanisan) {
+                    const yenilenen = danisanlar.find(d => (d.id || d.ID) === (aktifDanisan.id || aktifDanisan.ID));
+                    if(yenilenen) danisanSec(yenilenen);
+                }
+            });
+
+            jsonpFetch("getkullanicilar", "cb_kullanicilar").then(res => {
+                let tumUye = getSafeArray(res);
+                uzmanlar = tumUye.filter(u => {
+                    const vals = Object.values(u);
+                    let r = String(u.rol || u.Rol || u.ROL || vals[4] || "").toLowerCase();
+                    return r.includes("uzman");
+                });
+                renderUzmanlar();
+            });
+
+            jsonpFetch("gethizmetler", "cb_hizmetler").then(res => {
+                hizmetKutuphanesi = getSafeArray(res);
+                renderHizmetKutuphane();
+            });
+        }
+
+        function renderDanisanlar() {
+            const div = document.getElementById('danisanListe');
+            div.innerHTML = "";
+            let liste = getSafeArray(danisanlar);
+            if(liste.length === 0) {
+                div.innerHTML = `<p class="text-xs text-center text-slate-400 py-6">Kayıtlı danışan bulunamadı.</p>`;
+                return;
+            }
+            liste.forEach(d => {
+                let dId = safeGet(d.id, d.ID);
+                let dAd = safeGet(d.danisanAdiSoyadi, safeGet(d["Danışan Adı Soyadı"], d.danisanadisoyadi, "İsimsiz"));
+                
+                const row = document.createElement('div');
+                row.className = "list-item-row";
+                row.id = `danisan-row-${dId}`;
+                row.onclick = () => danisanSec(d);
+                row.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="item-primary-text">${dAd}</span>
+                        <span class="text-[0.68rem] text-slate-400">ID: ${dId}</span>
+                    </div>
+                `;
+                div.appendChild(row);
+            });
+        }
+
+        function renderUzmanlar() {
+            const div = document.getElementById('uzmanListe');
+            div.innerHTML = "";
+            let liste = getSafeArray(uzmanlar);
+            if(liste.length === 0) {
+                div.innerHTML = `<p class="text-xs text-center text-slate-400 py-6">Kayıtlı uzman bulunamadı.</p>`;
+                return;
+            }
+            liste.forEach(u => {
+                let uId = safeGet(u.id, u.ID);
+                let uAd = safeGet(u.adSoyad, safeGet(u["Ad Soyad"], u.adsoyad, "İsimsiz"));
+                let uRol = safeGet(u.rol, safeGet(u["Rol"], ""));
+                
+                const row = document.createElement('div');
+                row.className = "list-item-row";
+                row.id = `uzman-row-${uId}`;
+                row.onclick = () => {
+                    document.querySelectorAll('#uzmanListe .list-item-row').forEach(e => e.classList.remove('active'));
+                    row.classList.add('active');
+                    aktifUzman = u;
+                    showToast(`Uzman seçildi: ${uAd}`);
+                };
+                row.innerHTML = `<span class="item-primary-text">🎯 ${uAd}</span><span class="text-[0.7rem] text-slate-500 font-bold">${uRol}</span>`;
+                div.appendChild(row);
+            });
+        }
+
+        function renderHizmetKutuphane() {
+            const div = document.getElementById('kutuphaneListesi');
+            const select = document.getElementById('hizmetSecimi');
+            
+            if (div) div.innerHTML = "";
+            if (select) select.innerHTML = '<option value="" disabled selected>Hizmet Seçiniz...</option>';
+            
+            let liste = getSafeArray(hizmetKutuphanesi);
+            
+            if (liste.length === 0) {
+                if (div) div.innerHTML = `<p class="text-xs text-center text-slate-400 py-2">Kütüphane boş.</p>`;
+                return;
+            }
+            
+            let gecerliHizmetSayisi = 0;
+            liste.forEach((h) => {
+                let hId = safeGet(h.hizmetid, safeGet(h.id, h.ID));
+                let hAd = safeGet(h.hizmetAdiid, safeGet(h["hizmetAdiid"], h.hizmetadiid));
+                let hSure = safeGet(h.hizmetislemSuresi, safeGet(h["hizmetislemSuresi"], h.hizmetismsure, "0"));
+                
+                if (hAd === "-") return; 
+                gecerliHizmetSayisi++;
+
+                const safeId = String(hId).trim();
+                const safeAd = String(hAd).trim();
+                const safeSure = String(hSure).trim();
+
+                if (div) {
+                    const row = document.createElement('div');
+                    row.className = "list-item-row !mb-1 !p-1.5 flex justify-between items-center";
+                    row.innerHTML = `
+                        <div class="flex flex-col flex-1 truncate">
+                            <span class="item-primary-text truncate">✨ ${safeAd}</span>
+                            <span class="text-[0.65rem] text-slate-400 font-bold">${safeSure} dk</span>
+                        </div>
+                        <div class="flex gap-1 ml-2" onclick="event.stopPropagation();">
+                            <button onclick="hizmetDuzenle('${safeId}', '${safeAd.replace(/'/g, "\\'")}', '${safeSure}')" class="text-teal-600 hover:text-teal-800 p-1.5 text-xs" title="Düzenle">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="hizmetSil('${safeId}')" class="text-rose-600 hover:text-rose-800 p-1.5 text-xs" title="Sil">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    `;
+                    div.appendChild(row);
+                }
+
+                if (select) {
+                    const opt = document.createElement('option');
+                    opt.value = safeAd; 
+                    opt.dataset.sure = safeSure;
+                    opt.text = `${safeAd} (${safeSure} dk)`;
+                    select.appendChild(opt);
+                }
+            });
+
+            if (gecerliHizmetSayisi === 0 && div) {
+                div.innerHTML = `<p class="text-xs text-center text-slate-400 py-2">Kütüphane boş.</p>`;
+            }
+            otomatikSureGetir();
+        }
+
+        function danisanSec(d) {
+            let dId = safeGet(d.id, d.ID);
+            let dAd = safeGet(d.danisanAdiSoyadi, safeGet(d["Danışan Adı Soyadı"], d.danisanadisoyadi, "İsimsiz"));
+            
+            document.querySelectorAll('#danisanListe .list-item-row').forEach(e => e.classList.remove('active'));
+            const activeRow = document.getElementById(`danisan-row-${dId}`);
+            if(activeRow) activeRow.classList.add('active');
+            aktifDanisan = d;
+            document.getElementById('activePkgTitle').innerText = `${dAd} - Paket ve Seans Takip Kartı`;
+            arsivDokumuYap();
+            paketListesiniGuncelle();
+        }
+
+        function filtreleList(searchId, listId) {
+            const q = document.getElementById(searchId).value.toLowerCase().trim();
+            const rows = document.querySelectorAll(`#${listId} .list-item-row`);
+            rows.forEach(r => {
+                if(r.innerText.toLowerCase().includes(q)) r.style.display = "flex";
+                else r.style.display = "none";
+            });
+        }
+
+        function setPkgType(type) {
+            aktifTip = type;
+            document.getElementById('btnTek').classList.remove('active');
+            document.getElementById('btnCok').classList.remove('active');
+            const inputSeans = document.getElementById('seansSayisi');
+            if (type === 'tek') {
+                document.getElementById('btnTek').classList.add('active');
+                inputSeans.value = 1;
+                inputSeans.disabled = true;
+            } else {
+                document.getElementById('btnCok').classList.add('active');
+                inputSeans.value = 8;
+                inputSeans.disabled = false;
+            }
+        }
+
+        function otomatikSureGetir() {
+            const select = document.getElementById('hizmetSecimi');
+            if(!select || select.selectedIndex === -1) return;
+            const selectedOpt = select.options[select.selectedIndex];
+            if(!selectedOpt) return;
+            
+            kartDurumState.hizmetPaketSuresi = parseInt(selectedOpt.dataset.sure || 0);
+            kartDurumState.hizmetPaketTercihi = select.value;
+        }
+
+        function hizmetSil(id) {
+            if(!confirm("Bu hizmeti kütüphaneden silmek istediğinize emin misiniz?")) return;
+            jsonpFetch(`silhizmetkutuphane&id=${id}`, "cb_silhizmet").then(() => {
+                showToast("Hizmet kütüphaneden silindi.");
+                jsonpFetch("gethizmetler", "cb_hizmetler_tazele").then(res => {
+                    hizmetKutuphanesi = getSafeArray(res);
+                    renderHizmetKutuphane();
+                });
+            });
+        }
+
+        function hizmetDuzenle(id, eskiAd, eskiSure) {
+            let yeniAd = prompt("Hizmet / Kategori adını düzenleyin:", eskiAd);
+            if(!yeniAd || yeniAd.trim() === "") return;
+            let yeniSure = prompt("İşlem süresini (dk) düzenleyin:", eskiSure);
+            if(!yeniSure || yeniSure.trim() === "") return;
+
+            jsonpFetch(`guncellehizmetkutuphane&id=${id}&ad=${encodeURIComponent(yeniAd.trim())}&sure=${encodeURIComponent(yeniSure.trim())}`, "cb_gunchizmet").then(() => {
+                showToast("Hizmet başarıyla güncellendi.");
+                jsonpFetch("gethizmetler", "cb_hizmetler_tazele").then(res => {
+                    hizmetKutuphanesi = getSafeArray(res);
+                    renderHizmetKutuphane();
+                });
+            });
+        }
+
+        function hizmetKutuphaneKaydet() {
+            const kategoriInput = document.getElementById('libHizmetKategori');
+            const sureInput = document.getElementById('libHizmetSuresi');
+            
+            if(!kategoriInput || !sureInput) return;
+            
+            const kategoriAd = kategoriInput.value.trim();
+            const sure = sureInput.value.trim();
+            
+            if(!kategoriAd || !sure) return alert("Hizmet / Kategori adı ve İşlem süresi alanları zorunludur.");
+            
+            let queryUrl = `kaydethizmetkutuphane&hizmetAdiid=${encodeURIComponent(kategoriAd)}&hizmetislemSuresi=${encodeURIComponent(sure)}`;
+            
+            jsonpFetch(queryUrl, "cb_hizmetekle").then(() => {
+                showToast("Kütüphaneye eklendi.");
+                kategoriInput.value = "";
+                sureInput.value = "";
+                
+                jsonpFetch("gethizmetler", "cb_hizmetler_tazele").then(hizmetRes => {
+                    hizmetKutuphanesi = getSafeArray(hizmetRes);
+                    renderHizmetKutuphane();
+                });
+            }).catch(err => {
+                console.error("Kayıt hatası:", err);
+                alert("Bağlantı hatası oluştu, tekrar deneyiniz.");
+            });
+        }
+
+        function sonPaketiGetirUretici() {
+            if(!aktifDanisan) return alert("Önce bir danışan seçiniz.");
+            let dAd = safeGet(aktifDanisan.danisanAdiSoyadi, safeGet(aktifDanisan["Danışan Adı Soyadı"], aktifDanisan.danisanadisoyadi));
+            
+            jsonpFetch("getpaketler", "cb_sonpaket").then(res => {
+                const tumu = getSafeArray(res);
+                const dPaketleri = tumu.filter(p => {
+                    const vals = Object.values(p);
+                    const pd = safeGet(vals[2], safeGet(p.danisan, p["Danışan"]));
+                    return String(pd).trim() === String(dAd).trim();
+                });
+                
+                if(dPaketleri.length === 0) return alert("Bu danışana ait geçmiş paket bulunamadı.");
+                
+                dPaketleri.sort((a,b) => String(safeGet(b.id, b["id"])).localeCompare(String(safeGet(a.id, a["id"]))));
+                const sonP = dPaketleri[0];
+                const valsP = Object.values(sonP);
+                
+                document.getElementById('toplamUcret').value = parseFloat(String(safeGet(valsP[6], safeGet(sonP.toplamTutar, "0"))).replace(/[^0-9.-]+/g,"")) || 0;
+                document.getElementById('ilkOdeme').value = parseFloat(String(safeGet(valsP[7], safeGet(sonP.odenenMiktar, "0"))).replace(/[^0-9.-]+/g,"")) || 0;
+                let sS = parseInt(safeGet(valsP[5], safeGet(sonP.seansSayisi, "1")));
+                if(sS > 1) {
+                    setPkgType('cok');
+                    document.getElementById('seansSayisi').value = sS;
+                } else {
+                    setPkgType('tek');
+                }
+                showToast("Son paket bilgileri şablona yüklendi.");
+            });
+        }
+
+        // ŞABLONA YÜKLE (DÜZENLE) FONKSİYONU
+        function paketiSabonaYukle(id) {
+            let pkg = null;
+            let pKaynak = 'arşiv';
+
+            if (typeof aktifArsivListesi !== 'undefined' && aktifArsivListesi.length > 0) {
+                pkg = aktifArsivListesi.find(x => x.id === id);
+            }
+            if (!pkg && typeof genelArsivTumu !== 'undefined' && genelArsivTumu.length > 0) {
+                pkg = genelArsivTumu.find(x => safeGet(Object.values(x)[0], safeGet(x.id, x["id"])) === id);
+                pKaynak = 'genel';
+            }
+            
+            if (!pkg) return showToast("Kayıt bilgisi bulunamadı!");
+
+            let tSeans, tTutar, oTutar, hTercih, pTarih, uAd;
+            
+            if (pKaynak === 'arşiv' && pkg.hizmetTercihi !== undefined) {
+                tSeans = parseInt(pkg.seansSayisi || 1);
+                tTutar = parseFloat(String(pkg.toplamTutar).replace(/[^0-9.-]+/g,"")) || 0;
+                oTutar = parseFloat(String(pkg.odenenMiktar).replace(/[^0-9.-]+/g,"")) || 0;
+                hTercih = pkg.hizmetTercihi || "";
+                pTarih = safeGet(pkg.paketTarihi, pkg.kayitTarihi);
+                uAd = pkg.uzman || "";
+            } else {
+                const vals = Object.values(pkg);
+                tSeans = parseInt(safeGet(vals[5], safeGet(pkg.seansSayisi, "1")));
+                tTutar = parseFloat(String(safeGet(vals[6], safeGet(pkg.toplamTutar, "0"))).replace(/[^0-9.-]+/g,"")) || 0;
+                oTutar = parseFloat(String(safeGet(vals[7], safeGet(pkg.odenenMiktar, "0"))).replace(/[^0-9.-]+/g,"")) || 0;
+                hTercih = safeGet(vals[3], safeGet(pkg.hizmetTercihi, ""));
+                pTarih = safeGet(vals[11], safeGet(pkg.paketTarihi, ""));
+                uAd = safeGet(vals[1], safeGet(pkg.uzman, ""));
+            }
+
+            document.getElementById('toplamUcret').value = tTutar;
+            document.getElementById('ilkOdeme').value = oTutar;
+            
+            if (pTarih && pTarih !== "-") {
+                let parts = pTarih.split(".");
+                if (parts.length === 3) {
+                     document.getElementById('paketIlkGirisTarihi').value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                } else if (pTarih.includes("-") && pTarih.length >= 10) {
+                     document.getElementById('paketIlkGirisTarihi').value = pTarih.substring(0,10);
+                }
+            }
+
+            if(tSeans > 1) {
+                setPkgType('cok');
+                document.getElementById('seansSayisi').value = tSeans;
+            } else {
+                setPkgType('tek');
+            }
+
+            const select = document.getElementById('hizmetSecimi');
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === hTercih) {
+                    select.selectedIndex = i;
+                    otomatikSureGetir();
+                    break;
+                }
+            }
+
+            if (uAd && uAd !== "-") {
+                let foundUzman = uzmanlar.find(u => {
+                    let ad = safeGet(u.adSoyad, safeGet(u["Ad Soyad"], u.adsoyad, ""));
+                    return String(ad).trim() === String(uAd).trim();
+                });
+
+                if (foundUzman) {
+                    let uId = safeGet(foundUzman.id, foundUzman.ID);
+                    document.querySelectorAll('#uzmanListe .list-item-row').forEach(e => e.classList.remove('active'));
+                    let activeRow = document.getElementById(`uzman-row-${uId}`);
+                    if (activeRow) activeRow.classList.add('active');
+                    aktifUzman = foundUzman;
+                }
+            }
+
+            showToast("Veriler şablona yüklendi. Düzenleyip yeni paket olarak kaydedebilirsiniz.");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function danisanaPaketAtarla() {
+            if(!aktifDanisan) return alert("Lütfen bir danışan seçiniz!");
+            if(!aktifUzman) return alert("Lütfen bir uzman seçiniz!");
+            if(!kartDurumState.hizmetPaketTercihi) return alert("Lütfen bir hizmet türü seçiniz!");
+            
+            const toplam = parseFloat(document.getElementById('toplamUcret').value || 0);
+            const pesinat = parseFloat(document.getElementById('ilkOdeme').value || 0);
+            const seansS = parseInt(document.getElementById('seansSayisi').value || 1);
+            const pTarih = document.getElementById('paketIlkGirisTarihi').value;
+
+            if(toplam <= 0) return alert("Lütfen geçerli bir toplam tutar giriniz.");
+
+            let pId = "P-" + Math.floor(100000 + Math.random() * 900000);
+            
+            let uAd = safeGet(aktifUzman.adSoyad, safeGet(aktifUzman["Ad Soyad"], aktifUzman.adsoyad, ""));
+            let dAd = safeGet(aktifDanisan.danisanAdiSoyadi, safeGet(aktifDanisan["Danışan Adı Soyadı"], aktifDanisan.danisanadisoyadi, ""));
+            
+            let queryParams = [
+                `kaydethizmetpaketgiris`,
+                `id=${pId}`,
+                `uzman=${encodeURIComponent(uAd)}`,
+                `danisan=${encodeURIComponent(dAd)}`,
+                `hizmetTercihi=${encodeURIComponent(kartDurumState.hizmetPaketTercihi)}`,
+                `sure=${kartDurumState.hizmetPaketSuresi}`,
+                `seansSayisi=${seansS}`,
+                `toplamTutar=${toplam}`,
+                `odenenMiktar=${pesinat}`,
+                `seansDurumu=1. Seans Bekliyor`,
+                `kalanSeans=${seansS}`,
+                `paketTarihi=${encodeURIComponent(pTarih)}`,
+                `randevuTarihi=-`,
+                `randevuSaati=-`
+            ].join("&");
+
+            jsonpFetch(queryParams, "cb_paketatarla").then(() => {
+                showToast("Yeni paket oluşturuldu ve e-tabloya kaydedildi.");
+                
+                document.getElementById('toplamUcret').value = "";
+                document.getElementById('ilkOdeme').value = "";
+                const select = document.getElementById('hizmetSecimi');
+                if(select) select.selectedIndex = 0;
+                setPkgType('tek');
+                document.getElementById('paketIlkGirisTarihi').value = new Date().toISOString().slice(0, 10);
+                
+                paketListesiniGuncelle();
+                arsivDokumuYap();
+            });
+        }
+
+        function paketListesiniGuncelle() {
+            const div = document.getElementById('paketlerListesi');
+            if(!aktifDanisan) {
+                div.innerHTML = `<p class="text-center text-slate-400 py-4">Lütfen sol taraftan bir danışan seçiniz.</p>`;
+                return;
+            }
+            let dAd = safeGet(aktifDanisan.danisanAdiSoyadi, safeGet(aktifDanisan["Danışan Adı Soyadı"], aktifDanisan.danisanadisoyadi, ""));
+
+            jsonpFetch("getpaketler", "cb_paketlist").then(res => {
+                const tumArsiv = getSafeArray(res);
+                if(tumArsiv.length > 0 && (tumArsiv[0].id === "hizmetNo" || tumArsiv[0].id === "id" || tumArsiv[0].hizmetNo === "hizmetNo")) {
+                    tumArsiv.shift();
+                }
+                genelArsivTumu = tumArsiv;
+
+                const dPaketleri = tumArsiv.filter(p => {
+                    const vals = Object.values(p);
+                    const pd = safeGet(vals[2], safeGet(p.danisan, p["Danışan"], ""));
+                    return String(pd).trim() === String(dAd).trim();
+                });
+
+                if(dPaketleri.length === 0) {
+                    div.innerHTML = `<p class="text-center text-slate-400 py-4">Bu danışana ait aktif takip kartı bulunmuyor. Yukarıdan paket tanımlayabilirsiniz.</p>`;
+                    return;
+                }
+
+                // 🚨 SADECE EN SON EKLENEN TEK BİR PAKETİ GÖSTER:
+                const tekPaket = dPaketleri[dPaketleri.length - 1];
+
+                div.innerHTML = "";
+                
+                const vals = Object.values(tekPaket);
+                const rId = safeGet(vals[0], safeGet(tekPaket.id, tekPaket["id"]));
+                const tSeans = parseInt(safeGet(vals[5], safeGet(tekPaket.seansSayisi, "1")));
+                const kSeans = parseInt(safeGet(vals[10], safeGet(tekPaket.kalanSeans, "0")));
+                const tTutar = parseFloat(String(safeGet(vals[6], safeGet(tekPaket.toplamTutar, "0"))).replace(/[^0-9.-]+/g,"")) || 0;
+                const oTutar = parseFloat(String(safeGet(vals[7], safeGet(tekPaket.odenenMiktar, "0"))).replace(/[^0-9.-]+/g,"")) || 0;
+                const kBorc = tTutar - oTutar;
+                const hTercih = safeGet(vals[3], safeGet(tekPaket.hizmetTercihi, ""));
+                const pTarih = safeGet(vals[11], safeGet(tekPaket.paketTarihi, "-"));
+
+                let seansGecmisiRaw = safeGet(vals[9], safeGet(tekPaket.seansDurumu, ""));
+                let parsedGecmis = {};
+                if(seansGecmisiRaw.includes("{")) {
+                    try { parsedGecmis = JSON.parse(seansGecmisiRaw); } catch(e){}
+                }
+
+                let bubblesHtml = "";
+                for(let i=1; i<=tSeans; i++) {
+                    let statusClass = "";
+                    let icon = i;
+                    if(parsedGecmis[i]) {
+                        if(parsedGecmis[i].durum === "geldi") { statusClass = "geldi"; icon = '<i class="fas fa-check text-[0.65rem]"></i>'; }
+                        else if(parsedGecmis[i].durum === "gelmedi") { statusClass = "gelmedi"; icon = '<i class="fas fa-times text-[0.65rem]"></i>'; }
+                        else if(parsedGecmis[i].durum === "iptal") { statusClass = "iptal"; icon = '<i class="fas fa-ban text-[0.65rem]"></i>'; }
+                    }
+                    let isActive = (kartDurumState.hizmetNo === rId && kartDurumState.seciliSeansNo === i) ? "active-bubble" : "";
+                    bubblesHtml += `<div class="session-bubble ${statusClass} ${isActive}" onclick="seansBaloncukSec('${rId}', ${i})">${icon}</div>`;
+                }
+
+                const item = document.createElement('div');
+                item.className = "package-item";
+                item.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-2 mb-2">
+                        <div>
+                            <span class="font-extrabold text-slate-800 text-sm block">📦 ${hTercih} (${tSeans} Seanslık)</span>
+                            <span class="text-xs text-slate-400">Paket ID: <b class="text-slate-600">${rId}</b> | Başlangıç: ${pTarih}</span>
+                        </div>
+                        <div class="flex gap-2 items-center mt-2 sm:mt-0">
+                            <span class="text-xs bg-slate-100 px-2 py-1 rounded font-bold">Kalan Seans: ${kSeans}</span>
+                            <button onclick="paketiSabonaYukle('${rId}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[0.7rem] font-bold px-2 py-1 rounded transition-all" title="Paketi Yukarıdaki Şablona Yükle / Düzenle"><i class="fas fa-edit"></i> Düzenle</button>
+                        </div>
+                    </div>
+                    
+                    <div class="my-3">
+                        <span class="block text-[0.7rem] font-bold text-slate-400 uppercase tracking-wider mb-1">Seans Yapılandırma Matrisi</span>
+                        <div class="session-grid">${bubblesHtml}</div>
+                    </div>
+
+                    <div id="kontrol-paneli-${rId}" class="bg-teal-50/50 border border-teal-100 rounded-lg p-3 my-2 hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end">
+                            <div>
+                                <label class="block text-[0.65rem] font-bold text-teal-700 mb-0.5"><span class="selected-no font-black text-xs">1</span>. Seans Durumu</label>
+                                <select id="durum-${rId}" class="!bg-white !border-teal-300">
+                                    <option value="geldi">GELDİ (Hizmet Tamamlandı)</option>
+                                    <option value="gelmedi">GELMEDİ (Gelmedi Yazıldı)</option>
+                                    <option value="iptal">İPTAL (Seans İptal Edildi)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[0.65rem] font-bold text-teal-700 mb-0.5">Sonraki Randevu Tarihi</label>
+                                <input type="date" id="rTar-${rId}" class="!bg-white !border-teal-300">
+                            </div>
+                            <div>
+                                <label class="block text-[0.65rem] font-bold text-teal-700 mb-0.5">Sonraki Randevu Saati</label>
+                                <input type="time" id="rSaat-${rId}" class="!bg-white !border-teal-300">
+                            </div>
+                            <button onclick="seansDurumunuKaydetVeUzat('${rId}')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs p-2 rounded h-[30px] flex items-center justify-center gap-1">
+                                <i class="fas fa-save"></i> Seansı İşle
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="payment-summary">
+                        <div class="pay-box"><div class="pay-label">Toplam Fiyat</div><div class="pay-val text-slate-700">₺${tTutar}</div></div>
+                        <div class="pay-box"><div class="pay-label">Alınan Ödeme</div><div class="pay-val text-teal-600">₺${oTutar}</div></div>
+                        <div class="pay-box"><div class="pay-label">Kalan Borç</div><div class="pay-val ${kBorc > 0 ? 'text-rose-600' : 'text-slate-500'}">₺${kBorc}</div></div>
+                        <div class="flex gap-1" onclick="event.stopPropagation();">
+                            <input type="number" id="araOdemeInput-${rId}" placeholder="Tutar" class="!w-20 !p-1 !text-xs !bg-white">
+                            <button onclick="araOdemeAl('${rId}', ${tTutar}, ${oTutar})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1 rounded transition flex items-center gap-1">
+                                <i class="fas fa-lira-sign"></i> Ödeme Al
+                            </button>
+                        </div>
+                    </div>
+                `;
+                div.appendChild(item);
+            });
+        }
+
+        function seansBaloncukSec(pkgId, seansNo) {
+            kartDurumState.hizmetNo = pkgId;
+            kartDurumState.seciliSeansNo = seansNo;
+            
+            document.querySelectorAll('.package-item').forEach(el => {
+                el.querySelectorAll('[id^="kontrol-paneli-"]').forEach(p => p.classList.add('hidden'));
+            });
+            
+            const pnl = document.getElementById(`kontrol-paneli-${pkgId}`);
+            if(pnl) {
+                pnl.classList.remove('hidden');
+                pnl.querySelector('.selected-no').innerText = seansNo;
+            }
+            
+            document.querySelectorAll('.session-bubble').forEach(b => b.classList.remove('active-bubble'));
+            if(event && event.target) {
+                if(event.target.classList.contains('session-bubble')) event.target.classList.add('active-bubble');
+                else event.target.parentElement.classList.add('active-bubble');
+            }
+        }
+
+        function seansDurumunuKaydetVeUzat(pkgId) {
+            const durum = document.getElementById(`durum-${pkgId}`).value;
+            const rTar = document.getElementById(`rTar-${pkgId}`).value || "-";
+            const rSaat = document.getElementById(`rSaat-${pkgId}`).value || "-";
+            const sNo = kartDurumState.seciliSeansNo;
+
+            jsonpFetch("getpaketler", "cb_seansisleme").then(res => {
+                const tumu = getSafeArray(res);
+                const pkg = tumu.find(p => String(safeGet(Object.values(p)[0], p.id)).trim() === String(pkgId).trim());
+                if(!pkg) return;
+                
+                const vals = Object.values(pkg);
+
+                let seansGecmisiRaw = safeGet(vals[9], safeGet(pkg.seansDurumu, ""));
+                let parsedGecmis = {};
+                if(seansGecmisiRaw.includes("{")) {
+                    try { parsedGecmis = JSON.parse(seansGecmisiRaw); } catch(e){}
+                }
+
+                parsedGecmis[sNo] = {
+                    durum: durum,
+                    tarih: new Date().toLocaleDateString('tr-TR'),
+                    saat: new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'})
+                };
+
+                let tSeans = parseInt(safeGet(vals[5], safeGet(pkg.seansSayisi, "1")));
+                let islenmisSayisi = 0;
+                for(let k in parsedGecmis) {
+                    if(parsedGecmis[k].durum === "geldi" || parsedGecmis[k].durum === "gelmedi" || parsedGecmis[k].durum === "iptal") {
+                        islenmisSayisi++;
+                    }
+                }
+                let yeniKalan = tSeans - islenmisSayisi;
+                if(yeniKalan < 0) yeniKalan = 0;
+
+                let query = [
+                    `updatefullseans`,
+                    `id=${pkgId}`,
+                    `seansDurumu=${encodeURIComponent(JSON.stringify(parsedGecmis))}`,
+                    `kalanSeans=${yeniKalan}`,
+                    `randevuTarihi=${encodeURIComponent(rTar)}`,
+                    `randevuSaati=${encodeURIComponent(rSaat)}`
+                ].join("&");
+
+                jsonpFetch(query, "cb_seansupdate").then(() => {
+                    showToast(`Seans ${sNo} başarıyla işlendi.`);
+                    paketListesiniGuncelle();
+                    arsivDokumuYap();
+
+                    if (rTar !== "-" && rSaat !== "-") {
+                        let sureVal = parseInt(safeGet(vals[4], safeGet(pkg.sure, "30")));
+                        
+                        let parts = rSaat.split(':');
+                        let d = new Date();
+                        d.setHours(parseInt(parts[0]), parseInt(parts[1]), 0);
+                        d.setMinutes(d.getMinutes() + sureVal);
+                        let eH = String(d.getHours()).padStart(2, '0');
+                        let eM = String(d.getMinutes()).padStart(2, '0');
+                        let timeStr = `${rSaat} - ${eH}:${eM}`;
+
+                        let catStr = safeGet(vals[3], safeGet(pkg.hizmetTercihi, "Seans İşlemi"));
+                        let uzmStr = safeGet(vals[1], safeGet(pkg.uzman, "Bilinmiyor"));
+                        let danStr = safeGet(vals[2], safeGet(pkg.danisan, "Bilinmiyor"));
+                        let durationStr = sureVal + " Dk";
+                        let notStr = sNo + ". Seans Randevusu Olarak Otomatik Oluşturuldu.";
+
+                        let randevuQuery = `kaydetrandevu&tarih=${encodeURIComponent(rTar)}&saat=${encodeURIComponent(timeStr)}&uzman=${encodeURIComponent(uzmStr)}&danisan=${encodeURIComponent(danStr)}&kategori=${encodeURIComponent(catStr)}&sure=${encodeURIComponent(durationStr)}&notlar=${encodeURIComponent(notStr)}&_=${Date.now()}`;
+                        
+                        jsonpFetch(randevuQuery, "cb_otomatikrandevu").then(() => {
+                            showToast("Sonraki seans başarıyla Randevu Takvimi'ne eklendi! 📅");
+                        });
+                    }
+                });
+            });
+        }
+
+        function araOdemeAl(pkgId, toplam, eskiOdenen) {
+            const input = document.getElementById(`araOdemeInput-${pkgId}`);
+            const miktar = parseFloat(input.value || 0);
+            if(miktar <= 0) return alert("Lütfen geçerli bir ara ödeme tutarı giriniz.");
+            
+            let yeniOdenen = eskiOdenen + miktar;
+            if(yeniOdenen > toplam) return alert("Girilen miktar toplam paket tutarını aşamaz!");
+
+            jsonpFetch(`updatearsiv&id=${pkgId}&ciro=${yeniOdenen}`, "cb_araodeme").then(() => {
+                showToast(`₺${miktar} tutarında ara ödeme kayda geçildi.`);
+                input.value = "";
+                paketListesiniGuncelle();
+                arsivDokumuYap();
+            });
+        }
+
+        function biletYazdirmaPenceresiAc(id) {
+            let kayit = null;
+            if(typeof aktifArsivListesi !== 'undefined' && aktifArsivListesi.length > 0) {
+                kayit = aktifArsivListesi.find(x => x.id === id);
+            }
+            if(!kayit && typeof genelArsivTumu !== 'undefined' && genelArsivTumu.length > 0) {
+                kayit = genelArsivTumu.find(x => safeGet(Object.values(x)[0], safeGet(x.id, x["id"])) === id);
+            }
+
+            if(!kayit) {
+                showToast("Kayıt bulunamadı! Lütfen tabloyu yenileyin.");
+                return;
+            }
+
+            let tTutarText = String(kayit.toplamTutar || "0").replace(/[^0-9.,]/g, '');
+            let oMiktarText = String(kayit.odenenMiktar || "0").replace(/[^0-9.,]/g, '');
+
+            let tTutar = parseFloat(tTutarText) || 0;
+            let oMiktar = parseFloat(oMiktarText) || 0;
+            let kBorc = tTutar - oMiktar;
+            let bugun = new Date().toLocaleDateString('tr-TR') + " " + new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+
+            let kayitTar = safeGet(kayit.paketTarihi, safeGet(kayit.kayitTarihi, kayit.randevuTarihi));
+
+            let biletHtml = `
+                <div class="bilet-header">
+                    <div class="bilet-title">BAHAR BEAUTY STUDIO</div>
+                    <div class="bilet-subtitle">GUZELLIK & BAKIM MERKEZI</div>
+                    <div style="font-size:0.7rem; margin-top:5px; color:#555;">Fiş Tarihi: ${bugun}</div>
+                </div>
+                <div class="bilet-row">
+                    <span>İşlem / Sözleşme No:</span>
+                    <strong>${id}</strong>
+                </div>
+                <div class="bilet-row">
+                    <span>Tarih:</span>
+                    <span>${kayitTar}</span>
+                </div>
+                <div class="bilet-row">
+                    <span>Danışan:</span>
+                    <strong>${kayit.danisan || '-'}</strong>
+                </div>
+                <div class="bilet-row">
+                    <span>Uzman:</span>
+                    <span>${kayit.uzman || '-'}</span>
+                </div>
+                <div class="bilet-divider"></div>
+                <div class="bilet-row" style="font-weight: bold;">
+                    <span>Açıklama / Hizmet Tercihi</span>
+                </div>
+                <div class="bilet-row" style="font-size:0.8rem; margin-top:3px; padding-left:5px;">
+                    <span>${kayit.hizmetTercihi || '-'} (${kayit.seansSayisi || 1} Seans)</span>
+                </div>
+                <div class="bilet-divider"></div>
+                <div class="bilet-row">
+                    <span>Toplam Tutar:</span>
+                    <span>₺${tTutar.toFixed(2)}</span>
+                </div>
+                <div class="bilet-row" style="color: #059669;">
+                    <span>Alınan Ödeme:</span>
+                    <span>₺${oMiktar.toFixed(2)}</span>
+                </div>
+                <div class="bilet-divider"></div>
+                <div class="bilet-total">
+                    <span>KALAN BORÇ:</span>
+                    <span style="${kBorc > 0 ? 'color:#dc2626;':''} font-size:1.15rem;">₺${kBorc.toFixed(2)}</span>
+                </div>
+                <div class="bilet-footer">
+                    Güzelliğinizi Önemseyen Dokunuşlar.<br>Bizi Tercih Ettiğiniz İçin Teşekkür Ederiz!
+                </div>
+            `;
+
+            document.getElementById("biletIcerik").innerHTML = biletHtml;
+            document.getElementById("biletModal").style.display = "flex";
+        }
+
+        function biletKapat() {
+            document.getElementById("biletModal").style.display = "none";
+        }
+
+        function arsivDokumuYap() {
+            const tBody = document.getElementById('arsivTabloGövde');
+            if(!aktifDanisan) return;
+            
+            let dAd = safeGet(aktifDanisan.danisanAdiSoyadi, safeGet(aktifDanisan["Danışan Adı Soyadı"], aktifDanisan.danisanadisoyadi, ""));
+
+            const bTar = document.getElementById('archiveBaslangic').value;
+            const sTar = document.getElementById('archiveBitis').value;
+
+            Promise.all([
+                jsonpFetch("getpaketler", "cb_arsivdokum_paket"),
+                jsonpFetch("getrandevular", "cb_arsivdokum_randevu")
+            ]).then(([resPaket, resRandevu]) => {
+                let tumPaketler = getSafeArray(resPaket);
+                let tumRandevular = getSafeArray(resRandevu);
+
+                let dPaketleri = tumPaketler.filter(p => {
+                    const vals = Object.values(p);
+                    const pDanisan = safeGet(vals[2], safeGet(p.danisan, p["Danışan"], ""));
+                    return String(pDanisan).trim() === String(dAd).trim();
+                }).map(p => {
+                    const vals = Object.values(p);
+                    return {
+                        id: safeGet(vals[0], safeGet(p.id, p["Paket ID"])), 
+                        kayitTarihi: safeGet(vals[11], safeGet(p.paketTarihi, p.kayitTarihi)), 
+                        uzman: safeGet(vals[1], safeGet(p.uzman, p["Uzman"])), 
+                        danisan: safeGet(vals[2], safeGet(p.danisan, p["Danışan"])), 
+                        hizmetTercihi: safeGet(vals[3], safeGet(p.hizmetTercihi, p["Hizmet Tercihi"])), 
+                        sure: safeGet(vals[4], safeGet(p.sure, p["Süre"])), 
+                        seansSayisi: safeGet(vals[5], safeGet(p.seansSayisi, p["Toplam Seans"], "1")), 
+                        toplamTutar: safeGet(vals[6], safeGet(p.toplamTutar, p["Toplam Tutar"], "0")), 
+                        odenenMiktar: safeGet(vals[7], safeGet(p.odenenMiktar, p["Ödenen Miktar"], "0")), 
+                        seansDurumu: safeGet(vals[9], safeGet(p.seansDurumu, p["Seans Durumu & Tarih"])), 
+                        kalanSeans: safeGet(vals[10], safeGet(p.kalanSeans, p["Kalan S."], "0")), 
+                        paketTarihi: safeGet(vals[11], safeGet(p.paketTarihi, p["Paket Tarihi"])), 
+                        randevuTarihi: safeGet(vals[12], safeGet(p.randevuTarihi, p["Randevu Tarihi"])), 
+                        randevuSaati: safeGet(vals[13], safeGet(p.randevuSaati, p["Randevu Saati"])), 
+                        _kaynak: 'paket'
+                    };
+                });
+
+                let dRandevular = tumRandevular.filter(r => {
+                    const vals = Object.values(r);
+                    const rDanisan = safeGet(vals[4], safeGet(r.danisan, r["Danışan"], ""));
+                    return String(rDanisan).trim() === String(dAd).trim();
+                }).map(r => {
+                    const vals = Object.values(r);
+                    return {
+                        id: safeGet(vals[0], safeGet(r.id, r["Paket ID"])), 
+                        kayitTarihi: safeGet(vals[1], safeGet(r.tarih, r.kayitTarihi)), 
+                        uzman: safeGet(vals[3], safeGet(r.uzman, r["Uzman"])), 
+                        danisan: safeGet(vals[4], safeGet(r.danisan, r["Danışan"])), 
+                        hizmetTercihi: safeGet(vals[5], safeGet(r.hizmetTercihi, r["Hizmet Tercihi"])), 
+                        sure: safeGet(vals[6], safeGet(r.sure, r["Süre"])), 
+                        seansSayisi: "-",
+                        toplamTutar: "-",
+                        odenenMiktar: "-",
+                        seansDurumu: "Takvim Randevusu",
+                        kalanSeans: "-",
+                        paketTarihi: "-",
+                        randevuTarihi: safeGet(vals[1], safeGet(r.tarih, r.kayitTarihi)), 
+                        randevuSaati: safeGet(vals[2], safeGet(r.saat, r.randevuSaati)),
+                        _kaynak: 'randevu'
+                    };
+                });
+
+                let filtrelenmis = [...dPaketleri, ...dRandevular];
+
+                if(bTar) filtrelenmis = filtrelenmis.filter(p => (p.paketTarihi !== "-" ? p.paketTarihi : p.kayitTarihi) >= bTar);
+                if(sTar) filtrelenmis = filtrelenmis.filter(p => (p.paketTarihi !== "-" ? p.paketTarihi : p.kayitTarihi) <= sTar);
+
+                aktifArsivListesi = filtrelenmis; 
+                tBody.innerHTML = "";
+
+                if(filtrelenmis.length === 0) {
+                    tBody.innerHTML = `<tr><td colspan="15" class="text-center text-slate-400 py-4">Filtre kriterlerine uygun arşiv kaydı bulunamadı.</td></tr>`;
+                    return;
+                }
+
+                filtrelenmis.forEach(row => {
+                    const tr = document.createElement('tr');
+                    const rId = row.id;
+                    
+                    let seansHücreIcerigi = row.seansDurumu;
+                    if(seansHücreIcerigi.includes("{")) {
+                        try {
+                            let parsed = JSON.parse(seansHücreIcerigi);
+                            let özetler = [];
+                            for(let k in parsed) { özetler.push(`S${k}: ${parsed[k].durum.toUpperCase()}`); }
+                            seansHücreIcerigi = özetler.join(", ");
+                        } catch(e){}
+                    }
+
+                    let tutarText = row.toplamTutar === "-" ? "-" : "₺" + row.toplamTutar;
+                    let odenenText = row.odenenMiktar === "-" ? "-" : "₺" + row.odenenMiktar;
+                    let sureText = row.sure === "-" ? "-" : row.sure + " dk";
+
+                    let biletButonu = `<button onclick="biletYazdirmaPenceresiAc('${rId}')" class="bg-purple-50 hover:bg-purple-100 text-purple-600 text-[0.7rem] font-bold px-2 py-1 rounded transition-all mr-1" title="Termal Bilet Çıktısı"><i class="fas fa-ticket-alt"></i> Bilet</button>`;
+                    let duzenleButonu = `<button onclick="paketiSabonaYukle('${rId}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[0.7rem] font-bold px-2 py-1 rounded mr-1" title="Şablona Al (Düzenle)"><i class="fas fa-edit"></i> Düzenle</button>`;
+                    let silButonu = `<button onclick="arsivSatirSil('${rId}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-[0.7rem] font-bold px-2 py-1 rounded"><i class="fas fa-trash-alt"></i> Sil</button>`;
+                    
+                    let aksiyonButonlari = biletButonu + duzenleButonu + silButonu;
+
+                    tr.innerHTML = `
+                        <td class="font-extrabold text-slate-700">${rId}</td>
+                        <td>${row.kayitTarihi}</td>
+                        <td class="font-medium text-slate-600">${row.uzman}</td>
+                        <td class="font-bold text-slate-800">${row.danisan}</td>
+                        <td class="font-semibold text-teal-700">${row.hizmetTercihi}</td>
+                        <td>${sureText}</td>
+                        <td class="font-bold text-center">${row.seansSayisi}</td>
+                        <td class="font-bold text-slate-700">${tutarText}</td>
+                        <td class="font-bold text-emerald-600">${odenenText}</td>
+                        <td class="text-xs max-w-[150px] truncate" title="${seansHücreIcerigi}">${seansHücreIcerigi}</td>
+                        <td class="font-bold text-center text-rose-600">${row.kalanSeans}</td>
+                        <td>${row.paketTarihi}</td>
+                        <td>${row.randevuTarihi}</td>
+                        <td>${row.randevuSaati}</td>
+                        <td>
+                            <div class="flex gap-2 justify-end">
+                                ${aksiyonButonlari}
+                            </div>
+                        </td>
+                    `;
+                    tBody.appendChild(tr);
+                });
+            }).catch(err => {
+                console.error("Arşiv Döküm Veri Çekme Hatası:", err);
+                tBody.innerHTML = `<tr><td colspan="15" class="text-center text-rose-500 font-bold py-4">Veriler yüklenirken bir bağlantı hatası oluştu. Lütfen tekrar deneyin.</td></tr>`;
+            });
+        }
+
+        function arsivSatirSil(id) {
+            if(!confirm("Bu arşiv log kaydını kalıcı olarak silmek istediğinize emin misiniz?")) return;
+            jsonpFetch(`silhizmetpaket&id=${id}`, "cb_arsivsil").then(() => {
+                showToast("Arşiv kaydı başarıyla silindi.");
+                paketListesiniGuncelle();
+                arsivDokumuYap();
+            });
+        }
+    </script>
+</body>
+</html>

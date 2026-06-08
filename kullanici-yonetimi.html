@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bahar Beauty Studio - Personel Yetki Yönetimi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #f0f4f8; padding: 30px 20px; font-family: 'Playfair Display', serif; min-height: 100vh; }
+        .wrapper { max-width: 1240px; margin: 0 auto; width: 100%; }
+        
+        .global-page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background-color: white; padding: 15px 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 6px solid #00a8b5; width: 100%; }
+        .global-header-title-area { display: flex; flex-direction: column; }
+        .global-header-brand { font-family: 'Great Vibes', cursive; font-size: 2.4rem; color: #00a8b5; line-height: 1.1; margin-bottom: 2px; }
+        .global-header-sub { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; }
+        .global-btn-back { font-family: 'Segoe UI', sans-serif; background-color: #e0f7fa; color: #00a8b5; border: 1px solid #b2ebf2; padding: 10px 20px; border-radius: 10px; font-weight: 600; text-decoration: none; transition: all 0.25s; font-size: 0.9rem; }
+        .global-btn-back:hover { background-color: #00a8b5; color: white; transform: translateX(-3px); box-shadow: 0 4px 10px rgba(0, 168, 181, 0.15); }
+
+        .main-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; }
+        @media (max-width: 950px) { .main-grid { grid-template-columns: 1fr; } }
+
+        .studio-card { background: white; border-radius: 22px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.04); border-top: 4px solid #e2e8f0; }
+        .studio-card.accent { border-top-color: #00a8b5; }
+        .card-title { font-size: 1.4rem; color: #1e293b; margin-bottom: 25px; font-weight: 700; border-bottom: 2px dashed #f1f5f9; padding-bottom: 12px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { font-family: 'Segoe UI', sans-serif; display: block; margin-bottom: 8px; color: #475569; font-weight: 600; font-size: 0.9rem; }
+        .form-group input, .form-group select { font-family: 'Segoe UI', sans-serif; width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; background-color: #f8fafc; border-radius: 10px; font-size: 0.95rem; color: #334155; outline: none; transition: all 0.25s; }
+        .form-group input:focus, .form-group select:focus { border-color: #00a8b5; background-color: white; box-shadow: 0 0 0 3px rgba(0, 168, 181, 0.1); }
+        
+        .btn-save { font-family: 'Segoe UI', sans-serif; width: 100%; padding: 14px; background: linear-gradient(135deg, #00a8b5, #00c2c4); color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.25s; box-shadow: 0 4px 12px rgba(0, 168, 181, 0.2); margin-top: 10px; }
+        .btn-save:hover { background: linear-gradient(135deg, #008c96, #00a8b5); transform: translateY(-2px); }
+        .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; margin-top: -8px; }
+        th { font-family: 'Segoe UI', sans-serif; padding: 14px; color: #64748b; font-weight: 700; font-size: 0.88rem; text-transform: uppercase; text-align: left; }
+        td { padding: 16px 14px; background-color: #f8fafc; font-size: 0.95rem; color: #334155; transition: all 0.2s; font-family: 'Segoe UI', sans-serif; }
+        
+        td:first-child, th:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+        td:last-child, th:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+        
+        .emp-name { font-weight: 700; color: #0f172a; }
+        .emp-meta { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
+        .badge { font-family: 'Segoe UI', sans-serif; padding: 5px 12px; border-radius: 20px; font-size: 0.76rem; font-weight: 700; text-transform: uppercase; display: inline-block; }
+        .badge-admin { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .badge-mudur { background-color: #e0f7fa; color: #006064; border: 1px solid #b2ebf2; }
+        .badge-uzman { background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+        .action-area { display: flex; gap: 8px; }
+        .btn-action { font-family: 'Segoe UI', sans-serif; padding: 6px 12px; border: none; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-edit { background-color: #fef08a; color: #713f12; }
+        .btn-delete { background-color: #fee2e2; color: #991b1b; }
+        .status-loading { text-align: center; color: #00a8b5; font-weight: bold; padding: 30px; font-family: 'Segoe UI', sans-serif; }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <div class="global-page-header">
+            <div class="global-header-title-area">
+                <span class="global-header-brand">Bahar Beauty Studio</span>
+                <span class="global-header-sub">| Sistem Yetkilendirme Paneli</span>
+            </div>
+            <a href="dashboard.html" class="global-btn-back">🏠 Ana Yönetim Paneli</a>
+        </div>
+
+        <div class="main-grid">
+            <div class="studio-card accent">
+                <div class="card-title" id="formTitle">👤 Personel Kartı Oluştur</div>
+                <input type="hidden" id="editUserId">
+                
+                <div class="form-group">
+                    <label>Adı Soyadı</label>
+                    <input type="text" id="pName" placeholder="Örn: Bahar Sönmez" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Sistem Kullanıcı Adı / E-Posta</label>
+                    <input type="text" id="pEmail" placeholder="ornek veya email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Sistem Giriş Şifresi</label>
+                    <input type="text" id="pPassword" placeholder="Şifre belirleyiniz" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Stüdyo Görevi / Rol Yetkisi</label>
+                    <select id="pRole">
+                        <option value="Admin">Admin</option>
+                        <option value="Müdür">Müdür</option>
+                        <option value="Uzman">Uzman</option>
+                        <option value="Kabin">Kabin</option>
+                    </select>
+                </div>
+                
+                <button class="btn-save" id="btnSave" onclick="kaydetPersonel()">Personel Bilgilerini Kaydet</button>
+            </div>
+
+            <div class="studio-card">
+                <div class="card-title">👥 Kayıtlı Aktif Personel Listesi</div>
+                <div class="table-responsive">
+                    <table id="personelAnaTablo" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Personel Detayları</th>
+                                <th>Giriş Şifresi</th>
+                                <th>Yetki Grubu</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="personelTableBody"></tbody>
+                    </table>
+                    <div id="loadingMessage" class="status-loading">🔄 Google Bulut Veritabanına bağlanılıyor...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx6fWf_rPacPSY0VdKaq5DAMuT6EQTFu5CA7GK9qRwQTNep3eMMwA0jZcIT9OQz76EH8g/exec";
+        let yerelKullanicilarHafizasi = [];
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // --- 1. VIP GÜVENLİK KONTROLÜ ---
+            let aktifKullanici = JSON.parse(localStorage.getItem('aktifKullanici'));
+            
+            // Eğer hiç giriş yapılmamışsa ana kapıya (index.html) gönder
+            if (!aktifKullanici) {
+                window.location.href = "index.html";
+                return;
+            }
+
+            // 2. Rol kontrolü: Sadece Admin ve Müdür girebilir
+            let rol = String(aktifKullanici.rol).toLowerCase().trim();
+            if (!rol.includes("admin") && !rol.includes("müdür")) {
+                alert("Yetkisiz Erişim: Bu sayfayı görüntüleme yetkiniz bulunmamaktadır!");
+                window.location.href = "dashboard.html"; // Standart yetkili odaya geri postala
+                return; // Burası çok önemli: Yetki yoksa alttaki verileri çekme kodunu durdurur
+            }
+
+            // --- Güvenlikten geçildi, normal işlemlere (verileri çekmeye) devam ---
+            canliPersonelListesiniCek();
+        });
+
+        // 🎯 1. CANLI VERİ ÇEKME MODÜLÜ (JSONP Enjeksiyonu ile CORS Engeli Aşılmıştır)
+        function canliPersonelListesiniCek() {
+            const tbody = document.getElementById('personelTableBody');
+            const table = document.getElementById('personelAnaTablo');
+            const loader = document.getElementById('loadingMessage');
+            
+            loader.style.display = "block";
+            table.style.display = "none";
+            tbody.innerHTML = "";
+
+            const cbName = "getKullanicilar_cb_" + Math.floor(Math.random() * 1000000);
+            
+            window[cbName] = function(kullanicilar) {
+                yerelKullanicilarHafizasi = kullanicilar;
+
+                if (!kullanicilar || kullanicilar.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888; padding:30px;">Henüz e-tabloda personel kaydı bulunmuyor.</td></tr>`;
+                } else {
+                    kullanicilar.forEach((kullanici, index) => {
+                        let badgeClass = "badge-uzman";
+                        if(kullanici.rol === "Admin") badgeClass = "badge-admin";
+                        if(kullanici.rol === "Müdür") badgeClass = "badge-mudur";
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>
+                                <div class="emp-name">${kullanici.adSoyad || ''}</div>
+                                <div class="emp-meta">ID: <strong>${kullanici.id || ''}</strong> | ${kullanici.eposta || ''}</div>
+                            </td>
+                            <td><code>${kullanici.sifre || ''}</code></td>
+                            <td><span class="badge ${badgeClass}">${kullanici.rol || 'Uzman'}</span></td>
+                            <td>
+                                <div class="action-area">
+                                    <button class="btn-action btn-edit" onclick="duzenleModunaAl(${index})">✏️</button>
+                                    <button class="btn-action btn-delete" onclick="silPersonelTetikle('${kullanici.id}')">❌</button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+                
+                loader.style.display = "none";
+                table.style.display = "table";
+
+                const scriptNode = document.getElementById(cbName);
+                if (scriptNode) scriptNode.remove();
+            };
+
+            let scriptEkle = document.createElement('script');
+            scriptEkle.id = cbName;
+            scriptEkle.src = `${SHEET_WEB_APP_URL}?action=getkullanicilar&callback=${cbName}&_buster=${new Date().getTime()}`;
+            document.body.appendChild(scriptEkle);
+        }
+
+        // 📝 2. DÜZENLEME MODU
+        function duzenleModunaAl(index) {
+            const kullanici = yerelKullanicilarHafizasi[index];
+            if(kullanici) {
+                document.getElementById('editUserId').value = kullanici.id;
+                document.getElementById('pName').value = kullanici.adSoyad;
+                document.getElementById('pEmail').value = kullanici.eposta;
+                document.getElementById('pPassword').value = kullanici.sifre;
+                document.getElementById('pRole').value = kullanici.rol;
+                
+                document.getElementById('formTitle').textContent = "📝 Düzenle: " + kullanici.adSoyad;
+                document.getElementById('btnSave').textContent = "💾 Değişiklikleri E-Tabloya Kaydet";
+            }
+        }
+
+        // 💾 3. GÜVENLİ KAYIT VE GÜNCELLEME MODÜLÜ (JSONP altyapısı)
+        function kaydetPersonel() {
+            const id = document.getElementById('editUserId').value;
+            const name = document.getElementById('pName').value.trim();
+            const email = document.getElementById('pEmail').value.trim();
+            const password = document.getElementById('pPassword').value.trim();
+            const role = document.getElementById('pRole').value;
+            const btn = document.getElementById('btnSave');
+
+            if(!name || !email || !password) { 
+                alert("Lütfen tüm alanları doldurun!"); 
+                return; 
+            }
+
+            btn.disabled = true;
+            btn.textContent = "⌛ Buluta İşleniyor...";
+
+            const cbName = "kaydetKullanici_cb_" + Math.floor(Math.random() * 1000000);
+            
+            window[cbName] = function(sonuc) {
+                btn.disabled = false;
+                btn.textContent = "Personel Bilgilerini Kaydet";
+
+                if(sonuc && sonuc.status === "success") {
+                    alert("🎉 Başarılı! E-Tablo veritabanınız canlı olarak güncellendi.");
+                    formuSifirla();
+                    canliPersonelListesiniCek();
+                } else {
+                    alert("❌ Hata: " + (sonuc ? sonuc.message : "Bilinmeyen sunucu hatası"));
+                }
+
+                const scriptNode = document.getElementById(cbName);
+                if (scriptNode) scriptNode.remove();
+            };
+
+            const parametreler = new URLSearchParams({
+                action: "kaydetkullanici",
+                callback: cbName,
+                id: id,
+                adSoyad: name,
+                eposta: email,
+                sifre: password,
+                rol: role
+            });
+
+            let scriptEkle = document.createElement('script');
+            scriptEkle.id = cbName;
+            scriptEkle.src = `${SHEET_WEB_APP_URL}?${parametreler.toString()}`;
+            document.body.appendChild(scriptEkle);
+        }
+
+        // ❌ 4. GÜVENLİ SİLME MODÜLÜ (JSONP altyapısı)
+        function silPersonelTetikle(personelId) {
+            if(personelId === "P-100") {
+                alert("❌ Sistem ana kurucu hesabı (Süper Admin) güvenlik nedeniyle silinemez!");
+                return;
+            }
+
+            if(!confirm(`ID: ${personelId} olan personeli silmek istediğinize emin misiniz?`)) return;
+
+            const cbName = "silKullanici_cb_" + Math.floor(Math.random() * 1000000);
+            
+            window[cbName] = function(sonuc) {
+                if(sonuc && sonuc.status === "success") {
+                    alert("🗑️ Personel e-tablodan tamamen temizlendi.");
+                    formuSifirla();
+                    canliPersonelListesiniCek();
+                } else {
+                    alert("❌ Hata: " + (sonuc ? sonuc.message : "Silme işlemi başarısız."));
+                }
+
+                const scriptNode = document.getElementById(cbName);
+                if (scriptNode) scriptNode.remove();
+            };
+
+            let scriptEkle = document.createElement('script');
+            scriptEkle.id = cbName;
+            scriptEkle.src = `${SHEET_WEB_APP_URL}?action=silkullanici&id=${personelId}&callback=${cbName}`;
+            document.body.appendChild(scriptEkle);
+        }
+
+        function formuSifirla() {
+            document.getElementById('editUserId').value = "";
+            document.getElementById('pName').value = "";
+            document.getElementById('pEmail').value = "";
+            document.getElementById('pPassword').value = "";
+            document.getElementById('formTitle').textContent = "👤 Personel Kartı Oluştur";
+            document.getElementById('btnSave').textContent = "Personel Bilgilerini Kaydet";
+        }
+    </script>
+</body>
+</html>

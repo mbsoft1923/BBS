@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bahar Beauty Studio - Ürün Çeşit Girişi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;700&family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #f0f4f8; padding: 30px 20px; font-family: 'Playfair Display', serif; min-height: 100vh; }
+        .wrapper { max-width: 1350px; margin: 0 auto; width: 100%; }
+        
+        .global-page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background-color: white; padding: 15px 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 6px solid #00a8b5; }
+        .global-header-title-area { display: flex; flex-direction: column; }
+        .global-header-brand { font-family: 'Great Vibes', cursive; font-size: 2.4rem; color: #00a8b5; line-height: 1.1; margin-bottom: 2px; }
+        .global-header-sub { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; }
+        .global-btn-back { font-family: 'Segoe UI', sans-serif; background-color: #e0f7fa; color: #00a8b5; border: 1px solid #b2ebf2; padding: 10px 20px; border-radius: 10px; font-weight: 600; text-decoration: none; transition: all 0.25s; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+        .global-btn-back:hover { background-color: #00a8b5; color: white; transform: translateX(-3px); box-shadow: 0 4px 10px rgba(0, 168, 181, 0.15); }
+
+        .dashboard-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; align-items: start; }
+        @media(max-width: 1024px) { .dashboard-layout { grid-template-columns: 1fr; } }
+
+        .studio-card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border-top: 4px solid #cbd5e1; }
+        .studio-card.accent { border-top-color: #00a8b5; }
+        .card-title { font-size: 1.35rem; color: #1e293b; margin-bottom: 25px; font-weight: 700; border-bottom: 2px dashed #f1f5f9; padding-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+        .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; position: relative; }
+        .form-group label { font-family: 'Segoe UI', sans-serif; font-size: 0.88rem; color: #475569; font-weight: 600; }
+        .form-group input, .form-group select { font-family: 'Segoe UI', sans-serif; padding: 11px 15px; border: 1px solid #e2e8f0; background-color: #f8fafc; border-radius: 10px; font-size: 0.95rem; color: #334155; outline: none; transition: all 0.25s; }
+        .form-group input:focus, .form-group select:focus { border-color: #00a8b5; background-color: white; box-shadow: 0 0 0 3px rgba(0, 168, 181, 0.08); }
+        .form-group input[readonly] { background-color: #e2e8f0; color: #64748b; cursor: not-allowed; font-weight: bold; }
+        
+        .category-select-wrapper { display: flex; gap: 8px; }
+        .category-select-wrapper select { flex: 1; }
+        .btn-add-category { background-color: #10b981; color: white; border: none; width: 44px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: all 0.2s; }
+        .btn-add-category:hover { background-color: #059669; transform: scale(1.03); }
+        
+        .inline-add-box { background-color: #f8fafc; border: 1px dashed #10b981; padding: 15px; border-radius: 10px; margin-top: -8px; display: none; flex-direction: column; gap: 10px; }
+        .inline-add-box input { padding: 8px 12px; font-size: 0.9rem; }
+        .inline-add-actions { display: flex; justify-content: flex-end; gap: 8px; }
+        .btn-inline-save { font-family: 'Segoe UI', sans-serif; padding: 6px 14px; background-color: #10b981; color: white; border: none; border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+        .btn-inline-cancel { font-family: 'Segoe UI', sans-serif; padding: 6px 14px; background-color: #64748b; color: white; border: none; border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+        
+        .category-list-manager { border-top: 1px solid #e2e8f0; margin-top: 10px; padding-top: 10px; max-height: 150px; overflow-y: auto; }
+        .category-list-title { font-family: 'Segoe UI', sans-serif; font-size: 0.8rem; color: #64748b; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
+        .category-item-row { display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 5px; font-family: 'Segoe UI', sans-serif; font-size: 0.85rem; }
+        .category-item-actions { display: flex; gap: 5px; }
+        .btn-cat-mini { border: none; background: transparent; cursor: pointer; font-size: 0.85rem; padding: 2px 5px; border-radius: 4px; transition: all 0.2s; }
+        .btn-cat-mini.edit { color: #b45309; }
+        .btn-cat-mini.edit:hover { background-color: #fef3c7; }
+        .btn-cat-mini.delete { color: #b91c1c; }
+        .btn-cat-mini.delete:hover { background-color: #fee2e2; }
+
+        .btn-submit { font-family: 'Segoe UI', sans-serif; width: 100%; padding: 13px; background: linear-gradient(135deg, #00a8b5, #00c2c4); color: white; border: none; border-radius: 10px; font-size: 0.98rem; font-weight: 700; cursor: pointer; transition: all 0.25s; box-shadow: 0 4px 12px rgba(0, 168, 181, 0.2); display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
+        .btn-submit:hover { background: linear-gradient(135deg, #008c96, #00a8b5); transform: translateY(-2px); }
+        .btn-submit:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
+        .btn-cancel { font-family: 'Segoe UI', sans-serif; display: none; width: 100%; padding: 10px; background-color: #f1f5f9; color: #64748b; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; margin-top: 8px; transition: all 0.2s; }
+        .btn-cancel:hover { background-color: #e2e8f0; color: #334155; }
+
+        .search-bar-container { margin-bottom: 20px; position: relative; }
+        .search-bar-container i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 1rem; }
+        .search-input { font-family: 'Segoe UI', sans-serif; width: 100%; padding: 12px 15px 12px 42px; border: 1px solid #e2e8f0; background-color: #f8fafc; border-radius: 12px; font-size: 0.95rem; outline: none; transition: all 0.25s; }
+        .search-input:focus { border-color: #00a8b5; background-color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+
+        .table-wrapper { width: 100%; max-height: 550px; overflow-y: auto; overflow-x: auto; padding-right: 5px; }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; margin-top: -8px; }
+        th { font-family: 'Segoe UI', sans-serif; padding: 14px; color: #64748b; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; text-align: left; position: sticky; top: 0; background-color: white; z-index: 10; }
+        td { padding: 14px; background-color: #f8fafc; font-size: 0.92rem; color: #334155; transition: all 0.2s; font-family: 'Segoe UI', sans-serif; vertical-align: middle; }
+        td:first-child, th:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; padding-left: 18px; }
+        td:last-child, th:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; padding-right: 18px; }
+        tr:hover td { background-color: #f1f5f9; }
+        
+        .p-title { font-weight: 700; color: #0f172a; font-size: 0.95rem; }
+        .p-subtitle { font-size: 0.82rem; color: #64748b; margin-top: 2px; }
+        .cat-badge { font-family: 'Segoe UI', sans-serif; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; background-color: #e0f2f1; color: #004d40; display: inline-block; }
+        .hacim-text { font-weight: 600; color: #334155; }
+        .p-subtitle strong { color: #00a8b5; font-weight: 700; }
+        .maliyet-text { font-weight: 700; color: #0f172a; font-family: 'Segoe UI', monospace; }
+        
+        .action-btns { display: flex; gap: 8px; }
+        .btn-table-action { border: none; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
+        .btn-table-edit { background-color: #fef08a; color: #713f12; }
+        .btn-table-edit:hover { background-color: #fde047; transform: scale(1.05); }
+        .btn-table-delete { background-color: #fee2e2; color: #991b1b; }
+        .btn-table-delete:hover { background-color: #fca5a5; transform: scale(1.05); }
+        
+        .status-msg { text-align: center; color: #00a8b5; font-weight: 600; padding: 30px; font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; }
+
+        .table-wrapper::-webkit-scrollbar { width: 6px; }
+        .table-wrapper::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        .table-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .table-wrapper::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <div class="global-page-header">
+            <div class="global-header-title-area">
+                <span class="global-header-brand">Bahar Beauty Studio</span>
+                <span class="global-header-sub">| Sarf Malzeme & Ürün Depo Kayıtları</span>
+            </div>
+            <a href="dashboard.html" class="global-btn-back"><i class="fa-solid fa-house"></i> Ana Yönetim Paneli</a>
+        </div>
+
+        <div class="dashboard-layout">
+            <div class="studio-card accent">
+                <div class="card-title" id="formTitle"><i class="fa-solid fa-box-open"></i> Ürün Çeşidi Tanımla</div>
+                <form id="urunGirisFormu" onsubmit="event.preventDefault(); urunKaydetTetikle();">
+                    <input type="hidden" id="editUrunId">
+                    <div class="form-grid">
+                        
+                        <div class="form-group">
+                            <label>Ürün / Malzeme Adı</label>
+                            <input type="text" id="urunAdi" placeholder="Örn: Aquapeel Solüsyonu" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Ürün Kategorisi</label>
+                            <div class="category-select-wrapper">
+                                <select id="urunKategori" required>
+                                    <option value="">Kategoriler yükleniyor...</option>
+                                </select>
+                                <button type="button" class="btn-add-category" onclick="kategoriEkleKutusunuAc()" title="Kategorileri Yönet / Yeni Ekle">+</button>
+                            </div>
+                        </div>
+
+                        <div class="inline-add-box" id="newCategoryBox">
+                            <input type="hidden" id="editKategoriEskiAdi">
+                            <label id="katKutuBaslik" style="font-family:'Segoe UI',sans-serif; font-size:0.82rem; color:#10b981; font-weight:600;">Yeni Kategori Ekle</label>
+                            <input type="text" id="newCategoryName" placeholder="Kategori adı yazın...">
+                            <div class="inline-add-actions">
+                                <button type="button" class="btn-inline-cancel" onclick="kategoriEkleKutusunuKapat()">Kapat</button>
+                                <button type="button" class="btn-inline-save" id="btnKatKaydet" onclick="bulutaKategoriGonder()">Ekle</button>
+                            </div>
+                            <div class="category-list-manager">
+                                <div class="category-list-title">Mevcut Kategorileri Düzenle / Sil</div>
+                                <div id="miniCategoryListArea"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-row-2">
+                            <div class="form-group">
+                                <label>Giren Kutu / Ürün Adedi</label>
+                                <input type="number" id="kutuAdedi" placeholder="Adet" min="1" value="1" oninput="otomatikHesaplayici()" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Kutu İçi Birim Hacmi</label>
+                                <input type="number" id="birimHacim" placeholder="Miktar" min="0" step="any" oninput="otomatikHesaplayici()" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row-2">
+                            <div class="form-group">
+                                <label>Hesaplanan Toplam Ölçü</label>
+                                <input type="number" id="toplamdakihacim" placeholder="Otomatik Çarpılır" readonly required>
+                            </div>
+                            <div class="form-group">
+                                <label>Ölçü Birimi</label>
+                                <select id="birim" required>
+                                    <option value="ml">Mililitre (ml)</option>
+                                    <option value="gr">Gram (gr)</option>
+                                    <option value="mgr">Miligram (mgr)</option>
+                                    <option value="adet">Adet (Seanslık)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Birim Alış / Ürün Fiyatı (TL)</label>
+                            <input type="number" id="birimMaliyet" placeholder="1 Ürün / Kutu Fiyatını Girin" step="any" oninput="otomatikHesaplayici()" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Hesaplanan Toplam Maliyet (TL)</label>
+                            <input type="number" id="toplamdakimaliyet" placeholder="Otomatik Çarpılır" readonly required>
+                        </div>
+
+                        <button type="submit" class="btn-submit" id="btnSubmit">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Veriyi Depo Hafızasına İşle...
+                        </button>
+                        <button type="button" class="btn-cancel" id="btnCancel" onclick="urunFormTemizle()">Değişiklikleri İptal Et</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="studio-card">
+                <div class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Depodaki Güncel Ürün Kartları</div>
+                
+                <div class="search-bar-container">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" class="search-input" id="searchBox" onkeyup="urunTabloFiltrele()" placeholder="Ürün adı veya kategorilerde ara...">
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="urunAnaTablo" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Ürün Bilgileri</th>
+                                <th>Kategori</th>
+                                <th>Mevcut / Toplam Hacim</th>
+                                <th>Maliyet</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="urunTableBody"></tbody>
+                    </table>
+                    <div id="loadingMessage" class="status-msg">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i> Bulut sunucusundan depo verileri senkronize ediliyor...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx6fWf_rPacPSY0VdKaq5DAMuT6EQTFu5CA7GK9qRwQTNep3eMMwA0jZcIT9OQz76EH8g/exec";
+        let localUrunHavuzu = [];
+        let localKategoriHavuzu = {};
+
+        // GÜVENLİK KİLİDİ
+        document.addEventListener("DOMContentLoaded", function() {
+            let aktifKullanici = JSON.parse(localStorage.getItem('aktifKullanici'));
+            if (!aktifKullanici) {
+                window.location.href = "index.html";
+                return;
+            }
+            kategorileriBuluttanCek().then(() => {
+                urunleriBuluttanCek();
+            });
+        });
+
+        // Form içi anlık matematik hesaplaması
+        function otomatikHesaplayici() {
+            const kutuAdedi = parseFloat(document.getElementById('kutuAdedi').value) || 0;
+            const birimHacim = parseFloat(document.getElementById('birimHacim').value) || 0;
+            const birimMaliyet = parseFloat(document.getElementById('birimMaliyet').value) || 0;
+            document.getElementById('toplamdakihacim').value = (kutuAdedi * birimHacim);
+            document.getElementById('toplamdakimaliyet').value = (kutuAdedi * birimMaliyet);
+        }
+        
+        // YENİ: ID ÜRETİM MOTORU
+        function generateNextId() {
+            let maxId = 0;
+            localUrunHavuzu.forEach(u => {
+                let idStr = (u.urunid || u.id || "0").toString();
+                let num = parseInt(idStr.replace(/\D/g, '')); 
+                if (!isNaN(num) && num > maxId) maxId = num;
+            });
+            return "U-" + String(maxId + 1).padStart(3, '0');
+        }
+
+        function kategorileriBuluttanCek(secilecekKategori = "") {
+            return new Promise((resolve) => {
+                const select = document.getElementById('urunKategori');
+                const miniListArea = document.getElementById('miniCategoryListArea');
+                select.innerHTML = '<option value="">Yükleniyor...</option>';
+                miniListArea.innerHTML = '<div style="font-size:0.8rem; color:#64748b; padding:5px;">Yükleniyor...</div>';
+                const cbName = "getKategoriler_cb_" + Math.floor(Math.random() * 1000000);
+                window[cbName] = function(kategoriler) {
+                    select.innerHTML = '<option value="">Kategori Seçiniz...</option>';
+                    miniListArea.innerHTML = '';
+                    localKategoriHavuzu = {};
+                    if (kategoriler && kategoriler.length > 0) {
+                        kategoriler.forEach(k => {
+                            const kAd = (k.kategoriAdi || k.katergoriAdi || k.kategori || "").trim();
+                            const kId = (k.kategoriid || k.id || kAd).trim(); 
+                            if(kAd) {
+                                localKategoriHavuzu[kId] = kAd;
+                                const opt = document.createElement('option'); opt.value = kAd; opt.textContent = kAd; select.appendChild(opt);
+                                const row = document.createElement('div');
+                                row.className = 'category-item-row';
+                                row.innerHTML = `<span>${kAd}</span><div class="category-item-actions"><button type="button" class="btn-cat-mini edit" onclick="kategoriDuzenleModu('${kAd}')"><i class="fa-solid fa-pen"></i></button><button type="button" class="btn-cat-mini delete" onclick="kategoriSilTetikle('${kId}', '${kAd}')"><i class="fa-solid fa-trash-can"></i></button></div>`;
+                                miniListArea.appendChild(row);
+                            }
+                        });
+                    } else { miniListArea.innerHTML = '<div style="font-size:0.8rem; color:#64748b; padding:5px;">Kategori bulunamadı.</div>'; }
+                    if (secilecekKategori) select.value = secilecekKategori.trim();
+                    if(document.getElementById(cbName)) document.getElementById(cbName).remove();
+                    resolve(true);
+                };
+                let s = document.createElement('script'); s.id = cbName;
+                s.src = `${SHEET_WEB_APP_URL}?action=getkategoriler&callback=${cbName}&_b=${new Date().getTime()}`;
+                document.body.appendChild(s);
+            });
+        }
+
+        function kategoriEkleKutusunuAc() { kategoriEditorTemizle(); document.getElementById('newCategoryBox').style.display = 'flex'; document.getElementById('newCategoryName').focus(); }
+        function kategoriEkleKutusunuKapat() { document.getElementById('newCategoryBox').style.display = 'none'; kategoriEditorTemizle(); }
+        function kategoriEditorTemizle() { document.getElementById('editKategoriEskiAdi').value = ''; document.getElementById('newCategoryName').value = ''; document.getElementById('katKutuBaslik').textContent = "Yeni Kategori Ekle"; document.getElementById('katKutuBaslik').style.color = "#10b981"; document.getElementById('btnKatKaydet').textContent = "Ekle"; document.getElementById('btnKatKaydet').style.backgroundColor = "#10b981"; }
+        function kategoriDuzenleModu(eskiAd) { document.getElementById('editKategoriEskiAdi').value = eskiAd; document.getElementById('newCategoryName').value = eskiAd; document.getElementById('katKutuBaslik').textContent = "Kategori Adını Düzenle"; document.getElementById('katKutuBaslik').style.color = "#b45309"; document.getElementById('btnKatKaydet').textContent = "Güncelle"; document.getElementById('btnKatKaydet').style.backgroundColor = "#b45309"; document.getElementById('newCategoryName').focus(); }
+
+        function bulutaKategoriGonder() {
+            const yeniKatAdi = document.getElementById('newCategoryName').value.trim();
+            const eskiKatAdi = document.getElementById('editKategoriEskiAdi').value.trim();
+            if(!yeniKatAdi) return;
+            const cbName = "saveKat_cb_" + Math.floor(Math.random() * 1000000);
+            window[cbName] = function(sonuc) {
+                if(sonuc && sonuc.status === "success") { kategoriEditorTemizle(); kategorileriBuluttanCek(yeniKatAdi).then(() => { urunleriBuluttanCek(); }); } else { alert("Hata: " + (sonuc.message || "Kategori işlemi başarısız.")); }
+                if(document.getElementById(cbName)) document.getElementById(cbName).remove();
+            };
+            let s = document.createElement('script'); s.id = cbName;
+            s.src = eskiKatAdi ? `${SHEET_WEB_APP_URL}?action=editkategori&eskiKategoriAdi=${encodeURIComponent(eskiKatAdi)}&yeniKategoriAdi=${encodeURIComponent(yeniKatAdi)}&callback=${cbName}` : `${SHEET_WEB_APP_URL}?action=addkategori&kategoriAdi=${encodeURIComponent(yeniKatAdi)}&callback=${cbName}`;
+            document.body.appendChild(s);
+        }
+
+        function kategoriSilTetikle(katId, katAdi) {
+            if(!confirm(`"${katAdi}" kategorisini silmek istediğinize emin misiniz?`)) return;
+            const cbName = "silKat_cb_" + Math.floor(Math.random() * 1000000);
+            window[cbName] = function(sonuc) {
+                if(sonuc && sonuc.status === "success") { kategoriEditorTemizle(); kategorileriBuluttanCek().then(() => { urunleriBuluttanCek(); }); } else { alert("Hata: " + (sonuc.message || "Kategori silinemedi.")); }
+                if(document.getElementById(cbName)) document.getElementById(cbName).remove();
+            };
+            let s = document.createElement('script'); s.id = cbName;
+            s.src = `${SHEET_WEB_APP_URL}?action=silkategori&id=${encodeURIComponent(katId)}&callback=${cbName}`;
+            document.body.appendChild(s);
+        }
+
+        function urunleriBuluttanCek() {
+            const tbody = document.getElementById('urunTableBody');
+            const table = document.getElementById('urunAnaTablo');
+            const loader = document.getElementById('loadingMessage');
+            loader.style.display = "block";
+            table.style.display = "none";
+            tbody.innerHTML = "";
+            const cbName = "getstok_cb_" + Math.floor(Math.random() * 1000000);
+            window[cbName] = function(stokVerileri) {
+                localUrunHavuzu = (stokVerileri && Array.isArray(stokVerileri)) ? stokVerileri.filter(u => (u.urunid || u.id || '').toString().trim() !== "") : [];
+                if (localUrunHavuzu.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#64748b;">Depoda ürün kaydı bulunmuyor.</td></tr>`; } else {
+                    localUrunHavuzu.forEach(u => {
+                        const tr = document.createElement('tr');
+                        const idStr = u.urunid || u.id || '';
+                        const adStr = u.urunadi || u.urunAdi || '';
+                        const katStr = localKategoriHavuzu[u.kategori] || u.kategori || 'Genel';
+                        const dunyaHacim = parseFloat(u.toplamHacim || u.toplamhacim || 0);
+                        const kalanHacim = parseFloat(u.kalanHacim || u.kalanhacim || dunyaHacim);
+                        const dunyaMaliyet = parseFloat(u.toplamMaliyet || u.toplammaliyet || 0);
+                        tr.innerHTML = `<td><div class="p-title">${adStr}</div><div class="p-subtitle">ID: <strong>${idStr}</strong></div></td><td><span class="cat-badge">${katStr}</span></td><td><span class="hacim-text">${kalanHacim} / ${dunyaHacim} ${u.birim || 'ml'}</span></td><td><span class="maliyet-text">${dunyaMaliyet.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺</span></td><td><div class="action-btns"><button class="btn-table-action btn-table-edit" onclick="duzenleModunaAl('${idStr}')" title="Düzenle"><i class="fa-solid fa-pen-to-square"></i></button><button class="btn-table-action btn-table-delete" onclick="urunSilTetikle('${idStr}')" title="Sil"><i class="fa-solid fa-trash-can"></i></button></div></td>`;
+                        tbody.appendChild(tr);
+                    });
+                }
+                loader.style.display = "none";
+                table.style.display = "table";
+                if(document.getElementById(cbName)) document.getElementById(cbName).remove();
+            };
+            let s = document.createElement('script'); s.id = cbName;
+            s.src = `${SHEET_WEB_APP_URL}?action=getstok&callback=${cbName}&_b=${new Date().getTime()}`;
+            document.body.appendChild(s);
+        }
+
+        function urunKaydetTetikle() {
+            // 🚨 HATA ENGELLENDİ: EĞER ID YOKSA (YENİ ÜRÜNSE) AUTOMATİK GEÇERLİ ID ÜRETİLİR VE SAKLANIR
+            let id = document.getElementById('editUrunId').value;
+            if (!id || id.trim() === "") {
+                id = generateNextId();
+            }
+            
+            const urunAdi = document.getElementById('urunAdi').value.trim();
+            const kategori = document.getElementById('urunKategori').value;
+            const gonderHacim = parseFloat(document.getElementById('toplamdakihacim').value) || 0;
+            const gonderMaliyet = parseFloat(document.getElementById('toplamdakimaliyet').value) || 0;
+            const birim = document.getElementById('birim').value;
+            const btn = document.getElementById('btnSubmit');
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> İşleniyor...`;
+
+            const cbName = "kaydetUrun_cb_" + Math.floor(Math.random() * 1000000);
+            window[cbName] = function(sonuc) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Veriyi Depo Hafızasına İşle...`;
+                if(sonuc && sonuc.status === "success") { urunFormTemizle(); urunleriBuluttanCek(); } 
+                else { alert("Hata: " + (sonuc ? sonuc.message : "Bilinmeyen hata")); }
+                if(document.getElementById(cbName)) document.getElementById(cbName).remove();
+            };
+
+            let s = document.createElement('script'); s.id = cbName;
+            s.src = `${SHEET_WEB_APP_URL}?action=kaydeturun&id=${encodeURIComponent(id)}&urunAdi=${encodeURIComponent(urunAdi)}&kategori=${encodeURIComponent(kategori)}&toplamHacim=${gonderHacim}&kalanHacim=${gonderHacim}&birim=${encodeURIComponent(birim)}&toplamMaliyet=${gonderMaliyet}&callback=${cbName}`;
+            document.body.appendChild(s);
+        }
+
+        function duzenleModunaAl(id) {
+            const u = localUrunHavuzu.find(item => String(item.urunid || item.id).trim() === String(id).trim());
+            if(!u) return;
+            kategorileriBuluttanCek(u.kategori).then(() => {
+                document.getElementById('editUrunId').value = u.urunid || u.id || '';
+                document.getElementById('urunAdi').value = u.urunadi || u.urunAdi || '';
+                document.getElementById('kutuAdedi').value = 1;
+                document.getElementById('birimHacim').value = u.toplamHacim || u.toplamhacim || 0;
+                document.getElementById('toplamdakihacim').value = u.toplamHacim || u.toplamhacim || 0;
+                document.getElementById('birimMaliyet').value = u.toplamMaliyet || u.toplammaliyet || 0;
+                document.getElementById('toplamdakimaliyet').value = u.toplamMaliyet || u.toplammaliyet || 0;
+                document.getElementById('birim').value = u.birim || 'ml';
+                document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Ürün Kartını Değiştir`;
+                document.getElementById('btnSubmit').innerHTML = `<i class="fa-solid fa-rotate"></i> Değişiklikleri Kaydet`;
+                document.getElementById('btnCancel').style.display = 'inline-block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        function urunSilTetikle(id) {
+            if(!confirm("Kayıt kalıcı olarak silinecektir, emin misiniz?")) return;
+            const cbName = "sil_cb_" + Math.floor(Math.random() * 1000000);
+            window[cbName] = function(sonuc) {
+                if(sonuc && sonuc.status === "success") { urunFormTemizle(); urunleriBuluttanCek(); }
+                if(document.getElementById(cbName)) document.getElementById(cbName).remove();
+            };
+            let s = document.createElement('script'); s.id = cbName;
+            s.src = `${SHEET_WEB_APP_URL}?action=silurun&id=${id}&callback=${cbName}`;
+            document.body.appendChild(s);
+        }
+
+        function urunFormTemizle() {
+            document.getElementById('editUrunId').value = '';
+            document.getElementById('urunGirisFormu').reset();
+            document.getElementById('toplamdakihacim').value = '';
+            document.getElementById('toplamdakimaliyet').value = '';
+            document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-box-open"></i> Ürün Çeşidi Tanımla`;
+            document.getElementById('btnSubmit').innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Veriyi Depo Hafızasına İşle...`;
+            document.getElementById('btnCancel').style.display = 'none';
+            kategoriEkleKutusunuKapat();
+        }
+
+        function urunTabloFiltrele() {
+            const filter = document.getElementById("searchBox").value.toUpperCase();
+            const tr = document.getElementById("urunTableBody").getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) {
+                tr[i].style.display = (tr[i].textContent || tr[i].innerText).toUpperCase().indexOf(filter) > -1 ? "" : "none";
+            }
+        }
+    </script>
+</body>
+</html>

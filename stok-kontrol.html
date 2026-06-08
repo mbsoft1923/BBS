@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bahar Beauty Studio - Stok Kontrol Paneli</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;700&family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #f0f4f8; padding: 30px 20px; font-family: 'Playfair Display', serif; min-height: 100vh; }
+        .wrapper { max-width: 1400px; margin: 0 auto; width: 100%; }
+        
+        /* 💎 ÜST BAR TASARIMI */
+        .global-page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background-color: white; padding: 15px 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 6px solid #00a8b5; }
+        .global-header-title-area { display: flex; flex-direction: column; }
+        .global-header-brand { font-family: 'Great Vibes', cursive; font-size: 2.4rem; color: #00a8b5; line-height: 1.1; margin-bottom: 2px; }
+        .global-header-sub { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; }
+        .global-btn-back { font-family: 'Segoe UI', sans-serif; background-color: #e0f7fa; color: #00a8b5; border: 1px solid #b2ebf2; padding: 10px 20px; border-radius: 10px; font-weight: 600; text-decoration: none; transition: all 0.25s; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+        .global-btn-back:hover { background-color: #00a8b5; color: white; transform: translateX(-3px); box-shadow: 0 4px 10px rgba(0, 168, 181, 0.15); }
+
+        /* 📊 ORANSAL İKİLİ PANEL YERLEŞİMİ (3/4 Grafik - 1/4 Kritik Stok) */
+        .chart-section-wrapper { display: flex; gap: 20px; margin-bottom: 25px; align-items: stretch; }
+        
+        .chart-container-box { background: white; padding: 22px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); flex: 3; min-width: 0; display: flex; flex-direction: column; height: 380px; }
+        .alert-container-box { background: white; padding: 22px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); flex: 1; min-width: 0; display: flex; flex-direction: column; height: 380px; }
+
+        .chart-section-wrapper h3 { font-size: 17px; color: #1e293b; margin-bottom: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; font-family: 'Playfair Display', serif; }
+        
+        /* 📜 KAYDIRMA ALANI */
+        .chart-scroll-wrapper { width: 100%; overflow-x: auto; overflow-y: hidden; flex: 1; position: relative; margin-bottom: 5px; }
+        .chart-holder { height: 270px; min-width: 1300px; position: relative; transition: width 0.3s ease; }
+
+        /* İçerik Listeleri */
+        .scollable-list { overflow-y: auto; flex: 1; padding-right: 5px; }
+        .list-item-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; border-radius: 10px; background: #fff5f5; margin-bottom: 8px; font-family: 'Segoe UI', sans-serif; font-size: 13px; font-weight: 600; color: #7f1d1d; border: 1px solid #fee2e2; }
+        .alert-qty-badge { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; border: 1px solid #fca5a5; }
+
+        /* ⭕ KRİTİK STOK BOŞ DURUMU (BÜYÜK 0) */
+        .empty-stock-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #94a3b8; font-family: 'Segoe UI', sans-serif; padding-bottom: 20px; }
+        .empty-stock-zero { font-size: 100px; font-weight: 700; line-height: 1; color: #e2e8f0; margin-bottom: 5px; user-select: none; }
+        .empty-stock-text { font-size: 13px; font-weight: 600; color: #64748b; }
+
+        /* 📋 TABLO VE İLERLEME ÇUBUĞU STİLLERİ */
+        .main-card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); border: 1px solid rgba(255,255,255,0.8); }
+        .card-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #f1f5f9; }
+        .card-title-bottom { font-size: 1.35rem; color: #1e293b; font-weight: 700; display: flex; align-items: center; gap: 10px; font-family: 'Playfair Display', serif; }
+        .search-wrapper { position: relative; width: 320px; }
+        .search-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 14px; }
+        .search-input { width: 100%; padding: 11px 15px 11px 42px; border: 1px solid #e2e8f0; border-radius: 14px; font-size: 13px; font-family: 'Segoe UI', sans-serif; color: #334155; background-color: #f8fafc; transition: all 0.3s ease; }
+        .search-input:focus { border-color: #00a8b5; background-color: white; outline: none; box-shadow: 0 0 0 4px rgba(0,168,181,0.1); }
+
+        .table-responsive { overflow-x: auto; border-radius: 16px; border: 1px solid #e2e8f0; }
+        .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-family: 'Segoe UI', sans-serif; font-size: 13px; table-layout: fixed; }
+        
+        /* Tablo Sütun Genişlikleri */
+        .custom-table th:nth-child(1), .custom-table td:nth-child(1) { width: 95px; }
+        .custom-table th:nth-child(2), .custom-table td:nth-child(2) { width: 260px; }
+        .custom-table th:nth-child(3), .custom-table td:nth-child(3) { width: 140px; }
+        .custom-table th:nth-child(4), .custom-table td:nth-child(4) { width: 110px; }
+        .custom-table th:nth-child(5), .custom-table td:nth-child(5) { width: 110px; }
+        .custom-table th:nth-child(6), .custom-table td:nth-child(6) { width: 80px; }
+        .custom-table th:nth-child(7), .custom-table td:nth-child(7) { width: 235px; }
+
+        .custom-table th { background-color: #f8fafc; padding: 14px 16px; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; }
+        .custom-table td { padding: 14px 16px; color: #334155; border-bottom: 1px solid #f1f5f9; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .custom-table tr:hover td { background-color: #f8fafc; }
+
+        /* Hücre İçi İlerleme Çubuğu */
+        .progress-cell-container { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+        .progress-bar-bg { width: 100%; background-color: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden; position: relative; }
+        .progress-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+        .progress-text-flex { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; }
+
+        /* 🎛️ ÖZEL BELİRGİN YATAY SCROLLBAR TASARIMI */
+        .chart-scroll-wrapper::-webkit-scrollbar { height: 9px; }
+        .chart-scroll-wrapper::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        .chart-scroll-wrapper::-webkit-scrollbar-thumb { background: #00a8b5; border-radius: 10px; }
+        .chart-scroll-wrapper::-webkit-scrollbar-thumb:hover { background: #008c96; }
+
+        .scollable-list::-webkit-scrollbar { width: 5px; }
+        .scollable-list::-webkit-scrollbar-track { background: #f1f5f9; }
+        .scollable-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .status-msg { text-align: center; color: #00a8b5; font-weight: 600; padding: 30px; font-family: 'Segoe UI', sans-serif; }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <div class="global-page-header">
+            <div class="global-header-title-area">
+                <span class="global-header-brand">Bahar Beauty Studio</span>
+                <span class="global-header-sub">| Sarf Malzeme & Ürün Depo Analizleri</span>
+            </div>
+            <a href="dashboard.html" class="global-btn-back"><i class="fa-solid fa-house"></i> Ana Yönetim Paneli</a>
+        </div>
+
+        <div class="chart-section-wrapper">
+            <div class="chart-container-box">
+                <h3 id="chartTitleText"><i class="fa-solid fa-chart-bar" style="color: #00a8b5;"></i> Depo Genel Stok Hacim Grafiği</h3>
+                <div class="chart-scroll-wrapper">
+                    <div class="chart-holder" id="chartHolderBox">
+                        <canvas id="stockChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert-container-box">
+                <h3><i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i> Kritik Seviye Stok Durumu</h3>
+                <div class="scollable-list" id="azalanStokListesiBody"></div>
+            </div>
+        </div>
+
+        <div class="main-card">
+            <div class="card-header-flex">
+                <div class="card-title-bottom">
+                    <i class="fa-solid fa-boxes-stacked" style="color: #00a8b5;"></i> Depo Genel Stok Durumu
+                </div>
+                <div class="search-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchBox" class="search-input" onkeyup="stokTabloFiltrele()" placeholder="Ürün adı veya kategori ara...">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <div id="loadingMessage" class="status-msg">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Bulut sunucusundan güncel stok verileri senkronize ediliyor...
+                </div>
+                <table class="custom-table" id="stokAnaTablo" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Ürün ID</th>
+                            <th>Ürün Adı</th>
+                            <th>Kategori</th>
+                            <th>Toplam Hacim</th>
+                            <th>Mevcut Kalan</th>
+                            <th>Birim</th>
+                            <th>Kritik Seviye Durumu</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stokTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx6fWf_rPacPSY0VdKaq5DAMuT6EQTFu5CA7GK9qRwQTNep3eMMwA0jZcIT9OQz76EH8g/exec"; 
+        let myChart = null;
+        let globalStokVerisi = [];
+        let seciliUrunIndex = null; // Detay modunu kontrol etmek için state tutuyoruz
+
+        // DataLabels eklentisini küresel olarak kaydediyoruz
+        Chart.register(ChartDataLabels);
+
+document.addEventListener("DOMContentLoaded", function() {
+            // --- 1. STANDART GÜVENLİK KONTROLÜ (Giriş yapılmış mı?) ---
+            let aktifKullanici = JSON.parse(localStorage.getItem('aktifKullanici'));
+            
+            // Eğer giriş yapılmamışsa (bilet yoksa) ana kapıya postala
+            if (!aktifKullanici) {
+                window.location.href = "index.html";
+                return; // İzinsiz girişte alttaki verileri çekme işlemlerini durdur
+            }
+
+            // --- 2. GÜVENLİKTEN GEÇİLDİ, GRAFİKLERİ VE VERİLERİ YÜKLE ---
+            verileriBuluttanCek();
+        });
+
+        function verileriBuluttanCek() {
+            const table = document.getElementById('stokAnaTablo');
+            const loader = document.getElementById('loadingMessage');
+            loader.style.display = "block";
+            table.style.display = "none";
+
+            const cbName = "cb_stok_data_" + Math.floor(Math.random() * 1000000);
+            window[cbName] = function(data) {
+                if(data && Array.isArray(data)) {
+                    globalStokVerisi = data.filter(u => {
+                        const idKontrol = u.urunId || u.urunid || u.id || '';
+                        return idKontrol.toString().trim() !== "";
+                    });
+                }
+                
+                stokTablosunuYazdir(globalStokVerisi);
+                azalanStokListesiniYazdir(globalStokVerisi);
+                buildStockChart(globalStokVerisi);
+
+                loader.style.display = "none";
+                table.style.display = "table";
+                if(document.getElementById(cbName)) document.getElementById(cbName).remove();
+            };
+
+            let s = document.createElement('script');
+            s.id = cbName;
+            s.src = `${SHEET_WEB_APP_URL}?action=getstok&callback=${cbName}&_t=${Date.now()}`;
+            document.body.appendChild(s);
+        }
+
+        function stokTablosunuYazdir(data) {
+            const tbody = document.getElementById("stokTableBody");
+            tbody.innerHTML = "";
+
+            data.forEach(u => {
+                const urunId = u.urunId || u.urunid || u.id || '-';
+                const urunAdi = u.urunAdi || u.urunadi || '-';
+                const kategori = u.kategori || '-';
+                const topHacim = parseFloat(u.toplamHacim || u.toplamhacim || 0);
+                const kalanHacim = parseFloat(u.kalanHacim || u.kalanhacim || 0);
+                const birim = u.birim || 'ml';
+
+                const yuzdeKalan = topHacim > 0 ? Math.min(100, Math.max(0, (kalanHacim / topHacim) * 100)) : 0;
+                
+                let barColor = "#10b981"; 
+                let textColor = "#065f46";
+                let durumText = "Güvenli";
+
+                if(yuzdeKalan <= 25) { 
+                    barColor = "#ef4444"; 
+                    textColor = "#991b1b"; 
+                    durumText = "Kritik Seviye!"; 
+                } else if(yuzdeKalan <= 50) { 
+                    barColor = "#f59e0b"; 
+                    textColor = "#92400e"; 
+                    durumText = "Sınırda (Azalıyor)"; 
+                }
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td style="font-weight:600; color:#00a8b5;">${urunId}</td>
+                    <td style="font-weight:600; color:#1e293b;" title="${urunAdi}">${urunAdi}</td>
+                    <td>${kategori}</td>
+                    <td>${topHacim}</td>
+                    <td style="font-weight:700;">${kalanHacim}</td>
+                    <td>${birim}</td>
+                    <td>
+                        <div class="progress-cell-container">
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: ${yuzdeKalan}%; background-color: ${barColor};"></div>
+                            </div>
+                            <div class="progress-text-flex" style="color: ${textColor};">
+                                <span>%${htmlSafeRound(yuzdeKalan)} kaldı</span>
+                                <span>${durumText}</span>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function azalanStokListesiniYazdir(data) {
+            const container = document.getElementById("azalanStokListesiBody");
+            container.innerHTML = "";
+
+            let kritikUrunler = data.filter(u => {
+                const topHacim = parseFloat(u.toplamHacim || u.toplamhacim || 0);
+                const kalanHacim = parseFloat(u.kalanHacim || u.kalanhacim || 0);
+                if (topHacim <= 0) return false;
+                const yuzde = (kalanHacim / topHacim) * 100;
+                return (yuzde <= 25);
+            });
+
+            if(kritikUrunler.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-stock-state">
+                        <div class="empty-stock-zero">0</div>
+                        <div class="empty-stock-text">Kritik seviyede ürün bulunmuyor.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            kritikUrunler.forEach(u => {
+                const div = document.createElement("div");
+                div.className = "list-item-row";
+                div.innerHTML = `
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70%;" title="${u.urunAdi || u.urunadi}">${u.urunAdi || u.urunadi || 'Ürün'}</span>
+                    <span class="alert-qty-badge">${u.kalanHacim || u.kalanhacim || 0} ${u.birim || 'ml'}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function buildStockChart(data) {
+            const canvas = document.getElementById('stockChart');
+            const holder = document.getElementById('chartHolderBox');
+            const titleElement = document.getElementById('chartTitleText');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            if(myChart) { myChart.destroy(); }
+
+            if(data.length === 0) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "#94a3b8";
+                ctx.font = "14px Segoe UI";
+                ctx.textAlign = "center";
+                ctx.fillText("Gösterilecek depo verisi bulunamadı.", canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            // 🎯 DETAY MODU KONTROLÜ
+            let filtrelenmisVeri = data;
+            let detayModuAktif = (seciliUrunIndex !== null && seciliUrunIndex >= 0 && seciliUrunIndex < data.length);
+
+            if (detayModuAktif) {
+                filtrelenmisVeri = [data[seciliUrunIndex]];
+                holder.style.width = "100%"; // Detay modunda tek bar ekrana tam yayılır, scroll kaybolur
+                titleElement.innerHTML = `<i class="fa-solid fa-magnifying-glass-chart" style="color: #f59e0b;"></i> Detay Modu: ${filtrelenmisVeri[0].urunAdi || filtrelenmisVeri[0].urunadi} (Çıkmak için grafiğe tıklayın)`;
+            } else {
+                const hesaplananGenislik = Math.max(1300, data.length * 90);
+                holder.style.width = hesaplananGenislik + "px"; // Genel modda yatay kaydırma aktif
+                titleElement.innerHTML = `<i class="fa-solid fa-chart-bar" style="color: #00a8b5;"></i> Depo Genel Stok Hacim Grafiği`;
+            }
+
+            const labels = filtrelenmisVeri.map(u => u.urunAdi || u.urunadi || 'Ürün');
+            const toplamlar = filtrelenmisVeri.map(u => parseFloat(u.toplamHacim || u.toplamhacim || 0));
+            const kalanlar = filtrelenmisVeri.map(u => parseFloat(u.kalanHacim || u.kalanhacim || 0));
+            const birimler = filtrelenmisVeri.map(u => u.birim || 'ml');
+
+            const kalanRenkleri = filtrelenmisVeri.map(u => {
+                const top = parseFloat(u.toplamHacim || u.toplamhacim || 0);
+                const kal = parseFloat(u.kalanHacim || u.kalanhacim || 0);
+                const yuzde = top > 0 ? (kal / top) * 100 : 0;
+                
+                if (yuzde <= 25) return '#ef4444'; 
+                if (yuzde <= 50) return '#f59e0b'; 
+                return '#10b981'; 
+            });
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Olması Gereken Hacim',
+                            data: toplamlar,
+                            backgroundColor: '#475569', 
+                            borderRadius: 6,
+                            barPercentage: detayModuAktif ? 0.3 : 0.7, // Detay modunda çubuklar çok kalın olmasın diye daraltıldı
+                            categoryPercentage: detayModuAktif ? 0.3 : 0.6
+                        },
+                        {
+                            label: 'Mevcut Kalan Durum',
+                            data: kalanlar,
+                            backgroundColor: kalanRenkleri, 
+                            borderRadius: 6,
+                            barPercentage: detayModuAktif ? 0.3 : 0.7,
+                            categoryPercentage: detayModuAktif ? 0.3 : 0.6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    onClick: function(event, elements) {
+                        // 👆 TIKLAMA OLAYI YÖNETİMİ
+                        if (detayModuAktif) {
+                            // Detay modundaysa nereye tıklanırsa tıklansın eski haline döner
+                            seciliUrunIndex = null;
+                            buildStockChart(globalStokVerisi);
+                        } else {
+                            // Genel moddayken bir elemana tıklandıysa index'i bulup detay moduna geçiririz
+                            if (elements && elements.length > 0) {
+                                const chartIndex = elements[0].index;
+                                seciliUrunIndex = chartIndex;
+                                buildStockChart(globalStokVerisi);
+                            } else {
+                                // Alternatif olarak X ekseni etiketine doğrudan tıklanma senaryosu kontrolü
+                                const canvasPosition = Chart.helpers.getRelativePosition(event, myChart);
+                                const dataX = myChart.scales.x.getValueForPixel(canvasPosition.x);
+                                if (dataX !== undefined && dataX >= 0 && dataX < globalStokVerisi.length) {
+                                    seciliUrunIndex = dataX;
+                                    buildStockChart(globalStokVerisi);
+                                }
+                            }
+                        }
+                    },
+                    plugins: { 
+                        // Detay modunda rakamları barların üstüne yazdıran konsept ayarları
+                        datalabels: {
+                            display: detayModuAktif, // Sadece detay modunda aktif olur
+                            align: 'end',
+                            anchor: 'end',
+                            color: '#1e293b',
+                            font: { family: 'Segoe UI', weight: '700', size: 12 },
+                            formatter: function(value, context) {
+                                const idx = context.dataIndex;
+                                const birim = birimler[idx] || 'ml';
+                                return value + ' ' + birim;
+                            }
+                        },
+                        legend: { 
+                            display: true,
+                            position: 'top',
+                            labels: { 
+                                padding: 25, // 👁️ Belirteç kelimeleri grafik çizim alanından 25pt aşağı öteler (Üst üste binmeyi önler)
+                                font: { family: 'Segoe UI', size: 12, weight: '600' }, 
+                                boxWidth: 14,
+                                generateLabels: function(chart) {
+                                    return [
+                                        { text: 'Olması Gereken Hacim', fillStyle: '#475569', strokeStyle: '#475569', lineWidth: 0 },
+                                        { text: 'Yeterli Stok', fillStyle: '#10b981', strokeStyle: '#10b981', lineWidth: 0 },
+                                        { text: 'Sınırda Uyarı', fillStyle: '#f59e0b', strokeStyle: '#f59e0b', lineWidth: 0 },
+                                        { text: 'Kritik Seviye', fillStyle: '#ef4444', strokeStyle: '#ef4444', lineWidth: 0 }
+                                    ];
+                                }
+                            }
+                        } 
+                    },
+                    scales: {
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { font: { size: detayModuAktif ? 14 : 11, family: 'Segoe UI', weight: '600' }, color: '#334155' } 
+                        },
+                        y: { 
+                            beginAtZero: true, 
+                            grace: '15%', // 👁️ Grafik dikey tavanını %15 yükselterek sütun üstündeki rakamlara nefes alanı açar
+                            grid: { color: '#e2e8f0' },
+                            ticks: { font: { family: 'Segoe UI', size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function htmlSafeRound(val) {
+            return isNaN(val) ? 0 : Math.round(val);
+        }
+
+        function stokTabloFiltrele() {
+            const filter = document.getElementById("searchBox").value.toUpperCase();
+            const tr = document.getElementById("stokTableBody").getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) {
+                tr[i].style.display = (tr[i].textContent || tr[i].innerText).toUpperCase().indexOf(filter) > -1 ? "" : "none";
+            }
+        }
+    </script>
+</body>
+</html>

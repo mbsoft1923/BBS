@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bahar Beauty Studio - Randevu Sistemi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #f0f4f8; padding: 30px 20px; font-family: 'Playfair Display', serif; min-height: 100vh; }
+        .wrapper { max-width: 1400px; margin: 0 auto; width: 100%; }
+        
+        .global-page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background-color: white; padding: 15px 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 6px solid #6b21a8; width: 100%; }
+        .global-header-title-area { display: flex; flex-direction: column; text-align: left; }
+        .global-header-brand { font-family: 'Great Vibes', cursive; font-size: 2.6rem; color: #00a8b5; line-height: 1.1; margin-bottom: 2px; }
+        .global-header-sub { font-family: 'Playfair Display', serif; font-size: 1rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; }
+        .global-btn-back { font-family: 'Segoe UI', sans-serif; background-color: #e0f7fa; color: #00a8b5; border: 1px solid #b2ebf2; padding: 10px 20px; border-radius: 10px; font-weight: 600; text-decoration: none; transition: all 0.25s; font-size: 0.95rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; }
+        .global-btn-back:hover { background-color: #00a8b5; color: white; transform: scale(1.02); }
+        
+        .card { background-color: white; border-radius: 14px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 25px; width: 100%; }
+        .card-title { font-size: 1.2rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; border-bottom: 2px dashed #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; color: #475569; font-weight: 600; font-size: 0.9rem; font-family: 'Segoe UI', sans-serif; }
+        .form-control { width: 100%; padding: 11px; border: 1px solid #e2e8f0; background-color: #f8fafc; border-radius: 8px; font-size: 0.95rem; outline: none; font-family: 'Segoe UI', sans-serif; transition: all 0.2s; }
+        .form-control:focus { border-color: #00a8b5; background-color: white; box-shadow: 0 0 0 3px rgba(0, 168, 181, 0.1); }
+        .btn-primary { background-color: #00a8b5; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; transition: all 0.2s; white-space: nowrap; }
+        .btn-primary:hover { background-color: #008c96; }
+
+        .calendar-container { overflow-y: auto; max-height: 200px; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; background: #f8fafc; margin-bottom: 20px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+        .day-header { text-align: center; font-family: 'Segoe UI', sans-serif; font-weight: 700; color: #64748b; font-size: 0.85rem; padding-bottom: 5px; }
+        .calendar-day { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; font-family: 'Segoe UI', sans-serif; min-height: 60px; display: flex; flex-direction: column; justify-content: center; }
+        .calendar-day:hover { border-color: #00a8b5; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .calendar-day.active { background: #00a8b5; color: white; border-color: #00a8b5; font-weight: bold; }
+        .calendar-day.today { border: 2px solid #6b21a8; }
+        .day-num { font-size: 1.2rem; }
+        .day-month { font-size: 0.75rem; opacity: 0.8; }
+
+        .schedule-container { overflow-x: auto; margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 10px; }
+        .schedule-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; background: white; min-width: 800px; table-layout: fixed; user-select: none; }
+        .schedule-table th { background: #f1f5f9; padding: 10px; color: #334155; font-weight: 700; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 10; font-size: 0.9rem; }
+        
+        .schedule-table td { border: 1px solid #e2e8f0; padding: 0; height: 32px; max-height: 32px; text-align: center; vertical-align: middle; position: relative; overflow: hidden; } 
+        .time-col { width: 60px; background: #f8fafc; font-weight: 700; color: #64748b; font-size: 0.8rem; }
+        
+        .slot-cell { cursor: pointer; transition: background-color 0.1s; }
+        .slot-cell:hover:not(.booked) { background-color: #f0fdfa; }
+        .slot-cell.booked { cursor: default; }
+        
+        .slot-cell.selected { color: white; }
+        td:nth-child(2).slot-cell.selected { background-color: #00a8b5; border: 1px solid #008c96; } 
+        td:nth-child(3).slot-cell.selected { background-color: #f472b6; border: 1px solid #db2777; } 
+        td:nth-child(4).slot-cell.selected { background-color: #fbbf24; border: 1px solid #d97706; } 
+        td:nth-child(5).slot-cell.selected { background-color: #fb923c; border: 1px solid #ea580c; } 
+        td:nth-child(6).slot-cell.selected { background-color: #fb7185; border: 1px solid #e11d48; } 
+        td:nth-child(7).slot-cell.selected { background-color: #c084fc; border: 1px solid #9333ea; } 
+        td:nth-child(n+8).slot-cell.selected { background-color: #2dd4bf; border: 1px solid #0d9488; } 
+        
+        .btn-add-col { background: #e0e7ff; color: #4f46e5; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; font-size: 0.8rem;}
+        .btn-add-col:hover { background: #c7d2fe; }
+
+        .appointment-action-bar { display: grid; grid-template-columns: 1.3fr 1fr 1fr 0.8fr 1.3fr auto; gap: 10px; align-items: end; background: #faf5ff; border: 1px dashed #d8b4fe; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
+        @media (max-width: 1024px) { .appointment-action-bar { grid-template-columns: 1fr 1fr; } .appointment-action-bar > :last-child { grid-column: 1 / -1; } }
+        @media (max-width: 600px) { .appointment-action-bar { grid-template-columns: 1fr; } }
+        
+        .client-list-container { max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .client-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; }
+        .client-table th { background: #f8fafc; padding: 12px; text-align: left; color: #475569; position: sticky; top: 0; }
+        .client-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        .client-table tr:hover { background-color: #f8fafc; }
+        
+        .action-btns { display: flex; gap: 8px; }
+        .btn-edit { background: #e0f2fe; color: #0284c7; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+        .btn-delete { background: #fee2e2; color: #e11d48; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+
+        .new-client-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; align-items: start; }
+        .new-client-grid .full-width { grid-column: 1 / -1; }
+        @media (max-width: 900px) { .new-client-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 600px) { .new-client-grid { grid-template-columns: 1fr; } }
+
+        .btn-whatsapp { background-color: #25D366; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-whatsapp:hover { background-color: #128C7E; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2); }
+
+        .wa-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(3px); }
+        .wa-modal { background: #ece5dd; width: 400px; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.2); font-family: 'Segoe UI', sans-serif; }
+        .wa-modal-header { background: #128C7E; color: white; padding: 15px 20px; font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+        .wa-modal-body { padding: 25px 20px 10px 20px; }
+        .wa-chat-bubble { background: #dcf8c6; padding: 14px 18px; border-radius: 0 12px 12px 12px; font-size: 0.95rem; color: #303030; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; margin-bottom: 20px; line-height: 1.5; white-space: pre-wrap;}
+        .wa-chat-bubble::before { content: ""; position: absolute; top: 0; left: -10px; width: 0; height: 0; border-top: 12px solid #dcf8c6; border-left: 12px solid transparent; }
+        .wa-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 10px 20px 20px 20px; }
+        .btn-wa-cancel { background: white; color: #475569; border: 1px solid #cbd5e1; padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-wa-cancel:hover { background: #f1f5f9; }
+        .btn-wa-send { background: #128C7E; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 8px; }
+        .btn-wa-send:hover { background: #075E54; }
+
+        .client-filter-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #f1f5f9; padding-bottom: 15px; margin-bottom: 15px; flex-wrap: wrap; gap: 15px; }
+        .filter-inputs { display: flex; gap: 15px; align-items: center; flex: 1; }
+        .filter-inputs .form-control { flex: 1; padding: 8px 12px; font-size: 0.85rem; height: 38px; }
+        .btn-print-list { height: 38px; padding: 0 15px; font-size: 0.85rem; background-color: #10b981; display: flex; align-items: center; gap: 6px; } 
+        .btn-print-list:hover { background-color: #059669; }
+
+        /* =========================================================================
+           TAMAMEN ONARILAN KUSURSUZ RENKLİ A4 YAZDIRMA CSS AYARLARI
+           ========================================================================= */
+        @media print {
+            @page { size: A4 portrait; margin: 0.5cm; }
+            body { background-color: white !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .wrapper { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .card { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; background: transparent !important; }
+            .global-page-header, button, .btn-primary, .wa-modal-overlay { display: none !important; }
+            body.print-calendar .client-management-card, body.print-calendar .appointment-action-bar, body.print-calendar .calendar-container, body.print-calendar .btn-add-col, body.print-calendar .appointment-card > .card-title { display: none !important; }
+            body.print-calendar #selectedDateDisplay { display: block !important; font-size: 14pt !important; font-weight: bold !important; text-align: center !important; color: #00a8b5 !important; margin-bottom: 10px !important; }
+            
+            body.print-calendar .schedule-container { display: block !important; border: none !important; overflow: visible !important; width: 100% !important; }
+            body.print-calendar .schedule-table { width: 100% !important; max-width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; display: table !important; page-break-inside: avoid; }
+            body.print-calendar .schedule-table tr { page-break-inside: avoid; page-break-after: auto; }
+            body.print-calendar .schedule-table th { position: static !important; font-size: 9pt !important; padding: 4px !important; background-color: #f1f5f9 !important; border: 1pt solid #cbd5e1 !important; color: black !important; }
+            
+            body.print-calendar .schedule-table td { height: 32px !important; max-height: 32px !important; padding: 0 !important; font-size: 8pt !important; border: 1pt solid #cbd5e1 !important; color: black !important; overflow: hidden !important; }
+            body.print-calendar .time-col { width: 50px !important; background-color: #f8fafc !important; display: table-cell !important; }
+            
+            /* 🚨 FIX: YAZDIRIRKEN KUTULARI VE RENKLERİ KESİNLİKLE KORU, SADECE İKONLARI GİZLE */
+            body.print-calendar .slot-cell { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body.print-calendar .slot-cell div { box-shadow: none !important; color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body.print-calendar .slot-cell .apt-name { font-size: 8pt !important; white-space: nowrap !important; overflow: hidden !important; color: black !important; font-weight: bold !important; }
+            body.print-calendar .slot-cell .apt-cat { font-size: 7pt !important; white-space: nowrap !important; overflow: hidden !important; color: #333 !important; }
+            body.print-calendar .slot-cell .apt-btns { display: none !important; }
+            body.print-calendar .slot-cell span { background: transparent !important; box-shadow: none !important; border: none !important; color: #333 !important; padding: 0 !important; }
+
+            body.print-clients .appointment-card, body.print-clients .client-management-card > .card-title, body.print-clients .new-client-grid, body.print-clients .filter-inputs, body.print-clients th:last-child, body.print-clients td:last-child { display: none !important; } 
+            body.print-clients .client-filter-bar { border-bottom: none !important; margin-bottom: 10px !important; padding-bottom: 0 !important; display: block !important; }
+            body.print-clients .client-filter-bar .card-title { font-size: 14pt !important; display: block !important; color: #1e293b !important; }
+            body.print-clients .client-list-container { display: block !important; max-height: none !important; overflow: visible !important; border: none !important; }
+            body.print-clients .client-table { width: 100% !important; border-collapse: collapse !important; font-size: 10pt !important; display: table !important; }
+            body.print-clients .client-table th { background-color: #f1f5f9 !important; padding: 10px !important; border-bottom: 2pt solid #cbd5e1 !important; text-align: left !important; color: black !important; display: table-cell !important; }
+            body.print-clients .client-table td { padding: 8px 10px !important; border-bottom: 1pt solid #e2e8f0 !important; color: black !important; display: table-cell !important; }
+            body.print-clients span { border: 1pt solid #d8b4fe !important; padding: 2px 6px !important; background: transparent !important; color: black !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <div class="global-page-header">
+            <div class="global-header-title-area">
+                <span class="global-header-brand">Bahar Beauty Studio</span>
+                <span class="global-header-sub">| Randevular ve Danışanlar</span>
+            </div>
+            <a href="dashboard.html" class="global-btn-back">🏠 Ana Yönetim Paneli</a>
+        </div>
+
+        <div class="card appointment-card">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <div><i class="far fa-calendar-alt" style="color: #6b21a8;"></i> Randevu Çizelgesi (Bulut Senkronizasyonlu)</div>
+                <button class="btn-primary" style="font-size: 0.85rem; padding: 8px 16px; background-color: #6b21a8;" onclick="printCalendar()">
+                    <i class="fas fa-print"></i> Yazdır / PDF İndir
+                </button>
+            </div>
+            
+            <div class="calendar-container" id="calendarContainer">
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+
+            <h3 id="selectedDateDisplay" style="font-family: 'Segoe UI', sans-serif; color: #00a8b5; margin-bottom: 15px; text-align: center;"></h3>
+
+            <div class="schedule-container">
+                <table class="schedule-table" id="scheduleTable">
+                    <thead>
+                        <tr id="scheduleHeader">
+                            <th class="time-col"><i class="far fa-clock"></i> Saat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleBody"></tbody>
+                </table>
+            </div>
+
+            <div class="appointment-action-bar">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Danışan Seç</label>
+                    <select class="form-control" id="aptClient" onchange="fillClientPhone()">
+                        <option value="">-- Danışan Seçiniz --</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Telefon</label>
+                    <input type="text" class="form-control" id="aptPhone" placeholder="05XX XXX XX XX">
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Tarih (Takvimden veya Elle)</label>
+                    <input type="date" class="form-control" id="aptDate">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Saat (Tablodan veya Elle)</label>
+                    <input type="text" class="form-control" id="aptTime" placeholder="Örn: 10:00 - 11:30" style="font-weight: bold; color: #10b981;">
+                    <input type="hidden" id="aptStaff"> 
+                    <input type="hidden" id="editAptId">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Kategori İşlem</label>
+                    <select class="form-control" id="aptCategory">
+                        <option value="">-- Kategori Seçin --</option>
+                    </select>
+                </div>
+                <div>
+                    <button class="btn-primary" style="width: 100%; height: 44px;" onclick="saveAppointment()" id="btnSaveAppointment"><i class="fas fa-save"></i> Randevuyu Kaydet</button>
+                </div>
+                
+                <div class="form-group full-width" style="grid-column: 1 / -1; margin-top: 10px; margin-bottom:0;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
+                        <label style="margin-bottom: 0;">Randevu Notu</label>
+                        <button class="btn-whatsapp" type="button" onclick="openWhatsAppPopup()">
+                            <i class="fab fa-whatsapp" style="font-size: 1.15rem;"></i> WhatsApp Mesajı Gönder
+                        </button>
+                    </div>
+                    <textarea class="form-control" id="aptNote" rows="3" placeholder="Randevu ile ilgili özel notlarınızı buraya girebilirsiniz..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="card client-management-card">
+            <div class="card-title"><i class="fas fa-user-plus" style="color: #00a8b5;"></i> Danışan Yönetim Modülü</div>
+            
+            <div class="new-client-grid" style="margin-bottom: 26px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
+                <input type="hidden" id="editClientId" value="">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Adı Soyadı</label>
+                    <input type="text" class="form-control" id="clientName" placeholder="Örn: Ayşe Yılmaz">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Telefonu</label>
+                    <input type="text" class="form-control" id="clientPhone" placeholder="05XX XXX XX XX">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Doğum Tarihi</label>
+                    <input type="date" class="form-control" id="clientDob">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>&nbsp;</label>
+                    <button class="btn-primary" style="width: 100%; height: 44px;" onclick="saveClient()" id="btnSaveClient"><i class="fas fa-check"></i> Danışanı Kaydet</button>
+                </div>
+                <div class="form-group full-width" style="margin-bottom: 0; margin-top: 5px;">
+                    <label>Danışan Notu</label>
+                    <input type="text" class="form-control" id="clientNote" placeholder="Alerji durumu, referans vs.">
+                </div>
+            </div>
+
+            <div class="client-filter-bar">
+                <div class="card-title" style="border: none; font-size: 1.05rem; margin: 0; padding: 0;">
+                    <i class="fas fa-users" style="color: #64748b;"></i> Kayıtlı Danışanlar Listesi
+                </div>
+                <div class="filter-inputs">
+                    <input type="text" id="filterPhone" class="form-control" placeholder="Telefon Ara..." oninput="filterClientTable()">
+                    <input type="text" id="filterDob" class="form-control" placeholder="Doğum Tarihi Ara..." oninput="filterClientTable()">
+                    <input type="text" id="filterCategory" class="form-control" placeholder="Favori İşlem Ara..." oninput="filterClientTable()">
+                    <button class="btn-primary btn-print-list" onclick="printClientList()"><i class="fas fa-print"></i> Listeyi Yazdır</button>
+                </div>
+            </div>
+
+            <div class="client-list-container">
+                <table class="client-table">
+                    <thead>
+                        <tr>
+                            <th>Adı Soyadı</th>
+                            <th>Telefon</th>
+                            <th>Doğum Tarihi</th>
+                            <th>Not</th>
+                            <th>Favori İşlem</th>
+                            <th style="text-align: right;">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="wa-modal-overlay" id="waModal">
+        <div class="wa-modal">
+            <div class="wa-modal-header">
+                <i class="fab fa-whatsapp" style="font-size: 1.4rem;"></i> WhatsApp Mesaj Onayı
+            </div>
+            <div class="wa-modal-body">
+                <p style="margin-bottom: 15px; color: #475569; font-size: 0.9rem;">Aşağıdaki mesaj danışanın sistemde kayıtlı WhatsApp numarasına gönderilecektir:</p>
+                <div class="wa-chat-bubble" id="waMessagePreview"></div>
+                <input type="hidden" id="waTargetPhone">
+            </div>
+            <div class="wa-modal-footer">
+                <button class="btn-wa-cancel" onclick="closeWhatsAppPopup()">İptal</button>
+                <button class="btn-wa-send" onclick="sendWhatsAppMessage()">Gönder <i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Google Apps Script Web App URL
+        const API_URL = "https://script.google.com/macros/s/AKfycbx6fWf_rPacPSY0VdKaq5DAMuT6EQTFu5CA7GK9qRwQTNep3eMMwA0jZcIT9OQz76EH8g/exec"; 
+
+        let staffList = ["Yükleniyor..."]; 
+        let clients = []; 
+        let appointments = []; 
+        let activeDate = new Date(); 
+        let hizmetKategorileri = []; // Hizmet olan kategoriler
+        
+        let isDragging = false;
+        let dragStartCol = -1;
+        let dragStartRow = -1;
+        let dragEndRow = -1;
+
+        const colColors = ["#00a8b5", "#f472b6", "#fbbf24", "#fb923c", "#fb7185", "#c084fc", "#2dd4bf"];
+
+        function getLocalIsoDate(d) {
+            let year = d.getFullYear();
+            let month = String(d.getMonth() + 1).padStart(2, '0');
+            let day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const container = document.getElementById('calendarContainer');
+            grid.innerHTML = '';
+
+            const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+            days.forEach(d => {
+                let div = document.createElement('div');
+                div.className = 'day-header';
+                div.innerText = d;
+                grid.appendChild(div);
+            });
+
+            let today = new Date();
+            today.setHours(0,0,0,0);
+            
+            let startDate = new Date(today);
+            startDate.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) - 7); 
+
+            let todayElement = null;
+            const monthNames = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+
+            for (let i = 0; i < 35; i++) {
+                let d = new Date(startDate);
+                d.setDate(startDate.getDate() + i);
+                let div = document.createElement('div');
+                div.className = 'calendar-day';
+                let dateString = getLocalIsoDate(d);
+                
+                if (d.getTime() === today.getTime()) { div.classList.add('today'); todayElement = div; }
+                if (d.getTime() === activeDate.getTime()) { div.classList.add('active'); }
+
+                div.innerHTML = `<div class="day-num">${d.getDate()}</div><div class="day-month">${monthNames[d.getMonth()]}</div>`;
+                div.onclick = () => selectDate(d, dateString);
+                grid.appendChild(div);
+            }
+
+            setTimeout(() => {
+                if(todayElement) {
+                    const rowHeight = todayElement.offsetHeight + 8; 
+                    container.scrollTop = todayElement.offsetTop - container.offsetTop - (rowHeight * 1); 
+                }
+            }, 100);
+            updateSelectedDateText();
+        }
+
+        function selectDate(d, dateStr) {
+            activeDate = new Date(d);
+            activeDate.setHours(0,0,0,0);
+            document.getElementById('aptDate').value = dateStr;
+            renderCalendar(); 
+            updateSelectedDateText();
+            renderAppointmentsOnGrid(); 
+            clearFormAfterSchedule();
+        }
+
+        function updateSelectedDateText() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('selectedDateDisplay').innerText = activeDate.toLocaleDateString('tr-TR', options) + " - Randevu Programı";
+            document.getElementById('aptDate').value = getLocalIsoDate(activeDate);
+        }
+
+        function renderScheduleHeader() {
+            const tr = document.getElementById('scheduleHeader');
+            tr.innerHTML = '<th class="time-col"><i class="far fa-clock"></i> Saat</th>';
+            staffList.forEach(staff => {
+                let th = document.createElement('th');
+                th.innerText = staff;
+                tr.appendChild(th);
+            });
+            let thAdd = document.createElement('th');
+            thAdd.style.width = '50px';
+            thAdd.innerHTML = `<button class="btn-add-col" onclick="addNewStaffColumn()" title="Yeni Sütun (Personel) Ekle"><i class="fas fa-plus"></i></button>`;
+            tr.appendChild(thAdd);
+        }
+
+        function renderScheduleTable() {
+            renderScheduleHeader();
+            const tbody = document.getElementById('scheduleBody');
+            tbody.innerHTML = '';
+            let startTime = 8 * 60; 
+            let endTime = 20 * 60;  
+            let rowIndex = 0;
+            for (let time = startTime; time < endTime; time += 30) {
+                let tr = document.createElement('tr');
+                let h = Math.floor(time / 60).toString().padStart(2, '0');
+                let m = (time % 60).toString().padStart(2, '0');
+                let timeStr = `${h}:${m}`;
+                
+                let tdTime = document.createElement('td');
+                tdTime.className = 'time-col';
+                tdTime.innerText = timeStr;
+                tr.appendChild(tdTime);
+
+                staffList.forEach((staff, colIndex) => {
+                    let td = document.createElement('td');
+                    td.className = 'slot-cell';
+                    td.dataset.row = rowIndex;
+                    td.dataset.col = colIndex;
+                    td.dataset.time = timeStr;
+                    td.dataset.staff = staff;
+                    td.addEventListener('mousedown', handleMouseDown);
+                    td.addEventListener('mouseenter', handleMouseEnter);
+                    td.addEventListener('mouseup', handleMouseUp);
+                    tr.appendChild(td);
+                });
+                tr.appendChild(document.createElement('td'));
+                tbody.appendChild(tr);
+                rowIndex++;
+            }
+        }
+
+        function addNewStaffColumn() {
+            let name = prompt("Yeni eklenecek Estetisyen/Uzman adını giriniz:");
+            if (name && name.trim() !== "") {
+                staffList.push(name.trim());
+                renderAppointmentsOnGrid();
+            }
+        }
+
+        function handleMouseDown(e) {
+            if(e.button !== 0 || e.target.classList.contains('booked') || e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'i') return; 
+            isDragging = true;
+            dragStartCol = parseInt(e.target.dataset.col);
+            dragStartRow = parseInt(e.target.dataset.row);
+            dragEndRow = dragStartRow;
+            clearSelection();
+            e.target.classList.add('selected');
+        }
+
+        function handleMouseEnter(e) {
+            if (!isDragging) return;
+            let targetCol = parseInt(e.target.dataset.col);
+            let targetRow = parseInt(e.target.dataset.row);
+            if (targetCol !== dragStartCol || e.target.classList.contains('booked')) return;
+            dragEndRow = targetRow;
+            updateSelectionVisuals();
+        }
+
+        function handleMouseUp(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            processSelection();
+        }
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) { isDragging = false; processSelection(); }
+        });
+
+        function clearSelection() {
+            document.querySelectorAll('.slot-cell.selected').forEach(cell => cell.classList.remove('selected'));
+        }
+
+        function updateSelectionVisuals() {
+            clearSelection();
+            let start = Math.min(dragStartRow, dragEndRow);
+            let end = Math.max(dragStartRow, dragEndRow);
+            document.querySelectorAll('.slot-cell').forEach(cell => {
+                let r = parseInt(cell.dataset.row), c = parseInt(cell.dataset.col);
+                if (c === dragStartCol && r >= start && r <= end) cell.classList.add('selected');
+            });
+        }
+
+        function processSelection() {
+            let selectedCells = document.querySelectorAll('.slot-cell.selected');
+            if(selectedCells.length === 0) return;
+            let firstCell = selectedCells[0];
+            let lastCell = selectedCells[selectedCells.length - 1];
+
+            let startTimeStr = firstCell.dataset.time;
+            let endTimeParts = lastCell.dataset.time.split(':');
+            let endH = parseInt(endTimeParts[0]);
+            let endM = parseInt(endTimeParts[1]) + 30;
+            if(endM >= 60) { endH += 1; endM -= 60; }
+            let endTimeStr = `${endH.toString().padStart(2,'0')}:${endM.toString().padStart(2,'0')}`;
+
+            document.getElementById('aptTime').value = `${startTimeStr} - ${endTimeStr}`;
+            document.getElementById('aptStaff').value = firstCell.dataset.staff;
+            
+            let aptTimeInput = document.getElementById('aptTime');
+            aptTimeInput.style.backgroundColor = '#d1fae5';
+            setTimeout(() => { aptTimeInput.style.backgroundColor = 'white'; }, 500);
+        }
+
+        function clearFormAfterSchedule() {
+            document.getElementById('aptTime').value = "";
+            document.getElementById('aptStaff').value = "";
+            document.getElementById('aptCategory').value = "";
+            document.getElementById('aptNote').value = "";
+            document.getElementById('aptClient').value = "";
+            document.getElementById('editAptId').value = ""; 
+            clearSelection();
+        }
+
+        async function saveAppointment() {
+            let client = document.getElementById('aptClient').value;
+            let cat = document.getElementById('aptCategory').value;
+            let dateStr = document.getElementById('aptDate').value;
+            let timeStr = document.getElementById('aptTime').value;
+            let staffStr = document.getElementById('aptStaff').value;
+            let noteStr = document.getElementById('aptNote').value;
+            let editId = document.getElementById('editAptId').value;
+            
+            if(!client || !timeStr || !cat) {
+                alert("Lütfen Danışan, Saat ve Kategori seçtiğinizden emin olun!");
+                return;
+            }
+
+            let cObj = clients.find(c => String(c.id) === String(client));
+            let cName = cObj ? cObj.name : "Bilinmiyor";
+
+            let tP = timeStr.replace(/['"]/g, "").split('-');
+            let durationStr = "Bilinmiyor";
+            if(tP.length === 2) {
+                let s1 = tP[0].trim().split(':');
+                let s2 = tP[1].trim().split(':');
+                let mins = ((parseInt(s2[0])*60 + parseInt(s2[1])) - (parseInt(s1[0])*60 + parseInt(s1[1])));
+                durationStr = mins + " Dk";
+            }
+
+            if(editId) {
+                appointments = appointments.filter(a => a.id !== editId);
+                try { await fetch(`${API_URL}?action=silrandevu&id=${encodeURIComponent(editId)}&_=${Date.now()}`); } catch(e) {}
+            }
+
+            let tempApt = { id: "temp-" + Date.now(), tarih: dateStr, saat: timeStr, uzman: staffStr, danisan: cName, kategori: cat, sure: durationStr, notlar: noteStr };
+            appointments.push(tempApt);
+            renderAppointmentsOnGrid(); 
+
+            let btn = document.getElementById('btnSaveAppointment');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buluta Kaydediliyor...';
+            btn.disabled = true;
+
+            try {
+                let url = `${API_URL}?action=kaydetrandevu&tarih=${encodeURIComponent(dateStr)}&saat=${encodeURIComponent(timeStr)}&uzman=${encodeURIComponent(staffStr)}&danisan=${encodeURIComponent(cName)}&kategori=${encodeURIComponent(cat)}&sure=${encodeURIComponent(durationStr)}&notlar=${encodeURIComponent(noteStr)}&_=${Date.now()}`;
+                let response = await fetch(url);
+                let result = await response.json();
+
+                if (result.status === "success") {
+                    let idx = appointments.findIndex(a => a.id === tempApt.id);
+                    if(idx > -1) appointments[idx].id = result.id;
+
+                    // ========== YÖNLENDİRME (HİZMET KATEGORİSİ KONTROLÜ) ==========
+                    if (hizmetKategorileri && hizmetKategorileri.includes(cat)) {
+                        let cevap = confirm("✅ Seçilen işlem bir hizmettir.\nHizmet & Paket Yönetim Paneli sayfasına yönlendirilmek ister misiniz?");
+                        if (cevap) {
+                            // Hedef sayfa: hizmet-paket-giris.html
+                            window.location.href = "hizmet-paket-giris.html?hizmetAdi=" + encodeURIComponent(cat);
+                        }
+                    }
+                    // ============================================================
+                    
+                } else { 
+                    alert("Kayıt Hatası: " + result.message); 
+                    appointments = appointments.filter(a => a.id !== tempApt.id);
+                    renderAppointmentsOnGrid();
+                }
+            } catch (error) {
+                console.error("Randevu gönderilirken hata:", error);
+                alert("Bağlantı hatası!");
+            } finally {
+                btn.innerHTML = '<i class="fas fa-save"></i> Randevuyu Kaydet';
+                btn.disabled = false;
+                clearFormAfterSchedule();
+            }
+        }
+
+        async function fetchKategoriler() {
+            try {
+                const stokRes = await fetch(API_URL + "?action=getkategoriler&_=" + Date.now());
+                const stokData = await stokRes.json();
+                
+                const hizmetRes = await fetch(API_URL + "?action=gethizmetler&_=" + Date.now());
+                const hizmetData = await hizmetRes.json();
+                
+                let tumKategoriler = [];
+                hizmetKategorileri = [];
+                
+                if (Array.isArray(stokData)) {
+                    stokData.forEach(item => {
+                        let kategoriAdi = item.kategoriAdi || item["kategoriAdi"] || "";
+                        if (kategoriAdi && !kategoriAdi.toLowerCase().includes("sarf")) {
+                            tumKategoriler.push(kategoriAdi);
+                        }
+                    });
+                }
+                
+                if (Array.isArray(hizmetData)) {
+                    hizmetData.forEach(item => {
+                        let hizmetAdi = item.hizmetAdiid || item["hizmetAdiid"] || "";
+                        if (hizmetAdi && !hizmetAdi.toLowerCase().includes("sarf")) {
+                            tumKategoriler.push(hizmetAdi);
+                            hizmetKategorileri.push(hizmetAdi);
+                        }
+                    });
+                }
+                
+                tumKategoriler = [...new Set(tumKategoriler)];
+                
+                const select = document.getElementById('aptCategory');
+                select.innerHTML = '<option value="">-- Kategori Seçin --</option>';
+                tumKategoriler.forEach(kat => {
+                    if (kat && kat.trim() !== "") {
+                        let option = document.createElement('option');
+                        option.value = kat;
+                        option.textContent = kat;
+                        if (hizmetKategorileri.includes(kat)) {
+                            option.setAttribute('data-source', 'hizmet');
+                        }
+                        select.appendChild(option);
+                    }
+                });
+                
+                console.log(`${tumKategoriler.length} kategori yüklendi (sarf malzemeler hariç). Hizmet olanlar:`, hizmetKategorileri);
+                
+            } catch (error) {
+                console.error("Kategoriler yüklenirken hata:", error);
+                document.getElementById('aptCategory').innerHTML = '<option value="">-- Kategori yüklenemedi --</option>';
+            }
+        }
+
+        async function fetchRandevular() {
+            if (API_URL === "https://script.google.com/macros/s/AKfycbx6fWf_rPacPSY0VdKaq5DAMuT6EQTFu5CA7GK9qRwQTNep3eMMwA0jZcIT9OQz76EH8g/exec") return;
+            try {
+                const response = await fetch(API_URL + "?action=getrandevular&_=" + Date.now());
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    appointments = data.map(row => ({
+                        id: row.randevuGunu || row.id,
+                        tarih: row.randevular || row.tarih,
+                        saat: row.saat,
+                        uzman: row.uzman,
+                        danisan: row.danisan,
+                        kategori: row.kategori,
+                        sure: row.sure,
+                        notlar: row.notlar || ""
+                    }));
+                }
+                renderAppointmentsOnGrid(); 
+            } catch (e) { console.error("Randevular çekilemedi:", e); }
+        }
+
+        function formatSafeDate(val) {
+            if (!val) return "";
+            let s = String(val).replace(/['"]/g, "").trim();
+            if (s.includes("T") && s.endsWith("Z")) return getLocalIsoDate(new Date(s)); 
+            if (s.includes("T")) s = s.split("T")[0]; 
+            if (s.includes(" ")) s = s.split(" ")[0]; 
+            
+            let p = [];
+            if (s.includes(".")) p = s.split(".");
+            else if (s.includes("/")) p = s.split("/");
+            else if (s.includes("-")) p = s.split("-");
+            
+            if (p.length >= 3) {
+                if (p[0].length === 4) return `${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;
+                if (p[2].length === 4) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+            }
+            return s; 
+        }
+
+        function renderAppointmentsOnGrid() {
+            // Performans: staffList henüz yüklenmemişse çık
+            if (!staffList || staffList.length === 0 || staffList[0] === "Yükleniyor...") return;
+            
+            renderScheduleTable(); 
+            let currentDateStr = formatSafeDate(document.getElementById('aptDate').value);
+            
+            let todaysApts = appointments.filter(a => {
+                let t = formatSafeDate(a.tarih);
+                return t === currentDateStr;
+            });
+
+            todaysApts.forEach(apt => {
+                let colIndex = staffList.findIndex(s => String(s).trim().toLowerCase() === String(apt.uzman).replace(/['"]/g, "").trim().toLowerCase());
+                if(colIndex === -1) return;
+
+                let timeParts = String(apt.saat).replace(/['"]/g, "").split('-');
+                if(timeParts.length < 2) return;
+                let sParts = timeParts[0].trim().split(':');
+                let eParts = timeParts[1].trim().split(':');
+
+                let startRow = Math.round(((parseInt(sParts[0]) * 60 + parseInt(sParts[1])) - 480) / 30); 
+                let endRow = Math.round(((parseInt(eParts[0]) * 60 + parseInt(eParts[1])) - 480) / 30) - 1; 
+
+                let boxColor = colColors[colIndex % colColors.length];
+                let cellNodes = [];
+
+                for(let r = startRow; r <= endRow; r++) {
+                    let cell = document.querySelector(`.slot-cell[data-row='${r}'][data-col='${colIndex}']`);
+                    if(cell) cellNodes.push(cell);
+                }
+
+                if(cellNodes.length > 0) {
+                    cellNodes.forEach((cell, idx) => {
+                        cell.classList.remove('selected');
+                        cell.classList.add('booked');
+                        
+                        if (cellNodes.length === 1) {
+                            cell.style.borderTop = `2px solid ${boxColor}`;
+                            cell.style.borderBottom = `2px solid ${boxColor}`;
+                            cell.style.padding = "2px";
+                            cell.innerHTML = `
+                                <div style="background-color: ${boxColor}25; padding: 2px 4px; border-radius: 4px; height: 100%; display: flex; align-items: center; justify-content: space-between; border-left: 4px solid ${boxColor};">
+                                    <div style="display:flex; flex-direction:column; justify-content:center; text-align:left; max-width: 65%; overflow:hidden;">
+                                        <div class="apt-name" style="font-size:0.75rem; font-weight:800; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${apt.danisan}</div>
+                                        <div class="apt-cat" style="font-size:0.65rem; color:#475569; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${apt.kategori} <small style="font-size:0.55rem;">(${apt.sure || '30Dk'})</small></div>
+                                    </div>
+                                    <div class="apt-btns" style="display:flex; gap:2px; pointer-events:auto;">
+                                        <button onclick="event.stopPropagation(); gridEditApt('${apt.danisan}', '${apt.uzman}', '${apt.saat}', '${apt.kategori}', '${apt.notlar || ''}', '${apt.id}')" style="background:white; border:1px solid #cbd5e1; border-radius:3px; width:20px; height:20px; cursor:pointer; color:#0284c7;"><i class="fas fa-edit" style="font-size:0.65rem;"></i></button>
+                                        <button onclick="event.stopPropagation(); gridDeleteApt('${apt.id}')" style="background:white; border:1px solid #cbd5e1; border-radius:3px; width:20px; height:20px; cursor:pointer; color:#ef4444;"><i class="fas fa-trash-alt" style="font-size:0.65rem;"></i></button>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            if (idx === 0) {
+                                cell.style.borderTop = `2px solid ${boxColor}`;
+                                cell.style.borderBottom = `none`;
+                                cell.style.padding = "2px 2px 0 2px";
+                                cell.innerHTML = `
+                                    <div style="background-color: ${boxColor}25; padding: 2px 4px 0 4px; height: 100%; display: flex; flex-direction: column; justify-content: flex-start; text-align: left; border-left: 4px solid ${boxColor}; border-top-right-radius: 4px;">
+                                        <div class="apt-name" style="font-size:0.75rem; font-weight:800; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${apt.danisan}</div>
+                                        <div class="apt-cat" style="font-size:0.65rem; color:#475569; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${apt.kategori}</div>
+                                    </div>
+                                `;
+                            } else if (idx === cellNodes.length - 1) {
+                                cell.style.borderBottom = `2px solid ${boxColor}`;
+                                cell.style.borderTop = `none`;
+                                cell.style.padding = "0 2px 2px 2px";
+                                cell.innerHTML = `
+                                    <div style="background-color: ${boxColor}25; padding: 0 4px 2px 4px; height: 100%; display: flex; justify-content: space-between; align-items: flex-end; text-align: left; border-left: 4px solid ${boxColor}; border-bottom-right-radius: 4px;">
+                                        <span style="font-size:0.6rem; color:#334155; font-weight:700; background:rgba(255,255,255,0.7); padding:1px 4px; border-radius:3px;"><i class="far fa-clock"></i> ${apt.sure || 'Uzatmalı'}</span>
+                                        <div class="apt-btns" style="display:flex; gap:2px; pointer-events:auto;">
+                                            <button onclick="event.stopPropagation(); gridEditApt('${apt.danisan}', '${apt.uzman}', '${apt.saat}', '${apt.kategori}', '${apt.notlar || ''}', '${apt.id}')" style="background:white; border:1px solid #cbd5e1; border-radius:3px; width:20px; height:20px; cursor:pointer; color:#0284c7;"><i class="fas fa-edit" style="font-size:0.65rem;"></i></button>
+                                            <button onclick="event.stopPropagation(); gridDeleteApt('${apt.id}')" style="background:white; border:1px solid #cbd5e1; border-radius:3px; width:20px; height:20px; cursor:pointer; color:#ef4444;"><i class="fas fa-trash-alt" style="font-size:0.65rem;"></i></button>
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                cell.style.borderTop = `none`;
+                                cell.style.borderBottom = `none`;
+                                cell.style.padding = "0 2px";
+                                cell.innerHTML = `
+                                    <div style="background-color: ${boxColor}25; height: 100%; border-left: 4px solid ${boxColor};"></div>
+                                `;
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function gridEditApt(danisan, uzman, saat, kategori, notlar, aptId) {
+            let found = clients.find(c => c.name.toLowerCase().trim() === danisan.toLowerCase().trim());
+            if(found) {
+                document.getElementById('aptClient').value = found.id;
+                fillClientPhone();
+            }
+            document.getElementById('aptStaff').value = uzman;
+            document.getElementById('aptTime').value = saat;
+            document.getElementById('aptCategory').value = kategori;
+            document.getElementById('aptNote').value = notlar;
+            document.getElementById('editAptId').value = aptId; 
+            
+            document.querySelector('.appointment-action-bar').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        async function gridDeleteApt(id) {
+            if(String(id).startsWith("temp-")) {
+                alert("Randevu şu an arka planda kaydediliyor, lütfen birkaç saniye bekleyip tekrar silmeyi deneyin.");
+                return;
+            }
+            if(confirm("Bu randevuyu takvimden silmek istediğinize emin misiniz?")) {
+                appointments = appointments.filter(a => a.id !== id);
+                renderAppointmentsOnGrid();
+                try {
+                    await fetch(`${API_URL}?action=silrandevu&id=${encodeURIComponent(id)}&_=${Date.now()}`);
+                } catch(e) { console.error(e); }
+            }
+        }
+
+        function fillClientPhone() {
+            let clientId = document.getElementById('aptClient').value;
+            let phoneInput = document.getElementById('aptPhone');
+            if (clientId) {
+                let cObj = clients.find(c => String(c.id) === String(clientId));
+                if (cObj) phoneInput.value = cObj.phone;
+            } else { phoneInput.value = ""; }
+        }
+
+        window.selectClientForWhatsApp = function(id) {
+            let selectBox = document.getElementById('aptClient');
+            if(selectBox) {
+                selectBox.value = id;
+                if(typeof fillClientPhone === 'function') fillClientPhone(); 
+                document.querySelector('.appointment-action-bar').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        };
+
+        function openWhatsAppPopup() {
+            let clientId = document.getElementById('aptClient').value;
+            let date = document.getElementById('aptDate').value;
+            let time = document.getElementById('aptTime').value;
+            let cat = document.getElementById('aptCategory').value;
+
+            if(!clientId) return alert("Lütfen önce bir danışan seçiniz.");
+            
+            let cObj = clients.find(c => String(c.id) === String(clientId));
+            if(!cObj) return;
+
+            let firstName = cObj.name.split(' ')[0]; 
+            let messageText = "";
+
+            if (time && cat) {
+                let formattedDate = date ? date.split('-').reverse().join('.') : ""; 
+                messageText = `Merhaba ${firstName} Hanım,\n\n${formattedDate} tarihinde saat ${time} için *${cat}* randevunuz başarıyla oluşturulmuştur.\n\nSizi Bahar Beauty Studio'da ağırlamaktan mutluluk duyacağız. ✨`;
+            } else {
+                messageText = `Merhaba ${firstName},\n\nBahar Beauty Studio'dan iletişime geçiyoruz. Size nasıl yardımcı olabiliriz? ✨`;
+            }
+
+            let previewBox = document.getElementById('waMessagePreview');
+            previewBox.innerText = messageText;
+            previewBox.contentEditable = "true";
+            previewBox.style.outline = "none"; 
+            
+            document.getElementById('waTargetPhone').value = document.getElementById('aptPhone').value || cObj.phone;
+            document.getElementById('waModal').style.display = 'flex';
+        }
+
+        function closeWhatsAppPopup() { document.getElementById('waModal').style.display = 'none'; }
+
+        function sendWhatsAppMessage() {
+            let phone = document.getElementById('waTargetPhone').value;
+            let text = document.getElementById('waMessagePreview').innerText;
+            if(!phone) return alert("Geçerli bir telefon numarası bulunamadı!");
+
+            let cleanPhone = phone.replace(/[^0-9]/g, '');
+            if(cleanPhone.startsWith('0')) cleanPhone = cleanPhone.substring(1);
+            if(!cleanPhone.startsWith('90') && cleanPhone.length === 10) cleanPhone = '90' + cleanPhone;
+
+            window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+            closeWhatsAppPopup();
+        }
+        
+        async function fetchUzmanPersonel() {
+            try {
+                const response = await fetch(API_URL + "?action=getkullanicilar&_=" + Date.now());
+                const data = await response.json();
+                if (data && Array.isArray(data)) {
+                    let dinamikPersoneller = [];
+                    data.forEach(kisi => {
+                        let rol = kisi["Rol"] || kisi["rol"] || kisi["ROL"] || "";
+                        let adSoyad = kisi["adSoyad"] || kisi["AdSoyad"] || kisi["adsoyad"] || "";
+                        if (rol.toString().toLowerCase().trim().includes("uzman") && adSoyad) dinamikPersoneller.push(adSoyad);
+                    });
+                    staffList = dinamikPersoneller.length > 0 ? dinamikPersoneller : ["Kayıtlı Uzman Yok"];
+                }
+            } catch (error) { staffList = ["Bağlantı Hatası"]; }
+        }
+
+        async function fetchDanisanlar() {
+            try {
+                const response = await fetch(API_URL + "?action=getdanisanlar&_=" + Date.now());
+                const data = await response.json();
+                if (data && Array.isArray(data)) {
+                    clients = []; 
+                    data.forEach(kisi => {
+                        let id = kisi["id"] || kisi["danisanid"] || "";
+                        if (!id) return; 
+
+                        let rawPhone = (kisi["danisanTelefonu"] || kisi["Telefon"] || "").toString().trim();
+                        let rawDob = (kisi["danisanDogumTarihi"] || kisi["Doğum Tarihi"] || "").toString();
+                        let rawNote = (kisi["notlarDanisan"] || kisi["Not"] || "").toString().trim();
+                        let rawFav = (kisi["favoriHizmetDanisan"] || kisi["Favori İşlem"] || "").toString().trim();
+                        
+                        let dob = rawDob.split('T')[0];
+                        if (rawPhone === "0") rawPhone = "";
+                        if (dob === "0" || dob === "NaN") dob = "";
+                        if (rawNote === "0") rawNote = "";
+                        if (rawFav === "0" || rawFav === "") rawFav = "-";
+
+                        clients.push({ id: id, name: (kisi["danisanAdiSoyadi"] || kisi["Ad Soyad"] || "İsimsiz").toString().trim(), phone: rawPhone, dob: dob, note: rawNote, fav: rawFav });
+                    });
+                    renderClientTable();
+                }
+            } catch (error) { console.error("Danışanlar çekilemedi:", error); }
+        }
+
+        function renderClientSelect() {
+            const select = document.getElementById('aptClient');
+            select.innerHTML = '<option value="">-- Danışan Seçiniz --</option>';
+            clients.forEach(c => {
+                let opt = document.createElement('option');
+                opt.value = c.id;
+                opt.innerText = c.name; 
+                select.appendChild(opt);
+            });
+        }
+
+        function renderClientTable(filteredData = null) {
+            const tbody = document.getElementById('clientTableBody');
+            tbody.innerHTML = '';
+            let dataToRender = filteredData ? filteredData : [...clients].reverse();
+
+            dataToRender.slice(0, 10).forEach((c, idx) => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${c.name}</strong></td>
+                    <td>${c.phone}</td>
+                    <td>${c.dob ? c.dob.split('-').reverse().join('.') : '-'}</td>
+                    <td style="font-size: 0.85rem; color:#64748b;">${c.note}</td>
+                    <td><span style="background: #fdf4ff; color: #a21caf; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; border: 1px solid #f5d0fe;">${c.fav || '-'}</span></td>
+                    <td>
+                        <div class="action-btns" style="justify-content: flex-end;">
+                            <button class="btn-whatsapp" style="padding: 6px 10px; font-size: 0.85rem;" onclick="selectClientForWhatsApp('${c.id}')"><i class="fab fa-whatsapp"></i></button>
+                            <button class="btn-edit" onclick="editClientByArrayOrder(${idx}, '${c.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn-delete" onclick="deleteClient('${c.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            renderClientSelect(); 
+        }
+
+        function filterClientTable() {
+            let phoneVal = document.getElementById('filterPhone').value.toLowerCase().replace(/\s/g, '');
+            let dobVal = document.getElementById('filterDob').value.toLowerCase();
+            let catVal = document.getElementById('filterCategory').value.toLowerCase();
+
+            let filtered = [...clients].reverse().filter(c => {
+                let matchPhone = c.phone.toLowerCase().replace(/\s/g, '').includes(phoneVal);
+                let matchDob = (c.dob ? c.dob.split('-').reverse().join('.') : '').includes(dobVal) || (c.dob && c.dob.includes(dobVal));
+                let matchCat = (c.fav || '').toLowerCase().includes(catVal);
+                return matchPhone && matchDob && matchCat;
+            });
+            renderClientTable(filtered);
+        }
+
+        async function saveClient() {
+            let id = document.getElementById('editClientId').value || "";
+            let name = document.getElementById('clientName').value.trim();
+            let phone = document.getElementById('clientPhone').value.trim();
+            let dob = document.getElementById('clientDob').value || "";
+            let note = document.getElementById('clientNote').value.trim();
+
+            if (!name || !phone) return alert("Lütfen en az Ad Soyad ve Telefon alanlarını doldurunuz.");
+
+            let btn = document.getElementById('btnSaveClient');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kaydediliyor...';
+            btn.disabled = true;
+
+            try {
+                let action = id ? "guncelledanisan" : "kaydetdanisan";
+                let url = `${API_URL}?action=${action}&id=${encodeURIComponent(id)}&adSoyad=${encodeURIComponent(name)}&telefon=${encodeURIComponent(phone)}&dogumTarihi=${encodeURIComponent(dob)}&not=${encodeURIComponent(note)}&_=${Date.now()}`;
+
+                let response = await fetch(url);
+                let result = await response.json();
+
+                if (result.status === "success") {
+                    await new Promise(r => setTimeout(r, 800)); 
+                    await fetchDanisanlar(); 
+                } else { alert("Kayıt Hatası: " + result.message); }
+                
+                document.getElementById('editClientId').value = "";
+                document.getElementById('clientName').value = "";
+                document.getElementById('clientPhone').value = "";
+                document.getElementById('clientDob').value = "";
+                document.getElementById('clientNote').value = "";
+
+            } catch (error) { alert("Bağlantı hatası!"); } 
+            finally {
+                btn.innerHTML = '<i class="fas fa-check"></i> Danışanı Kaydet';
+                btn.disabled = false;
+            }
+        }
+
+        function editClientByArrayOrder(orderIndex, fallbackId) {
+            let reversedList = [...clients].reverse();
+            let c = reversedList[orderIndex];
+            if(!c && fallbackId) {
+                c = clients.find(x => String(x.id) === String(fallbackId));
+            }
+            if(c) {
+                document.getElementById('editClientId').value = c.id;
+                document.getElementById('clientName').value = c.name;
+                document.getElementById('clientPhone').value = c.phone;
+                document.getElementById('clientDob').value = c.dob;
+                document.getElementById('clientNote').value = c.note;
+                document.getElementById('btnSaveClient').innerHTML = '<i class="fas fa-sync"></i> Güncelle';
+                document.getElementById('clientName').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        async function deleteClient(id) {
+            if(confirm("Bu danışanı kalıcı olarak silmek istediğinize emin misiniz?")) {
+                try {
+                    await fetch(`${API_URL}?action=sildanisan&id=${encodeURIComponent(id)}&_=${Date.now()}`);
+                    await new Promise(r => setTimeout(r, 600));
+                    await fetchDanisanlar(); 
+                } catch (error) { console.error("Silme hatası:", error); }
+            }
+        }
+
+        function printCalendar() { document.body.classList.add('print-calendar'); window.print(); setTimeout(() => document.body.classList.remove('print-calendar'), 1000); }
+        function printClientList() { document.body.classList.add('print-clients'); window.print(); setTimeout(() => document.body.classList.remove('print-clients'), 1000); }
+
+        // ========== SAYFA YÜKLENİRKEN PARALEL API ÇAĞRILARI ==========
+        window.onload = async () => {
+            let localDateStr = getLocalIsoDate(activeDate);
+            selectDate(activeDate, localDateStr);
+            
+            // Tüm API çağrılarını paralel çalıştır
+            await Promise.allSettled([
+                fetchUzmanPersonel(),
+                fetchRandevular(),
+                fetchDanisanlar(),
+                fetchKategoriler()
+            ]);
+            
+            // Veriler geldikten sonra client tablosunu ve randevuları tekrar render et
+            renderClientTable();
+            renderAppointmentsOnGrid();
+        };
+    </script>
+</body>
+</html>
