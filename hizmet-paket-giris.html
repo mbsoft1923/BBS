@@ -199,7 +199,7 @@
             gap: 10px;
         }
 
-        /* 🖨️ PRINT RULES - SADECE BILETI YAZDIRMA AYARI */
+        /* 🖨️ PRINT RULES */
         @media print {
             body * { visibility: hidden; }
             #biletModal, #biletModal * { visibility: visible; }
@@ -229,11 +229,8 @@
                     <div class="card-title">
                         <span><i class="fas fa-users" style="color: #00a8b5;"></i> Danışan Seçimi</span>
                     </div>
-                    <div class="flex gap-2 mb-2">
+                    <div class="mb-2">
                         <input type="text" class="search-box" id="danisanSearch" placeholder="Danışan Ara..." oninput="filtreleList('danisanSearch', 'danisanListe')">
-                        <button class="btn-submit !p-2" onclick="danisanEklePrompt()" title="Yeni Danışan Ekle">
-                            <i class="fas fa-user-plus text-xs"></i>
-                        </button>
                     </div>
                     <div class="list-scroll-area" id="danisanListe">
                         <p class="text-xs text-center text-slate-400 py-6">Yükleniyor...</p>
@@ -258,21 +255,17 @@
             <div class="lg:col-span-3 card flex flex-col justify-between">
                 <div>
                     <div class="card-title">
-                        <span><i class="fas fa-tags" style="color: #00a8b5;"></i> Hizmet Tanımı</span>
+                        <span><i class="fas fa-tags" style="color: #00a8b5;"></i> Yeni Hizmet Tanımla</span>
                     </div>
-                    <div class="mb-1">
-                        <label class="block text-[0.7rem] font-bold text-slate-500 mb-0.5">Hizmet Adı</label>
-                        <input type="text" id="libHizmetAdi" placeholder="Örn: Lazer Epilasyon">
+                    <div class="mb-1 mt-3">
+                        <label class="block text-[0.7rem] font-bold text-slate-500 mb-0.5">Hizmet / Kategori Adı</label>
+                        <input type="text" id="libHizmetKategori" placeholder="Örn: Lazer Epilasyon">
                     </div>
-                    <div class="mb-1">
-                        <label class="block text-[0.7rem] font-bold text-slate-500 mb-0.5">Hizmet Kategorisi</label>
-                        <input type="text" id="libHizmetKategori" placeholder="Örn: Cilt Bakımı">
-                    </div>
-                    <div class="mb-2">
+                    <div class="mb-2 mt-2">
                         <label class="block text-[0.7rem] font-bold text-slate-500 mb-0.5">İşlem Süresi (Dk)</label>
                         <input type="number" id="libHizmetSuresi" placeholder="Örn: 45">
                     </div>
-                    <button class="btn-submit w-full mb-2" onclick="hizmetKutuphaneKaydet()">
+                    <button class="btn-submit w-full mb-2 mt-2" onclick="hizmetKutuphaneKaydet()">
                         <i class="fas fa-plus text-xs"></i> Kütüphaneye Ekle
                     </button>
                     <div class="list-scroll-area !h-[80px]" id="kutuphaneListesi">
@@ -382,10 +375,10 @@
             </div>
         </div>
     </div>
+    
     <div id="biletModal">
         <div class="bilet-container">
-            <div class="bilet-body" id="biletIcerik">
-                </div>
+            <div class="bilet-body" id="biletIcerik"></div>
             <div class="bilet-actions">
                 <button onclick="window.print()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded text-center text-xs"><i class="fas fa-print mr-1"></i> Yazdır</button>
                 <button onclick="biletKapat()" class="flex-1 bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 rounded text-center text-xs">Kapat</button>
@@ -395,21 +388,17 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // --- BİLET KONTROLÜ (Giriş yapılmış mı?) ---
             let aktifKullanici = JSON.parse(localStorage.getItem('aktifKullanici'));
-            
-            // Eğer bileti yoksa ana kapıya (index.html) gönder
             if (!aktifKullanici) {
                 window.location.href = "index.html";
                 return;
             }
-
-            // --- BİLETİ OLAN HERKES İÇİN NORMAL İŞLEYİŞ ---
             const bugun = new Date().toISOString().slice(0, 10);
             document.getElementById('paketIlkGirisTarihi').value = bugun;
             veriYukleleriGeriCagır();
         });
-        const API_URL = "https://script.google.com/macros/s/AKfycbycLcqeKr2ERvi-HisKboLMM7cFfq1r_5tRfS60uWqTEaiBJN31D1odAkfShqYtaU4owQ/exec";
+        
+        const API_URL = "https://script.google.com/macros/s/AKfycbx6fWf_rPacPSY0VdKaq5DAMuT6EQTFu5CA7GK9qRwQTNep3eMMwA0jZcIT9OQz76EH8g/exec";
         
         let danisanlar = [];
         let uzmanlar = [];
@@ -417,6 +406,8 @@
         let aktifDanisan = null;
         let aktifUzman = null;
         let aktifTip = 'tek';
+        let aktifArsivListesi = []; 
+        let genelArsivTumu = [];
 
         let kartDurumState = {
             hizmetNo: "",
@@ -439,11 +430,18 @@
 
         function showToast(msg) {
             const container = document.getElementById('toastContainer');
+            container.innerHTML = ''; 
             const toast = document.createElement('div');
             toast.className = "bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg flex items-center gap-2 border-l-4 border-teal-500";
             toast.innerHTML = `<i class="fas fa-info-circle text-teal-400"></i> <span>${msg}</span>`;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+            setTimeout(() => { if(toast.parentElement) toast.remove() }, 3000);
+        }
+
+        function safeGet(val1, val2, fallback = "-") {
+            if (val1 !== undefined && val1 !== null && String(val1).trim() !== "undefined" && String(val1).trim() !== "null" && String(val1).trim() !== "") return val1;
+            if (val2 !== undefined && val2 !== null && String(val2).trim() !== "undefined" && String(val2).trim() !== "null" && String(val2).trim() !== "") return val2;
+            return fallback;
         }
 
         function getSafeArray(val) {
@@ -495,7 +493,7 @@
                 uzmanlar = tumUye.filter(u => {
                     const vals = Object.values(u);
                     let r = String(u.rol || u.Rol || u.ROL || vals[4] || "").toLowerCase();
-                    return r.includes("uzman") || r.includes("admin") || r.includes("müdür");
+                    return r.includes("uzman");
                 });
                 renderUzmanlar();
             });
@@ -515,9 +513,8 @@
                 return;
             }
             liste.forEach(d => {
-                const vals = Object.values(d);
-                let dId = d.id || d.ID || vals[0] || "";
-                let dAd = d.danisanAdiSoyadi || d["Danışan Adı Soyadı"] || d.danisanadisoyadi || vals[1] || "İsimsiz";
+                let dId = safeGet(d.id, d.ID);
+                let dAd = safeGet(d.danisanAdiSoyadi, safeGet(d["Danışan Adı Soyadı"], d.danisanadisoyadi, "İsimsiz"));
                 
                 const row = document.createElement('div');
                 row.className = "list-item-row";
@@ -527,14 +524,6 @@
                     <div class="flex flex-col">
                         <span class="item-primary-text">${dAd}</span>
                         <span class="text-[0.68rem] text-slate-400">ID: ${dId}</span>
-                    </div>
-                    <div class="flex gap-1" onclick="event.stopPropagation();">
-                        <button onclick="danisanDuzenle('${dId}', '${dAd}')" class="text-teal-600 hover:text-teal-800 p-1 text-xs" title="Düzenle">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="danisanSil('${dId}')" class="text-rose-600 hover:text-rose-800 p-1 text-xs" title="Sil">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
                     </div>
                 `;
                 div.appendChild(row);
@@ -550,10 +539,9 @@
                 return;
             }
             liste.forEach(u => {
-                const vals = Object.values(u);
-                let uId = u.id || u.ID || vals[0] || "";
-                let uAd = u.adSoyad || u["Ad Soyad"] || u.adsoyad || vals[2] || vals[1] || "İsimsiz";
-                let uRol = u.rol || u["Rol"] || vals[4] || "";
+                let uId = safeGet(u.id, u.ID);
+                let uAd = safeGet(u.adSoyad, safeGet(u["Ad Soyad"], u.adsoyad, "İsimsiz"));
+                let uRol = safeGet(u.rol, safeGet(u["Rol"], ""));
                 
                 const row = document.createElement('div');
                 row.className = "list-item-row";
@@ -569,7 +557,6 @@
             });
         }
 
-        /* 🚀 ONARILAN DİNAMİK YAKALAMA MİMARİSİ: İndis isimleri tam eşleşecek şekilde düzeltildi */
         function renderHizmetKutuphane() {
             const div = document.getElementById('kutuphaneListesi');
             const select = document.getElementById('hizmetSecimi');
@@ -586,24 +573,33 @@
             
             let gecerliHizmetSayisi = 0;
             liste.forEach((h) => {
-                // Sizin belirttiğiniz net e-tablo indis isimleri tam olarak eşleştirildi
-                let hAd = h.hizmetAdiid || h["hizmetAdiid"] || h.hizmetadiid;
-                let hSure = h.hizmetislemSuresi || h["hizmetislemSuresi"] || h.hizmetismsure;
-                let hKat = h.hizmetKategori || h["hizmetKategori"] || "";
+                let hId = safeGet(h.hizmetid, safeGet(h.id, h.ID));
+                let hAd = safeGet(h.hizmetAdiid, safeGet(h["hizmetAdiid"], h.hizmetadiid));
+                let hSure = safeGet(h.hizmetislemSuresi, safeGet(h["hizmetislemSuresi"], h.hizmetismsure, "0"));
                 
-                if (!hAd || String(hAd).trim() === "") return; 
+                if (hAd === "-") return; 
                 gecerliHizmetSayisi++;
 
+                const safeId = String(hId).trim();
                 const safeAd = String(hAd).trim();
-                const safeSure = String(hSure).trim() || "0";
-                const safeKat = String(hKat).trim() ? ` [${String(hKat).trim()}]` : "";
+                const safeSure = String(hSure).trim();
 
                 if (div) {
                     const row = document.createElement('div');
                     row.className = "list-item-row !mb-1 !p-1.5 flex justify-between items-center";
                     row.innerHTML = `
-                        <span class="item-primary-text">✨ ${safeAd} <small class="text-slate-400 font-normal">${safeKat}</small></span>
-                        <span class="text-[0.7rem] text-slate-400 font-bold">${safeSure} dk</span>
+                        <div class="flex flex-col flex-1 truncate">
+                            <span class="item-primary-text truncate">✨ ${safeAd}</span>
+                            <span class="text-[0.65rem] text-slate-400 font-bold">${safeSure} dk</span>
+                        </div>
+                        <div class="flex gap-1 ml-2" onclick="event.stopPropagation();">
+                            <button onclick="hizmetDuzenle('${safeId}', '${safeAd.replace(/'/g, "\\'")}', '${safeSure}')" class="text-teal-600 hover:text-teal-800 p-1.5 text-xs" title="Düzenle">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="hizmetSil('${safeId}')" class="text-rose-600 hover:text-rose-800 p-1.5 text-xs" title="Sil">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
                     `;
                     div.appendChild(row);
                 }
@@ -612,7 +608,7 @@
                     const opt = document.createElement('option');
                     opt.value = safeAd; 
                     opt.dataset.sure = safeSure;
-                    opt.text = `${safeAd} (${safeSure} dk)${safeKat}`;
+                    opt.text = `${safeAd} (${safeSure} dk)`;
                     select.appendChild(opt);
                 }
             });
@@ -624,9 +620,8 @@
         }
 
         function danisanSec(d) {
-            const vals = Object.values(d);
-            let dId = d.id || d.ID || vals[0] || "";
-            let dAd = d.danisanAdiSoyadi || d["Danışan Adı Soyadı"] || d.danisanadisoyadi || vals[1] || "";
+            let dId = safeGet(d.id, d.ID);
+            let dAd = safeGet(d.danisanAdiSoyadi, safeGet(d["Danışan Adı Soyadı"], d.danisanadisoyadi, "İsimsiz"));
             
             document.querySelectorAll('#danisanListe .list-item-row').forEach(e => e.classList.remove('active'));
             const activeRow = document.getElementById(`danisan-row-${dId}`);
@@ -672,53 +667,47 @@
             kartDurumState.hizmetPaketTercihi = select.value;
         }
 
-        function danisanEklePrompt() {
-            let ad = prompt("Yeni Danışan Adı Soyadı giriniz:");
-            if(!ad || !ad.trim()) return;
-            jsonpFetch(`kaydetdanisan&danisanAdiSoyadi=${encodeURIComponent(ad.trim())}`, "cb_ekledanisan").then(() => {
-                showToast("Danışan başarıyla eklendi.");
-                veriYukleleriGeriCagır();
+        function hizmetSil(id) {
+            if(!confirm("Bu hizmeti kütüphaneden silmek istediğinize emin misiniz?")) return;
+            jsonpFetch(`silhizmetkutuphane&id=${id}`, "cb_silhizmet").then(() => {
+                showToast("Hizmet kütüphaneden silindi.");
+                jsonpFetch("gethizmetler", "cb_hizmetler_tazele").then(res => {
+                    hizmetKutuphanesi = getSafeArray(res);
+                    renderHizmetKutuphane();
+                });
             });
         }
 
-        function danisanDuzenle(id, eskiIsim) {
-            let yeni = prompt("Danışan adını düzenleyin:", eskiIsim);
-            if(!yeni || yeni.trim() === eskiIsim) return;
-            jsonpFetch(`guncelledanisan&id=${id}&danisanAdiSoyadi=${encodeURIComponent(yeni.trim())}`, "cb_guncelledanisan").then(() => {
-                showToast("Danışan kaydı güncellendi.");
-                veriYukleleriGeriCagır();
+        function hizmetDuzenle(id, eskiAd, eskiSure) {
+            let yeniAd = prompt("Hizmet / Kategori adını düzenleyin:", eskiAd);
+            if(!yeniAd || yeniAd.trim() === "") return;
+            let yeniSure = prompt("İşlem süresini (dk) düzenleyin:", eskiSure);
+            if(!yeniSure || yeniSure.trim() === "") return;
+
+            jsonpFetch(`guncellehizmetkutuphane&id=${id}&ad=${encodeURIComponent(yeniAd.trim())}&sure=${encodeURIComponent(yeniSure.trim())}`, "cb_gunchizmet").then(() => {
+                showToast("Hizmet başarıyla güncellendi.");
+                jsonpFetch("gethizmetler", "cb_hizmetler_tazele").then(res => {
+                    hizmetKutuphanesi = getSafeArray(res);
+                    renderHizmetKutuphane();
+                });
             });
         }
 
-        function danisanSil(id) {
-            if(!confirm("Bu danışanı silmek istediğinize emin misiniz?")) return;
-            jsonpFetch(`sildanisan&id=${id}`, "cb_sildanisan").then(() => {
-                showToast("Danışan kaydı silindi.");
-                aktifDanisan = null;
-                veriYukleleriGeriCagır();
-            });
-        }
-
-        /* 🚀 ONARILAN KAYIT FONKSİYONU: Google Sheets parametre yazımları ve eklenen hizmetKategori alanı entegre edildi */
         function hizmetKutuphaneKaydet() {
-            const adInput = document.getElementById('libHizmetAdi');
             const kategoriInput = document.getElementById('libHizmetKategori');
             const sureInput = document.getElementById('libHizmetSuresi');
             
-            if(!adInput || !sureInput || !kategoriInput) return;
+            if(!kategoriInput || !sureInput) return;
             
-            const ad = adInput.value.trim();
-            const kategori = kategoriInput.value.trim();
+            const kategoriAd = kategoriInput.value.trim();
             const sure = sureInput.value.trim();
             
-            if(!ad || !sure) return alert("Hizmet adı ve İşlem süresi alanları zorunludur.");
+            if(!kategoriAd || !sure) return alert("Hizmet / Kategori adı ve İşlem süresi alanları zorunludur.");
             
-            // Sizin indislerinize uygun parametre yapılandırması
-            let queryUrl = `kaydethizmetkutuphane&hizmetAdiid=${encodeURIComponent(ad)}&hizmetKategori=${encodeURIComponent(kategori)}&hizmetislemSuresi=${encodeURIComponent(sure)}`;
+            let queryUrl = `kaydethizmetkutuphane&hizmetAdiid=${encodeURIComponent(kategoriAd)}&hizmetislemSuresi=${encodeURIComponent(sure)}`;
             
             jsonpFetch(queryUrl, "cb_hizmetekle").then(() => {
                 showToast("Kütüphaneye eklendi.");
-                adInput.value = "";
                 kategoriInput.value = "";
                 sureInput.value = "";
                 
@@ -734,20 +723,25 @@
 
         function sonPaketiGetirUretici() {
             if(!aktifDanisan) return alert("Önce bir danışan seçiniz.");
-            const valsD = Object.values(aktifDanisan);
-            const dAd = aktifDanisan.danisanAdiSoyadi || aktifDanisan["Danışan Adı Soyadı"] || aktifDanisan.danisanadisoyadi || valsD[1] || "";
+            let dAd = safeGet(aktifDanisan.danisanAdiSoyadi, safeGet(aktifDanisan["Danışan Adı Soyadı"], aktifDanisan.danisanadisoyadi));
             
             jsonpFetch("getpaketler", "cb_sonpaket").then(res => {
                 const tumu = getSafeArray(res);
-                const dPaketleri = tumu.filter(p => String(p["danisan"] || p.danisan || "").trim() === String(dAd).trim());
+                const dPaketleri = tumu.filter(p => {
+                    const vals = Object.values(p);
+                    const pd = safeGet(vals[2], safeGet(p.danisan, p["Danışan"]));
+                    return String(pd).trim() === String(dAd).trim();
+                });
+                
                 if(dPaketleri.length === 0) return alert("Bu danışana ait geçmiş paket bulunamadı.");
                 
-                dPaketleri.sort((a,b) => String(b["id"] || b.id).localeCompare(String(a["id"] || a.id)));
+                dPaketleri.sort((a,b) => String(safeGet(b.id, b["id"])).localeCompare(String(safeGet(a.id, a["id"]))));
                 const sonP = dPaketleri[0];
+                const valsP = Object.values(sonP);
                 
-                document.getElementById('toplamUcret').value = sonP["toplamTutar"] || sonP.toplamTutar || 0;
-                document.getElementById('ilkOdeme').value = sonP["odenenMiktar"] || sonP.odenenMiktar || 0;
-                let sS = parseInt(sonP["seansSayisi"] || sonP.seansSayisi || 1);
+                document.getElementById('toplamUcret').value = parseFloat(String(safeGet(valsP[6], safeGet(sonP.toplamTutar, "0"))).replace(/[^0-9.-]+/g,"")) || 0;
+                document.getElementById('ilkOdeme').value = parseFloat(String(safeGet(valsP[7], safeGet(sonP.odenenMiktar, "0"))).replace(/[^0-9.-]+/g,"")) || 0;
+                let sS = parseInt(safeGet(valsP[5], safeGet(sonP.seansSayisi, "1")));
                 if(sS > 1) {
                     setPkgType('cok');
                     document.getElementById('seansSayisi').value = sS;
@@ -756,6 +750,86 @@
                 }
                 showToast("Son paket bilgileri şablona yüklendi.");
             });
+        }
+
+        function paketiSabonaYukle(id) {
+            let pkg = null;
+            let pKaynak = 'arşiv';
+
+            if (typeof aktifArsivListesi !== 'undefined' && aktifArsivListesi.length > 0) {
+                pkg = aktifArsivListesi.find(x => x.id === id);
+            }
+            if (!pkg && typeof genelArsivTumu !== 'undefined' && genelArsivTumu.length > 0) {
+                pkg = genelArsivTumu.find(x => safeGet(Object.values(x)[0], safeGet(x.id, x["id"])) === id);
+                pKaynak = 'genel';
+            }
+            
+            if (!pkg) return showToast("Kayıt bilgisi bulunamadı!");
+
+            let tSeans, tTutar, oTutar, hTercih, pTarih, uAd;
+            
+            if (pKaynak === 'arşiv' && pkg.hizmetTercihi !== undefined) {
+                tSeans = parseInt(pkg.seansSayisi || 1);
+                tTutar = parseFloat(String(pkg.toplamTutar).replace(/[^0-9.-]+/g,"")) || 0;
+                oTutar = parseFloat(String(pkg.odenenMiktar).replace(/[^0-9.-]+/g,"")) || 0;
+                hTercih = pkg.hizmetTercihi || "";
+                pTarih = safeGet(pkg.paketTarihi, pkg.kayitTarihi);
+                uAd = pkg.uzman || "";
+            } else {
+                const vals = Object.values(pkg);
+                tSeans = parseInt(safeGet(vals[5], safeGet(pkg.seansSayisi, "1")));
+                tTutar = parseFloat(String(safeGet(vals[6], safeGet(pkg.toplamTutar, "0"))).replace(/[^0-9.-]+/g,"")) || 0;
+                oTutar = parseFloat(String(safeGet(vals[7], safeGet(pkg.odenenMiktar, "0"))).replace(/[^0-9.-]+/g,"")) || 0;
+                hTercih = safeGet(vals[3], safeGet(pkg.hizmetTercihi, ""));
+                pTarih = safeGet(vals[11], safeGet(pkg.paketTarihi, ""));
+                uAd = safeGet(vals[1], safeGet(pkg.uzman, ""));
+            }
+
+            document.getElementById('toplamUcret').value = tTutar;
+            document.getElementById('ilkOdeme').value = oTutar;
+            
+            if (pTarih && pTarih !== "-") {
+                let parts = pTarih.split(".");
+                if (parts.length === 3) {
+                     document.getElementById('paketIlkGirisTarihi').value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                } else if (pTarih.includes("-") && pTarih.length >= 10) {
+                     document.getElementById('paketIlkGirisTarihi').value = pTarih.substring(0,10);
+                }
+            }
+
+            if(tSeans > 1) {
+                setPkgType('cok');
+                document.getElementById('seansSayisi').value = tSeans;
+            } else {
+                setPkgType('tek');
+            }
+
+            const select = document.getElementById('hizmetSecimi');
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === hTercih) {
+                    select.selectedIndex = i;
+                    otomatikSureGetir();
+                    break;
+                }
+            }
+
+            if (uAd && uAd !== "-") {
+                let foundUzman = uzmanlar.find(u => {
+                    let ad = safeGet(u.adSoyad, safeGet(u["Ad Soyad"], u.adsoyad, ""));
+                    return String(ad).trim() === String(uAd).trim();
+                });
+
+                if (foundUzman) {
+                    let uId = safeGet(foundUzman.id, foundUzman.ID);
+                    document.querySelectorAll('#uzmanListe .list-item-row').forEach(e => e.classList.remove('active'));
+                    let activeRow = document.getElementById(`uzman-row-${uId}`);
+                    if (activeRow) activeRow.classList.add('active');
+                    aktifUzman = foundUzman;
+                }
+            }
+
+            showToast("Veriler şablona yüklendi. Düzenleyip yeni paket olarak kaydedebilirsiniz.");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function danisanaPaketAtarla() {
@@ -772,10 +846,8 @@
 
             let pId = "P-" + Math.floor(100000 + Math.random() * 900000);
             
-            const valsU = Object.values(aktifUzman);
-            const valsD = Object.values(aktifDanisan);
-            const uAd = aktifUzman.adSoyad || aktifUzman["Ad Soyad"] || aktifUzman.adsoyad || valsU[2] || valsU[1] || "";
-            const dAd = aktifDanisan.danisanAdiSoyadi || aktifDanisan["Danışan Adı Soyadı"] || aktifDanisan.danisanadisoyadi || valsD[1] || "";
+            let uAd = safeGet(aktifUzman.adSoyad, safeGet(aktifUzman["Ad Soyad"], aktifUzman.adsoyad, ""));
+            let dAd = safeGet(aktifDanisan.danisanAdiSoyadi, safeGet(aktifDanisan["Danışan Adı Soyadı"], aktifDanisan.danisanadisoyadi, ""));
             
             let queryParams = [
                 `kaydethizmetpaketgiris`,
@@ -796,14 +868,18 @@
 
             jsonpFetch(queryParams, "cb_paketatarla").then(() => {
                 showToast("Yeni paket oluşturuldu ve e-tabloya kaydedildi.");
+                
                 document.getElementById('toplamUcret').value = "";
                 document.getElementById('ilkOdeme').value = "";
+                const select = document.getElementById('hizmetSecimi');
+                if(select) select.selectedIndex = 0;
+                setPkgType('tek');
+                document.getElementById('paketIlkGirisTarihi').value = new Date().toISOString().slice(0, 10);
+                
                 paketListesiniGuncelle();
                 arsivDokumuYap();
             });
         }
-
-        let genelArsivTumu = [];
 
         function paketListesiniGuncelle() {
             const div = document.getElementById('paketlerListesi');
@@ -811,8 +887,7 @@
                 div.innerHTML = `<p class="text-center text-slate-400 py-4">Lütfen sol taraftan bir danışan seçiniz.</p>`;
                 return;
             }
-            const valsD = Object.values(aktifDanisan);
-            const dAd = aktifDanisan.danisanAdiSoyadi || aktifDanisan["Danışan Adı Soyadı"] || aktifDanisan.danisanadisoyadi || valsD[1] || "";
+            let dAd = safeGet(aktifDanisan.danisanAdiSoyadi, safeGet(aktifDanisan["Danışan Adı Soyadı"], aktifDanisan.danisanadisoyadi, ""));
 
             jsonpFetch("getpaketler", "cb_paketlist").then(res => {
                 const tumArsiv = getSafeArray(res);
@@ -821,99 +896,105 @@
                 }
                 genelArsivTumu = tumArsiv;
 
-                const dPaketleri = tumArsiv.filter(p => String(p["danisan"] || p.danisan || "").trim() === String(dAd).trim());
+                const dPaketleri = tumArsiv.filter(p => {
+                    const vals = Object.values(p);
+                    const pd = safeGet(vals[2], safeGet(p.danisan, p["Danışan"], ""));
+                    return String(pd).trim() === String(dAd).trim();
+                });
 
                 if(dPaketleri.length === 0) {
                     div.innerHTML = `<p class="text-center text-slate-400 py-4">Bu danışana ait aktif takip kartı bulunmuyor. Yukarıdan paket tanımlayabilirsiniz.</p>`;
                     return;
                 }
 
+                const tekPaket = dPaketleri[dPaketleri.length - 1];
                 div.innerHTML = "";
-                dPaketleri.forEach(pkg => {
-                    const rId = pkg.id || pkg["id"];
-                    const tSeans = parseInt(pkg.seansSayisi || pkg.seanssayisi || 1);
-                    const kSeans = parseInt(pkg.kalanSeans || pkg.kalanseans || 0);
-                    const tTutar = parseFloat(pkg.toplamTutar || pkg.toplamtutar || 0);
-                    const oTutar = parseFloat(pkg.odenenMiktar || pkg.odenenmiktar || 0);
-                    const kBorc = tTutar - oTutar;
-                    const hTercih = pkg.hizmetTercihi || pkg.hizmettercihi || "";
-                    const pTarih = pkg.paketTarihi || pkg.pakettarihi || "";
+                
+                const vals = Object.values(tekPaket);
+                const rId = safeGet(vals[0], safeGet(tekPaket.id, tekPaket["id"]));
+                const tSeans = parseInt(safeGet(vals[5], safeGet(tekPaket.seansSayisi, "1")));
+                const kSeans = parseInt(safeGet(vals[10], safeGet(tekPaket.kalanSeans, "0")));
+                const tTutar = parseFloat(String(safeGet(vals[6], safeGet(tekPaket.toplamTutar, "0"))).replace(/[^0-9.-]+/g,"")) || 0;
+                const oTutar = parseFloat(String(safeGet(vals[7], safeGet(tekPaket.odenenMiktar, "0"))).replace(/[^0-9.-]+/g,"")) || 0;
+                const kBorc = tTutar - oTutar;
+                const hTercih = safeGet(vals[3], safeGet(tekPaket.hizmetTercihi, ""));
+                const pTarih = safeGet(vals[11], safeGet(tekPaket.paketTarihi, "-"));
 
-                    let seansGecmisiRaw = pkg.seansDurumu || pkg.seansdurumu || "";
-                    let parsedGecmis = {};
-                    if(seansGecmisiRaw.includes("{")) {
-                        try { parsedGecmis = JSON.parse(seansGecmisiRaw); } catch(e){}
+                let seansGecmisiRaw = safeGet(vals[9], safeGet(tekPaket.seansDurumu, ""));
+                let parsedGecmis = {};
+                if(seansGecmisiRaw.includes("{")) {
+                    try { parsedGecmis = JSON.parse(seansGecmisiRaw); } catch(e){}
+                }
+
+                let bubblesHtml = "";
+                for(let i=1; i<=tSeans; i++) {
+                    let statusClass = "";
+                    let icon = i;
+                    if(parsedGecmis[i]) {
+                        if(parsedGecmis[i].durum === "geldi") { statusClass = "geldi"; icon = '<i class="fas fa-check text-[0.65rem]"></i>'; }
+                        else if(parsedGecmis[i].durum === "gelmedi") { statusClass = "gelmedi"; icon = '<i class="fas fa-times text-[0.65rem]"></i>'; }
+                        else if(parsedGecmis[i].durum === "iptal") { statusClass = "iptal"; icon = '<i class="fas fa-ban text-[0.65rem]"></i>'; }
                     }
+                    let isActive = (kartDurumState.hizmetNo === rId && kartDurumState.seciliSeansNo === i) ? "active-bubble" : "";
+                    bubblesHtml += `<div class="session-bubble ${statusClass} ${isActive}" onclick="seansBaloncukSec('${rId}', ${i})">${icon}</div>`;
+                }
 
-                    let bubblesHtml = "";
-                    for(let i=1; i<=tSeans; i++) {
-                        let statusClass = "";
-                        let icon = i;
-                        if(parsedGecmis[i]) {
-                            if(parsedGecmis[i].durum === "geldi") { statusClass = "geldi"; icon = '<i class="fas fa-check text-[0.65rem]"></i>'; }
-                            else if(parsedGecmis[i].durum === "gelmedi") { statusClass = "gelmedi"; icon = '<i class="fas fa-times text-[0.65rem]"></i>'; }
-                            else if(parsedGecmis[i].durum === "iptal") { statusClass = "iptal"; icon = '<i class="fas fa-ban text-[0.65rem]"></i>'; }
-                        }
-                        let isActive = (kartDurumState.hizmetNo === rId && kartDurumState.seciliSeansNo === i) ? "active-bubble" : "";
-                        bubblesHtml += `<div class="session-bubble ${statusClass} ${isActive}" onclick="seansBaloncukSec('${rId}', ${i})">${icon}</div>`;
-                    }
+                const item = document.createElement('div');
+                item.className = "package-item";
+                item.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-2 mb-2">
+                        <div>
+                            <span class="font-extrabold text-slate-800 text-sm block">📦 ${hTercih} (${tSeans} Seanslık)</span>
+                            <span class="text-xs text-slate-400">Paket ID: <b class="text-slate-600">${rId}</b> | Başlangıç: ${pTarih}</span>
+                        </div>
+                        <div class="flex gap-2 items-center mt-2 sm:mt-0">
+                            <span class="text-xs bg-slate-100 px-2 py-1 rounded font-bold">Kalan Seans: ${kSeans}</span>
+                            <button onclick="paketiSabonaYukle('${rId}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[0.7rem] font-bold px-2 py-1 rounded transition-all" title="Paketi Yukarıdaki Şablona Yükle / Düzenle"><i class="fas fa-edit"></i> Düzenle</button>
+                        </div>
+                    </div>
+                    
+                    <div class="my-3">
+                        <span class="block text-[0.7rem] font-bold text-slate-400 uppercase tracking-wider mb-1">Seans Yapılandırma Matrisi</span>
+                        <div class="session-grid">${bubblesHtml}</div>
+                    </div>
 
-                    const item = document.createElement('div');
-                    item.className = "package-item";
-                    item.innerHTML = `
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-2 mb-2">
+                    <div id="kontrol-paneli-${rId}" class="bg-teal-50/50 border border-teal-100 rounded-lg p-3 my-2 hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end">
                             <div>
-                                <span class="font-extrabold text-slate-800 text-sm block">📦 ${hTercih} (${tSeans} Seanslık)</span>
-                                <span class="text-xs text-slate-400">Paket ID: <b class="text-slate-600">${rId}</b> | Başlangıç: ${pTarih}</span>
+                                <label class="block text-[0.65rem] font-bold text-teal-700 mb-0.5"><span class="selected-no font-black text-xs">1</span>. Seans Durumu</label>
+                                <select id="durum-${rId}" class="!bg-white !border-teal-300">
+                                    <option value="geldi">GELDİ (Hizmet Tamamlandı)</option>
+                                    <option value="gelmedi">GELMEDİ (Gelmedi Yazıldı)</option>
+                                    <option value="iptal">İPTAL (Seans İptal Edildi)</option>
+                                </select>
                             </div>
-                            <div class="flex gap-2 items-center mt-2 sm:mt-0">
-                                <span class="text-xs bg-slate-100 px-2 py-1 rounded font-bold">Kalan Seans: ${kSeans}</span>
+                            <div>
+                                <label class="block text-[0.65rem] font-bold text-teal-700 mb-0.5">Sonraki Randevu Tarihi</label>
+                                <input type="date" id="rTar-${rId}" class="!bg-white !border-teal-300">
                             </div>
+                            <div>
+                                <label class="block text-[0.65rem] font-bold text-teal-700 mb-0.5">Sonraki Randevu Saati</label>
+                                <input type="time" id="rSaat-${rId}" class="!bg-white !border-teal-300">
+                            </div>
+                            <button onclick="seansDurumunuKaydetVeUzat('${rId}')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs p-2 rounded h-[30px] flex items-center justify-center gap-1">
+                                <i class="fas fa-save"></i> Seansı İşle
+                            </button>
                         </div>
-                        
-                        <div class="my-3">
-                            <span class="block text-[0.7rem] font-bold text-slate-400 uppercase tracking-wider mb-1">Seans Yapılandırma Matrisi</span>
-                            <div class="session-grid">${bubblesHtml}</div>
-                        </div>
+                    </div>
 
-                        <div id="kontrol-paneli-${rId}" class="bg-teal-50/50 border border-teal-100 rounded-lg p-3 my-2 hidden">
-                            <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end">
-                                <div>
-                                    <label class="block text-[0.65rem] font-bold text-teal-700 mb-0.5"><span class="selected-no font-black text-xs">1</span>. Seans Durumu</label>
-                                    <select id="durum-${rId}" class="!bg-white !border-teal-300">
-                                        <option value="geldi">GELDİ (Hizmet Tamamlandı)</option>
-                                        <option value="gelmedi">GELMEDİ (Gelmedi Yazıldı)</option>
-                                        <option value="iptal">İPTAL (Seans İptal Edildi)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-[0.65rem] font-bold text-teal-700 mb-0.5">Sonraki Randevu Tarihi</label>
-                                    <input type="date" id="rTar-${rId}" class="!bg-white !border-teal-300">
-                                </div>
-                                <div>
-                                    <label class="block text-[0.65rem] font-bold text-teal-700 mb-0.5">Sonraki Randevu Saati</label>
-                                    <input type="time" id="rSaat-${rId}" class="!bg-white !border-teal-300">
-                                </div>
-                                <button onclick="seansDurumunuKaydetVeUzat('${rId}')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs p-2 rounded h-[30px] flex items-center justify-center gap-1">
-                                    <i class="fas fa-save"></i> Seansı İşle
-                                </button>
-                            </div>
+                    <div class="payment-summary">
+                        <div class="pay-box"><div class="pay-label">Toplam Fiyat</div><div class="pay-val text-slate-700">₺${tTutar}</div></div>
+                        <div class="pay-box"><div class="pay-label">Alınan Ödeme</div><div class="pay-val text-teal-600">₺${oTutar}</div></div>
+                        <div class="pay-box"><div class="pay-label">Kalan Borç</div><div class="pay-val ${kBorc > 0 ? 'text-rose-600' : 'text-slate-500'}">₺${kBorc}</div></div>
+                        <div class="flex gap-1" onclick="event.stopPropagation();">
+                            <input type="number" id="araOdemeInput-${rId}" placeholder="Tutar" class="!w-20 !p-1 !text-xs !bg-white">
+                            <button onclick="araOdemeAl('${rId}', ${tTutar}, ${oTutar})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1 rounded transition flex items-center gap-1">
+                                <i class="fas fa-lira-sign"></i> Ödeme Al
+                            </button>
                         </div>
-
-                        <div class="payment-summary">
-                            <div class="pay-box"><div class="pay-label">Toplam Fiyat</div><div class="pay-val text-slate-700">₺${tTutar}</div></div>
-                            <div class="pay-box"><div class="pay-label">Alınan Ödeme</div><div class="pay-val text-teal-600">₺${oTutar}</div></div>
-                            <div class="pay-box"><div class="pay-label">Kalan Borç</div><div class="pay-val ${kBorc > 0 ? 'text-rose-600' : 'text-slate-500'}">₺${kBorc}</div></div>
-                            <div class="flex gap-1" onclick="event.stopPropagation();">
-                                <input type="number" id="araOdemeInput-${rId}" placeholder="Tutar" class="!w-20 !p-1 !text-xs !bg-white">
-                                <button onclick="araOdemeAl('${rId}', ${tTutar}, ${oTutar})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1 rounded transition flex items-center gap-1">
-                                    <i class="fas fa-lira-sign"></i> Ödeme Al
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    div.appendChild(item);
-                });
+                    </div>
+                `;
+                div.appendChild(item);
             });
         }
 
@@ -946,10 +1027,12 @@
 
             jsonpFetch("getpaketler", "cb_seansisleme").then(res => {
                 const tumu = getSafeArray(res);
-                const pkg = tumu.find(p => String(p.id).trim() === String(pkgId).trim());
+                const pkg = tumu.find(p => String(safeGet(Object.values(p)[0], p.id)).trim() === String(pkgId).trim());
                 if(!pkg) return;
+                
+                const vals = Object.values(pkg);
 
-                let seansGecmisiRaw = pkg.seansDurumu || pkg.seansdurumu || "";
+                let seansGecmisiRaw = safeGet(vals[9], safeGet(pkg.seansDurumu, ""));
                 let parsedGecmis = {};
                 if(seansGecmisiRaw.includes("{")) {
                     try { parsedGecmis = JSON.parse(seansGecmisiRaw); } catch(e){}
@@ -961,7 +1044,7 @@
                     saat: new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'})
                 };
 
-                let tSeans = parseInt(pkg.seansSayisi || pkg.seanssayisi || 1);
+                let tSeans = parseInt(safeGet(vals[5], safeGet(pkg.seansSayisi, "1")));
                 let islenmisSayisi = 0;
                 for(let k in parsedGecmis) {
                     if(parsedGecmis[k].durum === "geldi" || parsedGecmis[k].durum === "gelmedi" || parsedGecmis[k].durum === "iptal") {
@@ -984,6 +1067,30 @@
                     showToast(`Seans ${sNo} başarıyla işlendi.`);
                     paketListesiniGuncelle();
                     arsivDokumuYap();
+
+                    if (rTar !== "-" && rSaat !== "-") {
+                        let sureVal = parseInt(safeGet(vals[4], safeGet(pkg.sure, "30")));
+                        
+                        let parts = rSaat.split(':');
+                        let d = new Date();
+                        d.setHours(parseInt(parts[0]), parseInt(parts[1]), 0);
+                        d.setMinutes(d.getMinutes() + sureVal);
+                        let eH = String(d.getHours()).padStart(2, '0');
+                        let eM = String(d.getMinutes()).padStart(2, '0');
+                        let timeStr = `${rSaat} - ${eH}:${eM}`;
+
+                        let catStr = safeGet(vals[3], safeGet(pkg.hizmetTercihi, "Seans İşlemi"));
+                        let uzmStr = safeGet(vals[1], safeGet(pkg.uzman, "Bilinmiyor"));
+                        let danStr = safeGet(vals[2], safeGet(pkg.danisan, "Bilinmiyor"));
+                        let durationStr = sureVal + " Dk";
+                        let notStr = sNo + ". Seans Randevusu Olarak Otomatik Oluşturuldu.";
+
+                        let randevuQuery = `kaydetrandevu&tarih=${encodeURIComponent(rTar)}&saat=${encodeURIComponent(timeStr)}&uzman=${encodeURIComponent(uzmStr)}&danisan=${encodeURIComponent(danStr)}&kategori=${encodeURIComponent(catStr)}&sure=${encodeURIComponent(durationStr)}&notlar=${encodeURIComponent(notStr)}&_=${Date.now()}`;
+                        
+                        jsonpFetch(randevuQuery, "cb_otomatikrandevu").then(() => {
+                            showToast("Sonraki seans başarıyla Randevu Takvimi'ne eklendi! 📅");
+                        });
+                    }
                 });
             });
         }
@@ -1004,25 +1111,29 @@
             });
         }
 
-        // 🎯 BILET / ADISYON DETAYLARINI OLUŞTURMA VE MODAL AÇMA FONKSİYONU
         function biletYazdirmaPenceresiAc(id) {
             let kayit = null;
-            if(typeof globalArsiv !== 'undefined' && globalArsiv.length > 0) {
-                kayit = globalArsiv.find(x => (x.id || x.hizmetNo) === id);
+            if(typeof aktifArsivListesi !== 'undefined' && aktifArsivListesi.length > 0) {
+                kayit = aktifArsivListesi.find(x => x.id === id);
             }
             if(!kayit && typeof genelArsivTumu !== 'undefined' && genelArsivTumu.length > 0) {
-                kayit = genelArsivTumu.find(x => (x.id || x.hizmetNo) === id);
+                kayit = genelArsivTumu.find(x => safeGet(Object.values(x)[0], safeGet(x.id, x["id"])) === id);
             }
 
             if(!kayit) {
-                showToast("Sözleşme kaydı bulunamadı! Lütfen tabloyu yenileyin.");
+                showToast("Kayıt bulunamadı! Lütfen tabloyu yenileyin.");
                 return;
             }
 
-            let tTutar = parseFloat(kayit.toplamTutar || kayit.toplamtutar || 0);
-            let oMiktar = parseFloat(kayit.odenenMiktar || kayit.odenenmiktar || kayit.hizmetAraOdeme || 0);
+            let tTutarText = String(kayit.toplamTutar || "0").replace(/[^0-9.,]/g, '');
+            let oMiktarText = String(kayit.odenenMiktar || "0").replace(/[^0-9.,]/g, '');
+
+            let tTutar = parseFloat(tTutarText) || 0;
+            let oMiktar = parseFloat(oMiktarText) || 0;
             let kBorc = tTutar - oMiktar;
             let bugun = new Date().toLocaleDateString('tr-TR') + " " + new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+
+            let kayitTar = safeGet(kayit.paketTarihi, safeGet(kayit.kayitTarihi, kayit.randevuTarihi));
 
             let biletHtml = `
                 <div class="bilet-header">
@@ -1031,27 +1142,27 @@
                     <div style="font-size:0.7rem; margin-top:5px; color:#555;">Fiş Tarihi: ${bugun}</div>
                 </div>
                 <div class="bilet-row">
-                    <span>Sözleşme No:</span>
+                    <span>İşlem / Sözleşme No:</span>
                     <strong>${id}</strong>
                 </div>
                 <div class="bilet-row">
                     <span>Tarih:</span>
-                    <span>${kayit.paketTarihi || kayit.pakettarihi || kayit.kayitTarihi || '-'}</span>
+                    <span>${kayitTar}</span>
                 </div>
                 <div class="bilet-row">
                     <span>Danışan:</span>
-                    <strong>${kayit.danisan || kayit.hizmetDanisan || '-'}</strong>
+                    <strong>${kayit.danisan || '-'}</strong>
                 </div>
                 <div class="bilet-row">
                     <span>Uzman:</span>
-                    <span>${kayit.uzman || kayit.hizmetUzman || '-'}</span>
+                    <span>${kayit.uzman || '-'}</span>
                 </div>
                 <div class="bilet-divider"></div>
                 <div class="bilet-row" style="font-weight: bold;">
                     <span>Açıklama / Hizmet Tercihi</span>
                 </div>
                 <div class="bilet-row" style="font-size:0.8rem; margin-top:3px; padding-left:5px;">
-                    <span>${kayit.hizmetTercihi || kayit.hizmettercihi || kayit.hizmetPaketTercihi || '-'} (${kayit.seansSayisi || kayit.seanssayisi || 1} Seans)</span>
+                    <span>${kayit.hizmetTercihi || '-'} (${kayit.seansSayisi || 1} Seans)</span>
                 </div>
                 <div class="bilet-divider"></div>
                 <div class="bilet-row">
@@ -1083,20 +1194,76 @@
         function arsivDokumuYap() {
             const tBody = document.getElementById('arsivTabloGövde');
             if(!aktifDanisan) return;
-            const valsD = Object.values(aktifDanisan);
-            const dAd = aktifDanisan.danisanAdiSoyadi || aktifDanisan["Danışan Adı Soyadı"] || aktifDanisan.danisanadisoyadi || valsD[1] || "";
+            
+            let dAd = safeGet(aktifDanisan.danisanAdiSoyadi, safeGet(aktifDanisan["Danışan Adı Soyadı"], aktifDanisan.danisanadisoyadi, ""));
 
             const bTar = document.getElementById('archiveBaslangic').value;
             const sTar = document.getElementById('archiveBitis').value;
 
-            jsonpFetch("getpaketler", "cb_arsivdokum").then(res => {
-                let tumArsiv = getSafeArray(res);
-                let filtrelenmis = tumArsiv.filter(p => String(p.danisan || "").trim() === String(dAd).trim());
+            Promise.all([
+                jsonpFetch("getpaketler", "cb_arsivdokum_paket"),
+                jsonpFetch("getrandevular", "cb_arsivdokum_randevu")
+            ]).then(([resPaket, resRandevu]) => {
+                let tumPaketler = getSafeArray(resPaket);
+                let tumRandevular = getSafeArray(resRandevu);
 
-                if(bTar) filtrelenmis = filtrelenmis.filter(p => (p.paketTarihi || p.kayitTarihi || p.pakettarihi || p.kayittarihi) >= bTar);
-                if(sTar) filtrelenmis = filtrelenmis.filter(p => (p.paketTarihi || p.kayitTarihi || p.pakettarihi || p.kayittarihi) <= sTar);
+                let dPaketleri = tumPaketler.filter(p => {
+                    const vals = Object.values(p);
+                    const pDanisan = safeGet(vals[2], safeGet(p.danisan, p["Danışan"], ""));
+                    return String(pDanisan).trim() === String(dAd).trim();
+                }).map(p => {
+                    const vals = Object.values(p);
+                    return {
+                        id: safeGet(vals[0], safeGet(p.id, p["Paket ID"])), 
+                        kayitTarihi: safeGet(vals[11], safeGet(p.paketTarihi, p.kayitTarihi)), 
+                        uzman: safeGet(vals[1], safeGet(p.uzman, p["Uzman"])), 
+                        danisan: safeGet(vals[2], safeGet(p.danisan, p["Danışan"])), 
+                        hizmetTercihi: safeGet(vals[3], safeGet(p.hizmetTercihi, p["Hizmet Tercihi"])), 
+                        sure: safeGet(vals[4], safeGet(p.sure, p["Süre"])), 
+                        seansSayisi: safeGet(vals[5], safeGet(p.seansSayisi, p["Toplam Seans"], "1")), 
+                        toplamTutar: safeGet(vals[6], safeGet(p.toplamTutar, p["Toplam Tutar"], "0")), 
+                        odenenMiktar: safeGet(vals[7], safeGet(p.odenenMiktar, p["Ödenen Miktar"], "0")), 
+                        seansDurumu: safeGet(vals[9], safeGet(p.seansDurumu, p["Seans Durumu & Tarih"])), 
+                        kalanSeans: safeGet(vals[10], safeGet(p.kalanSeans, p["Kalan S."], "0")), 
+                        paketTarihi: safeGet(vals[11], safeGet(p.paketTarihi, p["Paket Tarihi"])), 
+                        randevuTarihi: safeGet(vals[12], safeGet(p.randevuTarihi, p["Randevu Tarihi"])), 
+                        randevuSaati: safeGet(vals[13], safeGet(p.randevuSaati, p["Randevu Saati"])), 
+                        _kaynak: 'paket'
+                    };
+                });
 
+                // 🚨 E-TABLO BAŞLIKLARINA GÖRE YENİDEN KODLANMIŞ RANDEVU FİLTRESİ
+                let dRandevular = tumRandevular.filter(r => {
+                    const rDanisan = safeGet(r.danisan, r["danisan"], "");
+                    return String(rDanisan).trim() === String(dAd).trim();
+                }).map(r => {
+                    return {
+                        id: safeGet(r.randevuGunu, r["randevuGunu"], "-"), 
+                        kayitTarihi: safeGet(r.randevular, r["randevular"], "-"), 
+                        uzman: safeGet(r.uzman, r["uzman"], "-"), 
+                        danisan: safeGet(r.danisan, r["danisan"], "-"), 
+                        hizmetTercihi: safeGet(r.kategori, r["kategori"], "-"), 
+                        sure: safeGet(r.sure, r["sure"], "-"), 
+                        seansSayisi: "-",
+                        toplamTutar: "-",
+                        odenenMiktar: "-",
+                        seansDurumu: "Takvim Randevusu",
+                        kalanSeans: "-",
+                        paketTarihi: "-",
+                        randevuTarihi: safeGet(r.randevular, r["randevular"], "-"), 
+                        randevuSaati: safeGet(r.saat, r["saat"], "-"),
+                        _kaynak: 'randevu'
+                    };
+                });
+
+                let filtrelenmis = [...dPaketleri, ...dRandevular];
+
+                if(bTar) filtrelenmis = filtrelenmis.filter(p => (p.paketTarihi !== "-" ? p.paketTarihi : p.kayitTarihi) >= bTar);
+                if(sTar) filtrelenmis = filtrelenmis.filter(p => (p.paketTarihi !== "-" ? p.paketTarihi : p.kayitTarihi) <= sTar);
+
+                aktifArsivListesi = filtrelenmis; 
                 tBody.innerHTML = "";
+
                 if(filtrelenmis.length === 0) {
                     tBody.innerHTML = `<tr><td colspan="15" class="text-center text-slate-400 py-4">Filtre kriterlerine uygun arşiv kaydı bulunamadı.</td></tr>`;
                     return;
@@ -1106,7 +1273,7 @@
                     const tr = document.createElement('tr');
                     const rId = row.id;
                     
-                    let seansHücreIcerigi = row.seansDurumu || row.seansdurumu || "";
+                    let seansHücreIcerigi = row.seansDurumu;
                     if(seansHücreIcerigi.includes("{")) {
                         try {
                             let parsed = JSON.parse(seansHücreIcerigi);
@@ -1116,41 +1283,42 @@
                         } catch(e){}
                     }
 
+                    let tutarText = row.toplamTutar === "-" ? "-" : "₺" + row.toplamTutar;
+                    let odenenText = row.odenenMiktar === "-" ? "-" : "₺" + row.odenenMiktar;
+                    let sureText = row.sure === "-" ? "-" : row.sure + " dk";
+
+                    let biletButonu = `<button onclick="biletYazdirmaPenceresiAc('${rId}')" class="bg-purple-50 hover:bg-purple-100 text-purple-600 text-[0.7rem] font-bold px-2 py-1 rounded transition-all mr-1" title="Termal Bilet Çıktısı"><i class="fas fa-ticket-alt"></i> Bilet</button>`;
+                    let duzenleButonu = `<button onclick="paketiSabonaYukle('${rId}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[0.7rem] font-bold px-2 py-1 rounded mr-1" title="Şablona Al (Düzenle)"><i class="fas fa-edit"></i> Düzenle</button>`;
+                    let silButonu = `<button onclick="arsivSatirSil('${rId}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-[0.7rem] font-bold px-2 py-1 rounded"><i class="fas fa-trash-alt"></i> Sil</button>`;
+                    
+                    let aksiyonButonlari = biletButonu + duzenleButonu + silButonu;
+
                     tr.innerHTML = `
                         <td class="font-extrabold text-slate-700">${rId}</td>
-                        <td>${row.kayitTarihi || row.kayittarihi || "-"}</td>
-                        <td class="font-medium text-slate-600">${row.uzman || row.uzman || "-"}</td>
-                        <td class="font-bold text-slate-800">${row.danisan || row.danisan || "-"}</td>
-                        <td class="font-semibold text-teal-700">${row.hizmetTercihi || row.hizmettercihi || "-"}</td>
-                        <td>${row.sure || row.sure || "0"} dk</td>
-                        <td class="font-bold text-center">${row.seansSayisi || row.seanssayisi || "1"}</td>
-                        <td class="font-bold text-slate-700">₺${row.toplamTutar || row.toplamtutar || "0"}</td>
-                        <td class="font-bold text-emerald-600">₺${row.odenenMiktar || row.odenenmiktar || "0"}</td>
+                        <td>${row.kayitTarihi}</td>
+                        <td class="font-medium text-slate-600">${row.uzman}</td>
+                        <td class="font-bold text-slate-800">${row.danisan}</td>
+                        <td class="font-semibold text-teal-700">${row.hizmetTercihi}</td>
+                        <td>${sureText}</td>
+                        <td class="font-bold text-center">${row.seansSayisi}</td>
+                        <td class="font-bold text-slate-700">${tutarText}</td>
+                        <td class="font-bold text-emerald-600">${odenenText}</td>
                         <td class="text-xs max-w-[150px] truncate" title="${seansHücreIcerigi}">${seansHücreIcerigi}</td>
-                        <td class="font-bold text-center text-rose-600">${row.kalanSeans || row.kalanseans || "0"}</td>
-                        <td>${row.paketTarihi || row.pakettarihi || "-"}</td>
-                        <td>${row.randevuTarihi || row.randevutarihi || "-"}</td>
-                        <td>${row.randevuSaati || row.randevusaati || "-"}</td>
+                        <td class="font-bold text-center text-rose-600">${row.kalanSeans}</td>
+                        <td>${row.paketTarihi}</td>
+                        <td>${row.randevuTarihi}</td>
+                        <td>${row.randevuSaati}</td>
                         <td>
                             <div class="flex gap-2 justify-end">
-                                <button onclick="biletYazdirmaPenceresiAc('${rId}')" class="bg-purple-50 hover:bg-purple-100 text-purple-600 text-[0.7rem] font-bold px-2 py-1 rounded transition-all mr-1" title="Termal Bilet Çıktısı"><i class="fas fa-ticket-alt"></i> Bilet</button>
-                                <button onclick="arsivSatirDuzenle('${rId}', '${row.odenenMiktar || row.odenenmiktar || 0}')" class="bg-teal-50 hover:bg-teal-100 text-teal-600 text-[0.7rem] font-bold px-2 py-1 rounded"><i class="fas fa-edit"></i> Düzenle</button>
-                                <button onclick="arsivSatirSil('${rId}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-[0.7rem] font-bold px-2 py-1 rounded"><i class="fas fa-trash-alt"></i> Sil</button>
+                                ${aksiyonButonlari}
                             </div>
                         </td>
                     `;
                     tBody.appendChild(tr);
                 });
-            });
-        }
-
-        function arsivSatirDuzenle(id, eskiTutar) {
-            let yeni = prompt("Arşivlenen Toplam Ciro / Alınan Ödeme miktarını güncelleyin:", eskiTutar);
-            if(!yeni || yeni === eskiTutar) return;
-            jsonpFetch(`updatearsiv&id=${id}&ciro=${yeni}`, "cb_arsivedit").then(() => {
-                showToast("Arşiv kaydı başarıyla düzeltildi.");
-                paketListesiniGuncelle();
-                arsivDokumuYap();
+            }).catch(err => {
+                console.error("Arşiv Döküm Veri Çekme Hatası:", err);
+                tBody.innerHTML = `<tr><td colspan="15" class="text-center text-rose-500 font-bold py-4">Veriler yüklenirken bir bağlantı hatası oluştu. Lütfen tekrar deneyin.</td></tr>`;
             });
         }
 
