@@ -1232,26 +1232,28 @@
                     };
                 });
 
-                // 🚨 E-TABLO BAŞLIKLARINA GÖRE YENİDEN KODLANMIŞ RANDEVU FİLTRESİ
+                // 🚨 BAŞLIKLARDAN BAĞIMSIZ "İNDİS" (SÜTUN SIRASI) BAZLI KUSURSUZ OKUMA MOTORU
                 let dRandevular = tumRandevular.filter(r => {
-                    const rDanisan = safeGet(r.danisan, r["danisan"], "");
+                    const vals = Object.values(r);
+                    const rDanisan = safeGet(vals[4], ""); // Index 4 (E Sütunu) Danışan
                     return String(rDanisan).trim() === String(dAd).trim();
                 }).map(r => {
+                    const vals = Object.values(r);
                     return {
-                        id: safeGet(r.randevuGunu, r["randevuGunu"], "-"), 
-                        kayitTarihi: safeGet(r.randevular, r["randevular"], "-"), 
-                        uzman: safeGet(r.uzman, r["uzman"], "-"), 
-                        danisan: safeGet(r.danisan, r["danisan"], "-"), 
-                        hizmetTercihi: safeGet(r.kategori, r["kategori"], "-"), 
-                        sure: safeGet(r.sure, r["sure"], "-"), 
+                        id: safeGet(vals[0], "-"), // Index 0 (A Sütunu) - randevuGunu
+                        kayitTarihi: safeGet(vals[1], "-"), // Index 1 (B Sütunu) - randevular (Tarih)
+                        uzman: safeGet(vals[3], "-"), // Index 3 (D Sütunu) - uzman
+                        danisan: safeGet(vals[4], "-"), // Index 4 (E Sütunu) - danisan
+                        hizmetTercihi: safeGet(vals[5], "-"), // Index 5 (F Sütunu) - kategori
+                        sure: safeGet(vals[6], "-"), // Index 6 (G Sütunu) - sure
                         seansSayisi: "-",
                         toplamTutar: "-",
                         odenenMiktar: "-",
                         seansDurumu: "Takvim Randevusu",
                         kalanSeans: "-",
                         paketTarihi: "-",
-                        randevuTarihi: safeGet(r.randevular, r["randevular"], "-"), 
-                        randevuSaati: safeGet(r.saat, r["saat"], "-"),
+                        randevuTarihi: safeGet(vals[1], "-"), // B (Tarih)
+                        randevuSaati: safeGet(vals[2], "-"), // Index 2 (C Sütunu) - saat
                         _kaynak: 'randevu'
                     };
                 });
