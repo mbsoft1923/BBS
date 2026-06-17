@@ -57,7 +57,7 @@
         /* Boyanabilen Hücreler */
         .slot-cell { cursor: pointer; transition: background-color 0.1s; }
         .slot-cell:hover:not(.booked) { background-color: #f0fdfa; }
-        .slot-cell.booked { cursor: not-allowed; background-color: #f8fafc; }
+        .slot-cell.booked { cursor: not-allowed; background-color: white; }
         
         /* Sütunlara Özel Renklendirme */
         .slot-cell.selected { color: white; }
@@ -302,86 +302,44 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbycLcqeKr2ERvi-HisKboLMM7cFfq1r_5tRfS60uWqTEaiBJN31D1odAkfShqYtaU4owQ/exec";
-        
-        let staffList = ["Yükleniyor..."];
-        let clients = [];
-        let appointments = []; 
-        let activeDate = new Date(); 
-        
-        let isDragging = false;
-        let dragStartCol = -1;
-        let dragStartRow = -1;
-        let dragEndRow = -1;
-        const colColors = ["#00a8b5", "#f472b6", "#fbbf24", "#fb923c", "#fb7185", "#c084fc", "#2dd4bf"];
-
-        function showToast(msg) {
-            const container = document.getElementById('toastContainer');
-            container.innerHTML = '';
-            const toast = document.createElement('div');
-            toast.style.cssText = "background:#1e293b; color:white; padding:10px 20px; border-radius:8px; font-size:0.85rem; font-weight:bold; border-left:4px solid #10b981; box-shadow:0 4px 12px rgba(0,0,0,0.1);";
-            toast.innerHTML = `<i class="fas fa-check-circle" style="color:#34d399; margin-right:5px;"></i> ${msg}`;
-            container.appendChild(toast);
-            setTimeout(() => { if(toast.parentElement) toast.remove() }, 3000);
-        }
-
-        // 🚨 YENİLMEZ VERİ OKUYUCU: Sütunların ismine, sırasına, boşluğuna bakmadan %100 eşleşme sağlar
-        function getVal(item, index, ...possibleKeys) {
+        // 🚨 VERİTABANINDAN ALINAN %100 GERÇEK ALANLAR VE SEÇİCİLER
+        function getVal(item, index, keyName) {
             if (!item) return "";
             if (typeof item === 'object' && !Array.isArray(item)) {
-                let keys = Object.keys(item);
-                for (let pk of possibleKeys) {
-                    let lowerPk = pk.toLowerCase().replace(/\s/g, '');
-                    for (let k of keys) {
-                        if (k.toLowerCase().replace(/\s/g, '') === lowerPk) return item[k];
-                    }
+                let lowerKey = keyName.toLowerCase().replace(/\s/g, '');
+                for (let k in item) {
+                    if (k.toLowerCase().replace(/\s/g, '') === lowerKey) return item[k];
                 }
                 let vals = Object.values(item);
                 if (vals.length > index) return vals[index];
                 return "";
             }
-            if (Array.isArray(item)) {
-                if (item.length > index) return item[index];
-                return "";
-            }
             return "";
         }
 
-        // 🚨 MATEMATİKSEL SAAT ÇEVİRİCİ: Yazıyı dakikaya çevirir (16:30 -> 990)
-        function timeStrToMins(tStr) {
-            if (!tStr) return 0;
-            let parts = tStr.replace(/[^0-9:]/g, '').split(':');
-            let h = parseInt(parts[0]) || 0;
-            let m = parseInt(parts[1]) || 0;
-            return (h * 60) + m;
+        // Saati Çeviren Akıllı Formatlayıcı (Örn: "8:00" -> "08:00")
+        function cleanTimeFormat(tStr) {
+            if(!tStr) return "";
+            let cleaned = tStr.split('-')[0].trim().replace(/[^0-9:]/g, '');
+            let p = cleaned.split(':');
+            if(p.length === 2) {
+                return `${p[0].padStart(2, '0')}:${p[1].padStart(2, '0')}`;
+            }
+            return cleaned;
         }
 
-        // 🚨 KOPMAZ ZAMAN DİLİMİ OKUYUCUSU
         function formatDateSafe(dStr) {
             if(!dStr || dStr==="-") return "";
             dStr = String(dStr).trim();
-            
-            if (dStr.includes('T') && dStr.includes('Z')) {
-                let d = new Date(dStr);
-                if (!isNaN(d.getTime())) {
-                    let y = d.getFullYear();
-                    let m = String(d.getMonth() + 1).padStart(2, '0');
-                    let day = String(d.getDate()).padStart(2, '0');
-                    return `${y}-${m}-${day}`;
-                }
-            }
-
             let isoMatch = dStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
             if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
-
             let trMatch = dStr.match(/^(\d{2})[\.\/](\d{2})[\.\/](\d{4})/);
             if (trMatch) return `${trMatch[3]}-${trMatch[2]}-${trMatch[1]}`;
-
-            let fallD = new Date(dStr);
-            if (!isNaN(fallD.getTime())) {
-                let y = fallD.getFullYear();
-                let m = String(fallD.getMonth() + 1).padStart(2, '0');
-                let day = String(fallD.getDate()).padStart(2, '0');
+            let d = new Date(dStr);
+            if (!isNaN(d.getTime())) {
+                let y = d.getFullYear();
+                let m = String(d.getMonth() + 1).padStart(2, '0');
+                let day = String(d.getDate()).padStart(2, '0');
                 return `${y}-${m}-${day}`;
             }
             return dStr.substring(0,10);
@@ -406,7 +364,6 @@
             });
         }
 
-        // --- 🎯 TÜM VERİLERİ BULUTTAN İNDİRME MOTORU ---
         document.addEventListener("DOMContentLoaded", () => {
             let aktifKullanici = JSON.parse(localStorage.getItem('aktifKullanici'));
             if (!aktifKullanici) { window.location.href = "index.html"; return; }
@@ -417,62 +374,48 @@
                 jsonpFetch("getrandevular", "cb_ran")
             ]).then(([resDan, resKul, resRan]) => {
                 
-                // --- 1. DANIŞANLARI ÇEK ---
                 let safeDan = Array.isArray(resDan) ? resDan : [];
                 clients = safeDan.map(d => {
                     return {
-                        id: String(getVal(d, 0, 'id') || "-").trim(),
-                        name: String(getVal(d, 1, 'danisanAdiSoyadi', 'adsoyad') || "İsimsiz").trim(),
-                        phone: String(getVal(d, 3, 'telefon') || "").trim(),
-                        dob: String(getVal(d, 4, 'dogumTarihi') || "").trim(),
-                        note: String(getVal(d, 6, 'not') || "").trim(),
-                        fav: String(getVal(d, 7, 'favoriIslem', 'fav') || "-").trim()
+                        id: String(getVal(d, 0, 'danisanid') || "-").trim(),
+                        name: String(getVal(d, 1, 'danisanAdiSoyadi') || "İsimsiz").trim(),
+                        phone: String(getVal(d, 3, 'danisanTelefonu') || "").trim(),
+                        dob: String(getVal(d, 4, 'danisanDogumTarihi') || "").trim(),
+                        note: String(getVal(d, 6, 'notlarDanisan') || "").trim(),
+                        fav: String(getVal(d, 7, 'favoriHizmetDanisan') || "-").trim()
                     }
-                }).filter(c => c.id !== "-" && c.id.toLowerCase() !== "id");
+                }).filter(c => c.id !== "-" && c.id.toLowerCase() !== "danisanid");
 
-                // --- 2. RANDEVULARI ÇEK ---
                 let safeRan = Array.isArray(resRan) ? resRan : [];
                 appointments = safeRan.map(r => {
                     return {
-                        id: String(getVal(r, 0, 'randevuGunu', 'id', 'hizmetno') || "-").trim(), 
-                        date: String(getVal(r, 1, 'randevular', 'tarih', 'date') || "-").trim(), 
-                        time: String(getVal(r, 2, 'saat', 'time') || "-").trim(), 
-                        staff: String(getVal(r, 3, 'uzman', 'personel', 'estetisyen') || "-").trim(), 
-                        client: String(getVal(r, 4, 'danisan', 'danışan', 'musteri') || "-").trim(), 
-                        category: String(getVal(r, 5, 'kategori', 'islem') || "-").trim(), 
-                        duration: parseInt(String(getVal(r, 6, 'sure', 'süre', 'zaman') || "30").replace(/[^0-9]/g, '')) || 30
+                        id: String(getVal(r, 0, 'randevuGunu') || "-").trim(), 
+                        date: String(getVal(r, 1, 'randevular') || "-").trim(), 
+                        time: String(getVal(r, 2, 'saat') || "-").trim(), 
+                        staff: String(getVal(r, 3, 'uzman') || "-").trim(), 
+                        client: String(getVal(r, 4, 'danisan') || "-").trim(), 
+                        category: String(getVal(r, 5, 'kategori') || "-").trim(), 
+                        duration: parseInt(String(getVal(r, 6, 'sure') || "30").replace(/[^0-9]/g, '')) || 30
                     }
-                }).filter(r => r.id !== "-" && r.id.toLowerCase() !== "randevugunu" && r.id.toLowerCase() !== "id");
+                }).filter(r => r.id !== "-" && r.id.toLowerCase() !== "randevugunu");
 
-                // --- 3. UZMANLARI ÇEK (Yöneticiler, Adminler ve Müdürler Hariç) ---
                 let safeKul = Array.isArray(resKul) ? resKul : [];
                 let experts = safeKul.filter(u => {
                     let name = String(getVal(u, 1, 'adSoyad')).trim();
                     let rol = String(getVal(u, 4, 'rol')).toLowerCase().trim();
-                    
                     if (!name || name.toLowerCase() === "adsoyad") return false;
-                    
-                    // İçinde Bahar geçen kişi (Rolü ne olursa olsun) KESİN eklenecek
                     if (name.toLowerCase().includes("bahar")) return true;
-                    
-                    // MÜDÜR, YÖNETİCİ, ADMİN gibi rolleri otomatik eler, SADECE Uzman ve Estetisyenleri Alır
                     if (rol.includes("uzman") || rol.includes("estetisyen")) return true;
-                    
                     return false;
                 }).map(u => String(getVal(u, 1, 'adSoyad')).trim());
 
-                // Bahar ismini mutlaka 1. Sıraya Sabitle!
                 experts.sort((a, b) => {
                     if (a.toLowerCase().includes("bahar")) return -1;
                     if (b.toLowerCase().includes("bahar")) return 1;
                     return 0;
                 });
                 
-                // Eski sistemden kalan, üzerine randevu yazılı kim varsa takvim bozulmasın diye onu da çek
-                let staffWithApts = appointments.map(a => a.staff).filter(s => s !== "-" && s !== "");
-                let combinedStaff = [...new Set([...experts, ...staffWithApts])]; 
-                
-                if(combinedStaff.length > 0) staffList = combinedStaff;
+                if(experts.length > 0) staffList = experts;
 
                 renderClientTable();
                 
@@ -483,7 +426,6 @@
             });
         });
 
-        // --- TAKVİM VE GÖRSEL MANTIK ---
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid');
             const container = document.getElementById('calendarContainer');
@@ -499,7 +441,6 @@
 
             let today = new Date();
             today.setHours(0,0,0,0);
-            
             let startDate = new Date(today);
             startDate.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) - 7); 
 
@@ -509,7 +450,6 @@
             for (let i = 0; i < 35; i++) {
                 let d = new Date(startDate);
                 d.setDate(startDate.getDate() + i);
-                
                 let y = d.getFullYear();
                 let m = String(d.getMonth() + 1).padStart(2, '0');
                 let dayStr = String(d.getDate()).padStart(2, '0');
@@ -517,26 +457,15 @@
                 
                 let div = document.createElement('div');
                 div.className = 'calendar-day';
-                
-                if (d.getTime() === today.getTime()) {
-                    div.classList.add('today');
-                    todayElement = div;
-                }
-                if (d.getTime() === activeDate.getTime()) {
-                    div.classList.add('active');
-                }
+                if (d.getTime() === today.getTime()) { div.classList.add('today'); todayElement = div; }
+                if (d.getTime() === activeDate.getTime()) { div.classList.add('active'); }
 
                 div.innerHTML = `<div class="day-num">${d.getDate()}</div><div class="day-month">${monthNames[d.getMonth()]}</div>`;
                 div.onclick = () => selectDate(d, dateString);
                 grid.appendChild(div);
             }
 
-            setTimeout(() => {
-                if(todayElement) {
-                    const rowHeight = todayElement.offsetHeight + 8; 
-                    container.scrollTop = todayElement.offsetTop - container.offsetTop - (rowHeight * 1); 
-                }
-            }, 100);
+            setTimeout(() => { if(todayElement) { container.scrollTop = todayElement.offsetTop - container.offsetTop - (todayElement.offsetHeight * 1); } }, 100);
             updateSelectedDateText();
         }
 
@@ -553,7 +482,6 @@
         function updateSelectedDateText() {
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('selectedDateDisplay').innerText = activeDate.toLocaleDateString('tr-TR', options) + " - Randevu Programı";
-            
             let y = activeDate.getFullYear();
             let m = String(activeDate.getMonth() + 1).padStart(2, '0');
             let dayStr = String(activeDate.getDate()).padStart(2, '0');
@@ -581,7 +509,6 @@
             let rowIndex = 0;
             for (let time = startTime; time < endTime; time += 30) {
                 let tr = document.createElement('tr');
-                
                 let h = Math.floor(time / 60).toString().padStart(2, '0');
                 let m = (time % 60).toString().padStart(2, '0');
                 let timeStr = `${h}:${m}`;
@@ -598,79 +525,60 @@
                     td.dataset.col = colIndex + 1; 
                     td.dataset.time = timeStr;
                     td.dataset.staff = staff.trim(); 
-                    
                     td.addEventListener('mousedown', handleMouseDown);
                     td.addEventListener('mouseenter', handleMouseEnter);
                     td.addEventListener('mouseup', handleMouseUp);
-                    
                     tr.appendChild(td);
                 });
-
                 tbody.appendChild(tr);
                 rowIndex++;
             }
-            
             populateAppointmentsOnGrid();
         }
 
-        // 🚨 MATEMATİKSEL BOYA MOTORU: String karşılaştırmalarını bırakıp direkt dakikaları eşleştirir!
+        // 🚨 KUSURSUZ HÜCRE BOYAMA MOTORU
         function populateAppointmentsOnGrid() {
             let currentDateStr = document.getElementById('aptDate').value; 
-            
             let todaysApts = appointments.filter(a => formatDateSafe(a.date) === currentDateStr);
             
             todaysApts.forEach(apt => {
                 let staffIndex = staffList.findIndex(s => s.trim().toLowerCase() === apt.staff.trim().toLowerCase());
                 if (staffIndex === -1) return; 
 
-                let aptStartMins = timeStrToMins(apt.time.split('-')[0]);
+                let cleanStart = cleanTimeFormat(apt.time); 
                 let slotsCount = Math.max(1, Math.ceil(apt.duration / 30));
 
-                let allCells = document.querySelectorAll('.slot-cell');
-                let targetCells = [];
-
-                allCells.forEach(cell => {
-                    if (cell.dataset.staff.trim().toLowerCase() === apt.staff.trim().toLowerCase()) {
-                        let cellMins = timeStrToMins(cell.dataset.time);
-                        // Eğer hücrenin dakikası, randevunun başladığı ve bittiği aralıktaysa kutuyu yakala!
-                        if (cellMins >= aptStartMins && cellMins < aptStartMins + (slotsCount * 30)) {
-                            targetCells.push(cell);
-                        }
-                    }
-                });
-
-                if (targetCells.length === 0) return;
-
-                // Satır sırasına göre diz (yukarıdan aşağıya doğru boyamak için)
-                targetCells.sort((a,b) => parseInt(a.dataset.row) - parseInt(b.dataset.row));
-
-                let boxColor = colColors[(staffIndex) % colColors.length];
+                let startCell = document.querySelector(`.slot-cell[data-staff="${staffList[staffIndex]}"][data-time="${cleanStart}"]`);
+                if (!startCell) return;
                 
-                targetCells.forEach((cell, index) => {
-                    cell.classList.add('booked');
-                    cell.style.borderLeft = `4px solid ${boxColor}`;
-                    cell.style.borderRight = `4px solid ${boxColor}`;
-                    
-                    if (targetCells.length === 1) {
-                        cell.style.borderTop = `4px solid ${boxColor}`;
-                        cell.style.borderBottom = `4px solid ${boxColor}`;
-                        cell.innerHTML = `<div style="font-size:0.7rem; font-weight:bold; color:#1e293b; line-height:1.2;">${apt.client}<br>${apt.category}<br>${apt.duration} Dk</div>`;
-                    } else {
-                        if (index === 0) {
+                let startRow = parseInt(startCell.dataset.row);
+                let boxColor = colColors[staffIndex % colColors.length];
+                
+                for (let i = 0; i < slotsCount; i++) {
+                    let cell = document.querySelector(`.slot-cell[data-staff="${staffList[staffIndex]}"][data-row="${startRow + i}"]`);
+                    if (cell) {
+                        cell.classList.add('booked');
+                        cell.style.borderLeft = `4px solid ${boxColor}`;
+                        cell.style.borderRight = `4px solid ${boxColor}`;
+                        if (slotsCount === 1) {
                             cell.style.borderTop = `4px solid ${boxColor}`;
-                            cell.style.borderBottom = `none`;
-                            cell.innerHTML = `<div style="font-size:0.75rem; font-weight:bold; color:#1e293b; padding:2px; line-height:1.3; margin-top:5px;">
-                                                ${apt.client}<br>${apt.category}<br>${apt.duration} Dk
-                                              </div>`;
-                        } else if (index === targetCells.length - 1) {
                             cell.style.borderBottom = `4px solid ${boxColor}`;
-                            cell.style.borderTop = `none`;
+                            cell.innerHTML = `<div style="font-size:0.7rem; font-weight:bold; color:#1e293b; line-height:1.2;">${apt.client}<br>${apt.category}<br>${apt.duration} Dk</div>`;
                         } else {
-                            cell.style.borderTop = `none`;
-                            cell.style.borderBottom = `none`;
+                            if (i === 0) {
+                                cell.style.borderTop = `4px solid ${boxColor}`;
+                                cell.style.borderBottom = `none`;
+                                cell.innerHTML = `<div style="font-size:0.75rem; font-weight:bold; color:#1e293b; padding:2px; line-height:1.3; margin-top:5px;">${apt.client}<br>${apt.category}<br>${apt.duration} Dk</div>`;
+                            } else if (i === slotsCount - 1) {
+                                cell.style.borderBottom = `4px solid ${boxColor}`;
+                                cell.style.borderTop = `none`;
+                            } else {
+                                cell.style.borderTop = `none`;
+                                cell.style.borderBottom = `none`;
+                            }
                         }
                     }
-                });
+                }
             });
         }
 
@@ -701,37 +609,24 @@
             processSelection();
         }
 
-        document.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                processSelection();
-            }
-        });
+        document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; processSelection(); } });
 
-        function clearSelection() {
-            document.querySelectorAll('.slot-cell.selected').forEach(cell => {
-                cell.classList.remove('selected');
-            });
-        }
+        function clearSelection() { document.querySelectorAll('.slot-cell.selected').forEach(cell => cell.classList.remove('selected')); }
 
         function updateSelectionVisuals() {
             clearSelection();
             let start = Math.min(dragStartRow, dragEndRow);
             let end = Math.max(dragStartRow, dragEndRow);
-            let cells = document.querySelectorAll('.slot-cell');
-            cells.forEach(cell => {
+            document.querySelectorAll('.slot-cell').forEach(cell => {
                 let r = parseInt(cell.dataset.row);
                 let c = parseInt(cell.dataset.col);
-                if (c === dragStartCol && r >= start && r <= end) {
-                    cell.classList.add('selected');
-                }
+                if (c === dragStartCol && r >= start && r <= end) cell.classList.add('selected');
             });
         }
 
         function processSelection() {
             let selectedCells = document.querySelectorAll('.slot-cell.selected');
             if(selectedCells.length === 0) return;
-
             let firstCell = selectedCells[0];
             let lastCell = selectedCells[selectedCells.length - 1];
 
@@ -742,10 +637,8 @@
             if(endM >= 60) { endH += 1; endM -= 60; }
             let endTimeStr = `${endH.toString().padStart(2,'0')}:${endM.toString().padStart(2,'0')}`;
 
-            let staffName = firstCell.dataset.staff;
-
             document.getElementById('aptTime').value = `${startTimeStr} - ${endTimeStr}`;
-            document.getElementById('aptStaff').value = staffName;
+            document.getElementById('aptStaff').value = firstCell.dataset.staff;
             
             let aptTimeInput = document.getElementById('aptTime');
             aptTimeInput.style.backgroundColor = '#d1fae5';
@@ -765,11 +658,7 @@
             let clientId = document.getElementById('aptClient').value;
             let cat = document.getElementById('aptCategory').value;
             let selectedCells = document.querySelectorAll('.slot-cell.selected');
-            
-            if(!clientId || selectedCells.length === 0 || !cat) {
-                alert("Lütfen Danışan, Tablodan Saat ve Kategori seçtiğinizden emin olun!");
-                return;
-            }
+            if(!clientId || selectedCells.length === 0 || !cat) { alert("Lütfen Danışan, Tablodan Saat ve Kategori seçin!"); return; }
 
             let cObj = clients.find(c => String(c.id) === String(clientId));
             let cName = cObj ? cObj.name : "Bilinmiyor";
@@ -781,148 +670,24 @@
             let note = document.getElementById('aptNote').value.trim();
             
             let btn = document.getElementById('btnSaveApt');
-            let oldText = btn.innerHTML;
-            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> İşleniyor...`;
             btn.disabled = true;
 
-            let query = [
-                `kaydetrandevu`,
-                `tarih=${encodeURIComponent(aptDateInput)}`,
-                `saat=${encodeURIComponent(aptTimeInput)}`,
-                `uzman=${encodeURIComponent(staffName)}`,
-                `danisan=${encodeURIComponent(cName)}`,
-                `kategori=${encodeURIComponent(cat)}`,
-                `sure=${encodeURIComponent(durationMins + " Dk")}`, 
-                `notlar=${encodeURIComponent(note)}`
-            ].join("&");
+            let query = [`kaydetrandevu`,`tarih=${encodeURIComponent(aptDateInput)}`,`saat=${encodeURIComponent(aptTimeInput)}`,`uzman=${encodeURIComponent(staffName)}`,`danisan=${encodeURIComponent(cName)}`,`kategori=${encodeURIComponent(cat)}`,`sure=${encodeURIComponent(durationMins + " Dk")}`,`notlar=${encodeURIComponent(note)}`].join("&");
 
             jsonpFetch(query, "cb_saveapt").then(() => {
-                showToast("Randevu başarıyla takvime kaydedildi!");
-                
-                let colIndex = parseInt(selectedCells[0].dataset.col);
-                let boxColor = colColors[(colIndex - 1) % colColors.length];
-                
-                selectedCells.forEach((cell, index) => {
-                    cell.classList.remove('selected');
-                    cell.classList.add('booked');
-                    cell.style.borderLeft = `4px solid ${boxColor}`;
-                    cell.style.borderRight = `4px solid ${boxColor}`;
-                    
-                    if (selectedCells.length === 1) {
-                        cell.style.borderTop = `4px solid ${boxColor}`;
-                        cell.style.borderBottom = `4px solid ${boxColor}`;
-                        cell.innerHTML = `<div style="font-size:0.7rem; font-weight:bold; color:#1e293b; line-height:1.2;">${cName}<br>${cat}<br>${durationMins} Dk</div>`;
-                    } else {
-                        if (index === 0) {
-                            cell.style.borderTop = `4px solid ${boxColor}`;
-                            cell.style.borderBottom = `none`;
-                            cell.innerHTML = `<div style="font-size:0.75rem; font-weight:bold; color:#1e293b; padding:2px; line-height:1.3; margin-top:5px;">
-                                                ${cName}<br>${cat}<br>${durationMins} Dk
-                                              </div>`;
-                        } else if (index === selectedCells.length - 1) {
-                            cell.style.borderBottom = `4px solid ${boxColor}`;
-                            cell.style.borderTop = `none`;
-                        } else {
-                            cell.style.borderTop = `none`;
-                            cell.style.borderBottom = `none`;
-                        }
-                    }
-                });
-
-                jsonpFetch("getrandevular", "cb_ran_refresh").then(resRan => {
-                    let safeRan = Array.isArray(resRan) ? resRan : [];
-                    appointments = safeRan.map(r => {
-                        return { 
-                            id: String(getVal(r, 0, 'randevuGunu', 'id', 'hizmetno') || "-").trim(), 
-                            date: String(getVal(r, 1, 'randevular', 'tarih', 'date') || "-").trim(), 
-                            time: String(getVal(r, 2, 'saat', 'time') || "-").trim(), 
-                            staff: String(getVal(r, 3, 'uzman', 'personel', 'estetisyen') || "-").trim(), 
-                            client: String(getVal(r, 4, 'danisan', 'danışan', 'musteri') || "-").trim(), 
-                            category: String(getVal(r, 5, 'kategori', 'islem') || "-").trim(), 
-                            duration: parseInt(String(getVal(r, 6, 'sure', 'süre', 'zaman') || "30").replace(/[^0-9]/g, '')) || 30
-                        }
-                    }).filter(r => r.id !== "-" && r.id.toLowerCase() !== "randevugunu" && r.id.toLowerCase() !== "id");
-                });
-
-                clearFormAfterSchedule();
-                btn.innerHTML = oldText;
-                btn.disabled = false;
-            }).catch(err => {
-                alert("Bağlantı hatası! Lütfen internetinizi kontrol edip tekrar deneyin.");
-                btn.innerHTML = oldText;
-                btn.disabled = false;
+                showToast("Randevu takvime başarıyla işlendi!");
+                location.reload();
             });
         }
 
         function fillClientPhone() {
             let clientId = document.getElementById('aptClient').value;
-            let phoneInput = document.getElementById('aptPhone');
             if (clientId) {
                 let cObj = clients.find(c => String(c.id) === String(clientId));
-                if (cObj) phoneInput.value = cObj.phone;
-            } else {
-                phoneInput.value = ""; 
-            }
+                if (cObj) document.getElementById('aptPhone').value = cObj.phone;
+            } else { document.getElementById('aptPhone').value = ""; }
         }
 
-        window.selectClientForWhatsApp = function(id) {
-            let selectBox = document.getElementById('aptClient');
-            if(selectBox) {
-                selectBox.value = id;
-                if(typeof fillClientPhone === 'function') fillClientPhone(); 
-                document.querySelector('.appointment-action-bar').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        };
-
-        function openWhatsAppPopup() {
-            let clientId = document.getElementById('aptClient').value;
-            let date = document.getElementById('aptDate').value;
-            let time = document.getElementById('aptTime').value;
-            let cat = document.getElementById('aptCategory').value;
-
-            if(!clientId) { alert("Lütfen önce bir danışan seçiniz."); return; }
-
-            let cObj = clients.find(c => String(c.id) === String(clientId));
-            if(!cObj) return;
-
-            let firstName = cObj.name.split(' ')[0]; 
-            let messageText = "";
-
-            if (time && cat) {
-                let formattedDate = date ? date.split('-').reverse().join('.') : ""; 
-                messageText = `Merhaba ${firstName} Hanım,\n\n${formattedDate} tarihinde saat ${time} için *${cat}* randevunuz başarıyla oluşturulmuştur.\n\nSizi Bahar Beauty Studio'da ağırlamaktan mutluluk duyacağız. ✨`;
-            } else {
-                messageText = `Merhaba ${firstName},\n\nBahar Beauty Studio'dan iletişime geçiyoruz. Size nasıl yardımcı olabiliriz? ✨`;
-            }
-
-            let previewBox = document.getElementById('waMessagePreview');
-            previewBox.innerText = messageText;
-            previewBox.contentEditable = "true";
-            previewBox.style.outline = "none"; 
-            
-            let inputPhone = document.getElementById('aptPhone') ? document.getElementById('aptPhone').value : "";
-            document.getElementById('waTargetPhone').value = inputPhone || cObj.phone;
-            document.getElementById('waModal').style.display = 'flex';
-        }
-
-        function closeWhatsAppPopup() {
-            document.getElementById('waModal').style.display = 'none';
-        }
-
-        function sendWhatsAppMessage() {
-            let phone = document.getElementById('waTargetPhone').value;
-            let text = document.getElementById('waMessagePreview').innerText;
-            if(!phone) { alert("Geçerli bir telefon numarası bulunamadı!"); return; }
-
-            let cleanPhone = phone.replace(/[^0-9]/g, '');
-            if(cleanPhone.startsWith('0')) cleanPhone = cleanPhone.substring(1);
-            if(!cleanPhone.startsWith('90') && cleanPhone.length === 10) cleanPhone = '90' + cleanPhone;
-
-            let waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
-            window.open(waUrl, '_blank');
-            closeWhatsAppPopup();
-        }
-        
         function renderClientSelect() {
             const select = document.getElementById('aptClient');
             select.innerHTML = '<option value="">-- Danışan Seçiniz --</option>';
@@ -937,7 +702,6 @@
         function renderClientTable(filteredData = null) {
             const tbody = document.getElementById('clientTableBody');
             tbody.innerHTML = '';
-            
             let dataToRender = filteredData ? filteredData : [...clients].reverse();
 
             if (dataToRender.length === 0) {
@@ -948,20 +712,7 @@
 
             dataToRender.slice(0, 10).forEach(c => {
                 let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${c.name}</strong></td>
-                    <td>${c.phone}</td>
-                    <td>${c.dob ? c.dob.split('-').reverse().join('.') : '-'}</td>
-                    <td style="font-size: 0.85rem; color:#64748b;">${c.note}</td>
-                    <td><span style="background: #fdf4ff; color: #a21caf; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; border: 1px solid #f5d0fe;">${c.fav || '-'}</span></td>
-                    <td>
-                        <div class="action-btns" style="justify-content: flex-end;">
-                            <button class="btn-whatsapp" style="padding: 6px 10px; font-size: 0.85rem;" onclick="selectClientForWhatsApp('${c.id}')" title="Yukarıda Seç"><i class="fab fa-whatsapp"></i></button>
-                            <button class="btn-edit" onclick="editClient('${c.id}')" title="Düzenle"><i class="fas fa-edit"></i></button>
-                            <button class="btn-delete" onclick="deleteClient('${c.id}')" title="Sil"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </td>
-                `;
+                tr.innerHTML = `<td><strong>${c.name}</strong></td><td>${c.phone}</td><td>${c.dob ? c.dob.split('-').reverse().join('.') : '-'}</td><td style="font-size: 0.85rem; color:#64748b;">${c.note}</td><td><span style="background: #fdf4ff; color: #a21caf; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; border: 1px solid #f5d0fe;">${c.fav || '-'}</span></td><td><div class="action-btns" style="justify-content: flex-end;"><button class="btn-whatsapp" style="padding: 6px 10px; font-size: 0.85rem;" onclick="selectClientForWhatsApp('${c.id}')"><i class="fab fa-whatsapp"></i></button><button class="btn-edit" onclick="editClient('${c.id}')"><i class="fas fa-edit"></i></button><button class="btn-delete" onclick="deleteClient('${c.id}')"><i class="fas fa-trash"></i></button></div></td>`;
                 tbody.appendChild(tr);
             });
             renderClientSelect(); 
@@ -973,97 +724,13 @@
             let catVal = document.getElementById('filterCategory').value.toLowerCase();
 
             let filtered = [...clients].reverse().filter(c => {
-                let cleanPhone = c.phone.toLowerCase().replace(/\s/g, '');
-                let matchPhone = cleanPhone.includes(phoneVal);
-                let dobView = c.dob ? c.dob.split('-').reverse().join('.') : '';
-                let matchDob = dobView.includes(dobVal) || (c.dob && c.dob.includes(dobVal));
-                let matchCat = (c.fav || '').toLowerCase().includes(catVal);
-                return matchPhone && matchDob && matchCat;
+                return c.phone.toLowerCase().replace(/\s/g, '').includes(phoneVal) && (c.dob ? c.dob.includes(dobVal) : true) && c.fav.toLowerCase().includes(catVal);
             });
             renderClientTable(filtered);
         }
 
-        function printCalendar() {
-            document.body.classList.add('print-calendar'); 
-            window.print();
-            setTimeout(() => { document.body.classList.remove('print-calendar'); }, 1000);
-        }
-
-        function printClientList() {
-            document.body.classList.add('print-clients'); 
-            window.print();
-            setTimeout(() => { document.body.classList.remove('print-clients'); }, 1000);
-        }
-
-        function saveClient() {
-            let id = document.getElementById('editClientId').value;
-            let name = document.getElementById('clientName').value.trim();
-            let phone = document.getElementById('clientPhone').value.trim();
-            let dob = document.getElementById('clientDob').value;
-            let note = document.getElementById('clientNote').value.trim();
-
-            if (!name || !phone) { alert("Lütfen en az Ad Soyad ve Telefon alanlarını doldurunuz."); return; }
-
-            let btn = document.getElementById('btnSaveClient');
-            let oldText = btn.innerHTML;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Bekleyin...`;
-            btn.disabled = true;
-
-            let query = (id) ? 
-                `guncelledanisan&id=${encodeURIComponent(id)}&adSoyad=${encodeURIComponent(name)}&telefon=${encodeURIComponent(phone)}&dogumTarihi=${encodeURIComponent(dob)}&not=${encodeURIComponent(note)}` : 
-                `kaydetdanisan&adSoyad=${encodeURIComponent(name)}&telefon=${encodeURIComponent(phone)}&dogumTarihi=${encodeURIComponent(dob)}&not=${encodeURIComponent(note)}`;
-
-            jsonpFetch(query, "cb_savecli").then(() => {
-                showToast(id ? "Danışan bilgileri güncellendi." : "Yeni danışan eklendi.");
-                document.getElementById('editClientId').value = "";
-                document.getElementById('clientName').value = "";
-                document.getElementById('clientPhone').value = "";
-                document.getElementById('clientDob').value = "";
-                document.getElementById('clientNote').value = "";
-                
-                jsonpFetch("getdanisanlar", "cb_dan_ref").then(resDan => {
-                    let safeDan = Array.isArray(resDan) ? resDan : [];
-                    clients = safeDan.map(d => {
-                        return {
-                            id: String(getVal(d, 0, 'id') || "-").trim(),
-                            name: String(getVal(d, 1, 'danisanAdiSoyadi', 'adsoyad') || "İsimsiz").trim(),
-                            phone: String(getVal(d, 3, 'telefon') || "").trim(),
-                            dob: String(getVal(d, 4, 'dogumTarihi') || "").trim(),
-                            note: String(getVal(d, 6, 'not') || "").trim(),
-                            fav: String(getVal(d, 7, 'favoriIslem', 'fav') || "-").trim()
-                        }
-                    }).filter(c => c.id !== "-" && c.id.toLowerCase() !== "id");
-                    renderClientTable();
-                    btn.innerHTML = '<i class="fas fa-check"></i> Danışanı Kaydet';
-                    btn.disabled = false;
-                });
-            });
-        }
-
-        function editClient(id) {
-            let c = clients.find(x => String(x.id) === String(id));
-            if(c) {
-                document.getElementById('editClientId').value = c.id;
-                document.getElementById('clientName').value = c.name;
-                document.getElementById('clientPhone').value = c.phone;
-                document.getElementById('clientDob').value = c.dob;
-                document.getElementById('clientNote').value = c.note;
-                
-                document.getElementById('btnSaveClient').innerHTML = '<i class="fas fa-sync"></i> Güncelle';
-                document.getElementById('clientName').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }
-
-        function deleteClient(id) {
-            if(confirm("Bu danışanı tamamen silmek istediğinize emin misiniz?")) {
-                jsonpFetch(`sildanisan&id=${id}`, "cb_delcli").then(() => {
-                    showToast("Danışan silindi.");
-                    clients = clients.filter(c => String(c.id) !== String(id));
-                    renderClientTable();
-                });
-            }
-        }
-
+        function printClientList() { document.body.classList.add('print-clients'); window.print(); setTimeout(() => document.body.classList.remove('print-clients'), 1000); }
+        function printCalendar() { document.body.classList.add('print-calendar'); window.print(); setTimeout(() => document.body.classList.remove('print-calendar'), 1000); }
     </script>
 </body>
 </html>
