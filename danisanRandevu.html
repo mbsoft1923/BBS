@@ -157,6 +157,7 @@
 </head>
 <body>
 
+    <!-- 🚨 API VE BİLDİRİM İÇİN EKLENEN KUTUCUK -->
     <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
 
     <div class="wrapper">
@@ -348,27 +349,25 @@
             return fb;
         }
 
+        // 🚨 ZAMAN DİLİMİ (TIMEZONE) GÜVENLİK MOTORU: Tarayıcı saati ne olursa olsun yazan tarihi şaşmaz şekilde okur
         function formatDateSafe(dStr) {
             if(!dStr || dStr==="-") return "";
             dStr = String(dStr).trim();
+            
+            if (/^\d{4}-\d{2}-\d{2}/.test(dStr)) return dStr.substring(0, 10);
+            if (/^\d{2}\.\d{2}\.\d{4}/.test(dStr)) {
+                let p = dStr.split('.'); return `${p[2]}-${p[1]}-${p[0]}`;
+            }
+            if (/^\d{2}\/\d{2}\/\d{4}/.test(dStr)) {
+                let p = dStr.split('/'); return `${p[2]}-${p[1]}-${p[0]}`;
+            }
+            
             let d = new Date(dStr);
             if (!isNaN(d.getTime())) {
-                if (dStr.includes('T')) return dStr.split('T')[0];
                 let y = d.getFullYear();
                 let m = String(d.getMonth() + 1).padStart(2, '0');
                 let day = String(d.getDate()).padStart(2, '0');
                 return `${y}-${m}-${day}`;
-            }
-            if(dStr.includes('.')) {
-                let p = dStr.split('.'); 
-                if(p.length === 3) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
-            }
-            if(dStr.includes('/')) {
-                let p = dStr.split('/');
-                if(p.length === 3) {
-                    if(p[2].length === 4) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
-                    return `${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;
-                }
             }
             return dStr.substring(0,10);
         }
@@ -403,6 +402,7 @@
                 jsonpFetch("getrandevular", "cb_ran")
             ]).then(([resDan, resKul, resRan]) => {
                 
+                // Danışanları Çek
                 let safeDan = Array.isArray(resDan) ? resDan : [];
                 clients = safeDan.map(d => {
                     const vals = Object.values(d);
@@ -416,31 +416,39 @@
                     }
                 }).filter(c => c.id !== "-");
 
-                // 🚨 SİZİN İSTEDİĞİNİZ "SADECE UZMAN VEYA ESTETİSYEN GÖSTERİLSİN" FİLTRESİ
-                let safeKul = Array.isArray(resKul) ? resKul : [];
-                let experts = safeKul.filter(u => {
-                    let rol = safeGet(u.rol, safeGet(u["Rol"], safeGet(Object.values(u)[4], ""))).toLowerCase().trim();
-                    return rol.includes("uzman") || rol.includes("estetisyen"); 
-                }).map(u => safeGet(u.adSoyad, safeGet(u["Ad Soyad"], safeGet(Object.values(u)[1], "")))).filter(n => n !== "-" && n !== "");
-                
-                if(experts.length > 0) staffList = experts;
-
+                // Randevuları Sütun Sırasıyla Kopmaz Şekilde Çek
                 let safeRan = Array.isArray(resRan) ? resRan : [];
                 appointments = safeRan.map(r => {
+                    const vals = Object.values(r);
                     return {
-                        id: safeGet(r.randevuGunu, r["randevuGunu"], "-"), 
-                        date: safeGet(r.randevular, r["randevular"], "-"), 
-                        time: safeGet(r.saat, r["saat"], "-"), 
-                        staff: safeGet(r.uzman, r["uzman"], "-"), 
-                        client: safeGet(r.danisan, r["danisan"], "-"), 
-                        category: safeGet(r.kategori, r["kategori"], "-"), 
-                        duration: parseInt(safeGet(r.sure, r["sure"], "30")) 
+                        id: safeGet(vals[0], "-"), 
+                        date: safeGet(vals[1], "-"), 
+                        time: safeGet(vals[2], "-"), 
+                        staff: safeGet(vals[3], "-"), 
+                        client: safeGet(vals[4], "-"), 
+                        category: safeGet(vals[5], "-"), 
+                        duration: parseInt(String(safeGet(vals[6], "30")).replace(/[^0-9]/g, '')) || 30
                     }
                 }).filter(r => r.id !== "-");
 
+                // Uzmanları ve Estetisyenleri Çek, Yöneticileri Gizle! 
+                let safeKul = Array.isArray(resKul) ? resKul : [];
+                let experts = safeKul.filter(u => {
+                    const vals = Object.values(u);
+                    let rol = safeGet(vals[4], "").toLowerCase().trim();
+                    return !rol.includes("admin") && !rol.includes("yönetici") && !rol.includes("yonetici");
+                }).map(u => safeGet(Object.values(u)[1], "")).filter(n => n !== "-" && n !== "");
+                
+                // 🚨 ZEKİ SİSTEM: Tabloda birinin randevusu varsa (Örn: Bahar Sönmez) ama rolü "Yönetici" olduğu için gizlendiyse, 
+                // Randevusu olduğu için o kişiyi MECBUREN takvime ekler! Böylece takvim asla boş kalmaz.
+                let staffWithApts = appointments.map(a => a.staff).filter(s => s !== "-" && s !== "");
+                let combinedStaff = [...new Set([...experts, ...staffWithApts])]; 
+                
+                if(combinedStaff.length > 0) staffList = combinedStaff;
+
                 renderClientTable();
                 
-                // 🚨 ZAMAN KAYMASINI ÖNLEYEN YEREL TARİH SEÇİMİ
+                // Başlangıç tarihini yerel saatte okuyarak başlat
                 let y = activeDate.getFullYear();
                 let m = String(activeDate.getMonth() + 1).padStart(2, '0');
                 let dayStr = String(activeDate.getDate()).padStart(2, '0');
@@ -474,12 +482,11 @@
             for (let i = 0; i < 35; i++) {
                 let d = new Date(startDate);
                 d.setDate(startDate.getDate() + i);
-                d.setHours(0,0,0,0); // Kesin gece yarısı
                 
                 let div = document.createElement('div');
                 div.className = 'calendar-day';
                 
-                // 🚨 Zaman dilimi hatasını (Tıkladığımda tablonun boşalması) önleyen sağlam tarih okuyucu
+                // Zaman Kaymasını Önleyen Kopmaz Tarih Oluşturucu
                 let y = d.getFullYear();
                 let m = String(d.getMonth() + 1).padStart(2, '0');
                 let dayStr = String(d.getDate()).padStart(2, '0');
@@ -568,7 +575,7 @@
                     td.dataset.row = rowIndex;
                     td.dataset.col = colIndex + 1; 
                     td.dataset.time = timeStr;
-                    td.dataset.staff = staff.trim(); // Boşluk hatalarını engelle
+                    td.dataset.staff = staff.trim(); 
                     
                     td.addEventListener('mousedown', handleMouseDown);
                     td.addEventListener('mouseenter', handleMouseEnter);
@@ -735,7 +742,6 @@
             clearSelection();
         }
 
-        // --- 🚨 1. HATANIN ÇÖZÜLDÜĞÜ YER (BOŞLUKLU URL SORUNU) ---
         function saveAppointment() {
             let clientId = document.getElementById('aptClient').value;
             let cat = document.getElementById('aptCategory').value;
@@ -760,7 +766,6 @@
             btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> İşleniyor...`;
             btn.disabled = true;
 
-            // 🚨 Süre parametresi URL'yi kırmasın diye (encodeURIComponent) içine eklendi
             let query = [
                 `kaydetrandevu`,
                 `tarih=${encodeURIComponent(aptDateInput)}`,
@@ -805,17 +810,19 @@
                     }
                 });
 
+                // Sessizce arka planda verileri tazele
                 jsonpFetch("getrandevular", "cb_ran_refresh").then(resRan => {
                     let safeRan = Array.isArray(resRan) ? resRan : [];
                     appointments = safeRan.map(r => {
+                        const vals = Object.values(r);
                         return { 
-                            id: safeGet(r.randevuGunu, r["randevuGunu"], "-"), 
-                            date: safeGet(r.randevular, r["randevular"], "-"), 
-                            time: safeGet(r.saat, r["saat"], "-"), 
-                            staff: safeGet(r.uzman, r["uzman"], "-"), 
-                            client: safeGet(r.danisan, r["danisan"], "-"), 
-                            category: safeGet(r.kategori, r["kategori"], "-"), 
-                            duration: parseInt(safeGet(r.sure, r["sure"], "30")) 
+                            id: safeGet(vals[0], "-"), 
+                            date: safeGet(vals[1], "-"), 
+                            time: safeGet(vals[2], "-"), 
+                            staff: safeGet(vals[3], "-"), 
+                            client: safeGet(vals[4], "-"), 
+                            category: safeGet(vals[5], "-"), 
+                            duration: parseInt(String(safeGet(vals[6], "30")).replace(/[^0-9]/g, '')) || 30
                         }
                     }).filter(r => r.id !== "-");
                 });
