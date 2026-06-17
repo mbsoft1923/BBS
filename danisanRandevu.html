@@ -68,9 +68,6 @@
         td:nth-child(6).slot-cell.selected { background-color: #fb7185; border: 1px solid #e11d48; } 
         td:nth-child(7).slot-cell.selected { background-color: #c084fc; border: 1px solid #9333ea; } 
         td:nth-child(n+8).slot-cell.selected { background-color: #2dd4bf; border: 1px solid #0d9488; } 
-        
-        .btn-add-col { background: #e0e7ff; color: #4f46e5; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
-        .btn-add-col:hover { background: #c7d2fe; }
 
         /* Randevu Kayıt Satırı */
         .appointment-action-bar { display: grid; grid-template-columns: 1.3fr 1fr 1fr 0.8fr 1.3fr auto; gap: 10px; align-items: end; background: #faf5ff; border: 1px dashed #d8b4fe; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
@@ -121,14 +118,19 @@
         @media print {
             @page { size: A4 portrait; margin: 0.5cm; }
             body { background-color: white !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
             .wrapper { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
             .card { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; background: transparent !important; }
-            .global-page-header, button, .btn-primary, .wa-modal-overlay { display: none !important; }
+
+            /* ORTAK GİZLENECEK ÖĞELER */
+            .global-page-header, 
+            button, 
+            .btn-primary, 
+            .wa-modal-overlay { display: none !important; }
 
             body.print-calendar .client-management-card, 
             body.print-calendar .appointment-action-bar, 
             body.print-calendar .calendar-container,
-            body.print-calendar .btn-add-col,
             body.print-calendar .appointment-card > .card-title { display: none !important; }
             
             body.print-calendar #selectedDateDisplay { display: block !important; font-size: 14pt !important; font-weight: bold !important; text-align: center !important; color: #00a8b5 !important; margin-bottom: 15px !important; }
@@ -157,6 +159,7 @@
 </head>
 <body>
 
+    <!-- 🚨 GÜÇLENDİRİLMİŞ BİLDİRİM KUTUCUĞU -->
     <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
 
     <div class="wrapper">
@@ -348,26 +351,23 @@
             return fb;
         }
 
-        // 🚨 YENİ NESİL ZAMAN DİLİMİ KORUYUCU: 
-        // Google'dan gelen "2026-06-16T21:00:00.000Z" gibi UTC formatları 
-        // Türkiye yerel saatine (+3 saat) dönüştürerek tarihi asıl olması gereken güne sabitler.
+        // 🚨 YENİ NESİL ZAMAN DİLİMİ KORUYUCU: Tarih kaymalarını önler
         function formatDateSafe(dStr) {
             if(!dStr || dStr==="-") return "";
             dStr = String(dStr).trim();
             
-            // Sadece YYYY-MM-DD ise direkt çevir
-            if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) return dStr;
-            
-            // Eğer Google Sheets'ten UTC zaman dilimi geliyorsa, yerel saate çevir
-            let d = new Date(dStr);
-            if (!isNaN(d.getTime())) {
-                let y = d.getFullYear();
-                let m = String(d.getMonth() + 1).padStart(2, '0');
-                let day = String(d.getDate()).padStart(2, '0');
-                return `${y}-${m}-${day}`;
+            if (dStr.includes('T') && dStr.includes('Z')) {
+                let d = new Date(dStr);
+                if (!isNaN(d.getTime())) {
+                    let y = d.getFullYear();
+                    let m = String(d.getMonth() + 1).padStart(2, '0');
+                    let day = String(d.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${day}`;
+                }
             }
 
-            // TR Formatları (. veya / ayraçlı)
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) return dStr;
+            
             if (/^\d{2}\.\d{2}\.\d{4}/.test(dStr)) {
                 let p = dStr.split('.'); return `${p[2]}-${p[1]}-${p[0]}`;
             }
@@ -375,6 +375,13 @@
                 let p = dStr.split('/'); return `${p[2]}-${p[1]}-${p[0]}`;
             }
             
+            let fallD = new Date(dStr);
+            if (!isNaN(fallD.getTime())) {
+                let y = fallD.getFullYear();
+                let m = String(fallD.getMonth() + 1).padStart(2, '0');
+                let day = String(fallD.getDate()).padStart(2, '0');
+                return `${y}-${m}-${day}`;
+            }
             return dStr.substring(0,10);
         }
 
@@ -410,39 +417,50 @@
                 
                 let safeDan = Array.isArray(resDan) ? resDan : [];
                 clients = safeDan.map(d => {
+                    const vals = Object.values(d);
                     return {
-                        id: safeGet(d.id, d.ID),
-                        name: safeGet(d.danisanAdiSoyadi, d.adSoyad, "İsimsiz"),
-                        phone: safeGet(d.telefon, ""),
-                        dob: safeGet(d.dogumTarihi, ""),
-                        note: safeGet(d.not, ""),
-                        fav: safeGet(d.favoriIslem, "-")
+                        id: String(vals[0] || "-").trim(),
+                        name: String(vals[1] || "İsimsiz").trim(),
+                        phone: String(vals[3] || "").trim(),
+                        dob: String(vals[4] || "").trim(),
+                        note: String(vals[6] || "").trim(),
+                        fav: String(vals[7] || "-").trim()
                     }
                 }).filter(c => c.id !== "-");
 
-                // 🚨 RANDEVULAR: Başlık ismine bakmaksızın özellik anahtarlarıyla (keys) okunur
+                // 🚨 RANDEVULAR: Sütun İndisine Göre (0=A, 1=B, 2=C) Alınır
                 let safeRan = Array.isArray(resRan) ? resRan : [];
                 appointments = safeRan.map(r => {
+                    const vals = Object.values(r);
                     return {
-                        id: safeGet(r.randevuGunu, r.id, "-"), 
-                        date: safeGet(r.randevular, r.tarih, "-"), 
-                        time: safeGet(r.saat, "-"), 
-                        staff: safeGet(r.uzman, "-"), 
-                        client: safeGet(r.danisan, "-"), 
-                        category: safeGet(r.kategori, "-"), 
-                        duration: parseInt(String(safeGet(r.sure, "30")).replace(/[^0-9]/g, '')) || 30
+                        id: String(vals[0] || "-").trim(), 
+                        date: String(vals[1] || "-").trim(), 
+                        time: String(vals[2] || "-").trim(), 
+                        staff: String(vals[3] || "-").trim(), 
+                        client: String(vals[4] || "-").trim(), 
+                        category: String(vals[5] || "-").trim(), 
+                        duration: parseInt(String(vals[6] || "30").replace(/[^0-9]/g, '')) || 30
                     }
                 }).filter(r => r.id !== "-");
 
-                // 🚨 UZMANLAR: Yöneticiler gizlenir
+                // 🚨 UZMANLAR & YÖNETİCİ GİZLEME VE "BAHAR" KURTARMA
                 let safeKul = Array.isArray(resKul) ? resKul : [];
                 let experts = safeKul.filter(u => {
-                    let rol = safeGet(u.rol, safeGet(u["Rol"], "")).toLowerCase().trim();
-                    return rol.includes("uzman") || rol.includes("estetisyen");
-                }).map(u => safeGet(u.adSoyad, safeGet(u["Ad Soyad"], ""))).filter(n => n !== "-" && n !== "");
+                    const vals = Object.values(u);
+                    let name = String(vals[1] || "").trim();
+                    let rol = String(vals[4] || "").toLowerCase().trim(); // E Sütunu (Index 4)
+                    
+                    if (name.toLowerCase().includes("bahar")) return true;
+                    
+                    return !rol.includes("admin") && !rol.includes("yönetici") && !rol.includes("yonetici");
+                }).map(u => String(Object.values(u)[1] || "").trim()).filter(n => n !== "-" && n !== "");
+
+                experts.sort((a, b) => {
+                    if (a.toLowerCase().includes("bahar")) return -1;
+                    if (b.toLowerCase().includes("bahar")) return 1;
+                    return 0;
+                });
                 
-                // 🚨 GARANTİCİ KALKAN: Tabloda üzerine randevu yazılı biri varsa (Bahar Sönmez gibi)
-                // rolü gizli olsa bile takvimdeki tablo eksik kalmasın diye mecburen ekrana eklenir.
                 let staffWithApts = appointments.map(a => a.staff).filter(s => s !== "-" && s !== "");
                 let combinedStaff = [...new Set([...experts, ...staffWithApts])]; 
                 
@@ -450,7 +468,6 @@
 
                 renderClientTable();
                 
-                // Yerel saate göre takvimi başlat
                 let y = activeDate.getFullYear();
                 let m = String(activeDate.getMonth() + 1).padStart(2, '0');
                 let dayStr = String(activeDate.getDate()).padStart(2, '0');
@@ -543,10 +560,7 @@
                 th.innerText = staff.trim();
                 tr.appendChild(th);
             });
-            let thAdd = document.createElement('th');
-            thAdd.style.width = '50px';
-            thAdd.innerHTML = `<button class="btn-add-col" onclick="addNewStaffColumn()" title="Yeni Sütun (Personel) Ekle"><i class="fas fa-plus"></i></button>`;
-            tr.appendChild(thAdd);
+            // 🚨 + Butonu ve gereksiz sütun ekleme özelliği kaldırıldı.[cite: 3]
         }
 
         function renderScheduleTable() {
@@ -585,8 +599,6 @@
                     tr.appendChild(td);
                 });
 
-                let tdEmpty = document.createElement('td');
-                tr.appendChild(tdEmpty);
                 tbody.appendChild(tr);
                 rowIndex++;
             }
@@ -595,9 +607,8 @@
         }
 
         function populateAppointmentsOnGrid() {
-            let currentDateStr = document.getElementById('aptDate').value; // Örn: 2026-06-17
+            let currentDateStr = document.getElementById('aptDate').value; 
             
-            // Tüm randevuların formatlanmış yerel tarihi, seçili olan gün ile uyuşuyor mu?
             let todaysApts = appointments.filter(a => formatDateSafe(a.date) === currentDateStr);
             
             todaysApts.forEach(apt => {
@@ -648,14 +659,6 @@
                     }
                 });
             });
-        }
-
-        function addNewStaffColumn() {
-            let name = prompt("Yeni eklenecek Estetisyen/Uzman adını giriniz:");
-            if (name && name.trim() !== "") {
-                staffList.push(name.trim());
-                renderScheduleTable();
-            }
         }
 
         function handleMouseDown(e) {
@@ -745,6 +748,8 @@
             clearSelection();
         }
 
+        // 🚨 API'YE GÖNDERİM KISMI: Değişken isimleri (tarih, saat, uzman, danisan, kategori, sure) 
+        // e-tablodaki indekslere sırasıyla yazılır.
         function saveAppointment() {
             let clientId = document.getElementById('aptClient').value;
             let cat = document.getElementById('aptCategory').value;
@@ -813,17 +818,19 @@
                     }
                 });
 
+                // Sessizce arka planda verileri tazele
                 jsonpFetch("getrandevular", "cb_ran_refresh").then(resRan => {
                     let safeRan = Array.isArray(resRan) ? resRan : [];
                     appointments = safeRan.map(r => {
+                        const vals = Object.values(r);
                         return { 
-                            id: safeGet(r.randevuGunu, r.id, "-"), 
-                            date: safeGet(r.randevular, r.tarih, "-"), 
-                            time: safeGet(r.saat, "-"), 
-                            staff: safeGet(r.uzman, "-"), 
-                            client: safeGet(r.danisan, "-"), 
-                            category: safeGet(r.kategori, "-"), 
-                            duration: parseInt(String(safeGet(r.sure, "30")).replace(/[^0-9]/g, '')) || 30
+                            id: String(vals[0] || "-").trim(), 
+                            date: String(vals[1] || "-").trim(), 
+                            time: String(vals[2] || "-").trim(), 
+                            staff: String(vals[3] || "-").trim(), 
+                            client: String(vals[4] || "-").trim(), 
+                            category: String(vals[5] || "-").trim(), 
+                            duration: parseInt(String(vals[6] || "30").replace(/[^0-9]/g, '')) || 30
                         }
                     }).filter(r => r.id !== "-");
                 });
@@ -1011,13 +1018,14 @@
                 jsonpFetch("getdanisanlar", "cb_dan_ref").then(resDan => {
                     let safeDan = Array.isArray(resDan) ? resDan : [];
                     clients = safeDan.map(d => {
+                        const vals = Object.values(d);
                         return {
-                            id: safeGet(d.id, d.ID),
-                            name: safeGet(d.danisanAdiSoyadi, d.adSoyad, "İsimsiz"),
-                            phone: safeGet(d.telefon, ""),
-                            dob: safeGet(d.dogumTarihi, ""),
-                            note: safeGet(d.not, ""),
-                            fav: safeGet(d.favoriIslem, "-")
+                            id: String(vals[0] || "-").trim(),
+                            name: String(vals[1] || "İsimsiz").trim(),
+                            phone: String(vals[3] || "").trim(),
+                            dob: String(vals[4] || "").trim(),
+                            note: String(vals[6] || "").trim(),
+                            fav: String(vals[7] || "-").trim()
                         }
                     }).filter(c => c.id !== "-");
                     renderClientTable();
