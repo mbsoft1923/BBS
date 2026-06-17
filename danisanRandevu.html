@@ -118,8 +118,10 @@
         @media print {
             @page { size: A4 portrait; margin: 0.5cm; }
             body { background-color: white !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
             .wrapper { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
             .card { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; background: transparent !important; }
+
             .global-page-header, button, .btn-primary, .wa-modal-overlay { display: none !important; }
 
             body.print-calendar .client-management-card, 
@@ -336,12 +338,21 @@
             setTimeout(() => { if(toast.parentElement) toast.remove() }, 3000);
         }
 
-        // 🚨 KOPMAZ TARİH OKUYUCUSU: 1 gün geriye atma hatasını sonsuza dek çözer
+        // 🚨 KOPMAZ ZAMAN DİLİMİ OKUYUCUSU
         function formatDateSafe(dStr) {
             if(!dStr || dStr==="-") return "";
             dStr = String(dStr).trim();
             
-            // Eğer tarih YYYY-MM-DD formatında geldiyse direkt kendisini kullan (saati vs hesaplama)
+            if (dStr.includes('T') && dStr.includes('Z')) {
+                let d = new Date(dStr);
+                if (!isNaN(d.getTime())) {
+                    let y = d.getFullYear();
+                    let m = String(d.getMonth() + 1).padStart(2, '0');
+                    let day = String(d.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${day}`;
+                }
+            }
+
             let isoMatch = dStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
             if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
 
@@ -351,11 +362,11 @@
             let slashMatch = dStr.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
             if (slashMatch) return `${slashMatch[3]}-${slashMatch[2]}-${slashMatch[1]}`;
 
-            let d = new Date(dStr);
-            if (!isNaN(d.getTime())) {
-                let y = d.getFullYear();
-                let m = String(d.getMonth() + 1).padStart(2, '0');
-                let day = String(d.getDate()).padStart(2, '0');
+            let fallD = new Date(dStr);
+            if (!isNaN(fallD.getTime())) {
+                let y = fallD.getFullYear();
+                let m = String(fallD.getMonth() + 1).padStart(2, '0');
+                let day = String(fallD.getDate()).padStart(2, '0');
                 return `${y}-${m}-${day}`;
             }
             return dStr.substring(0,10);
@@ -380,6 +391,7 @@
             });
         }
 
+        // --- 🎯 TÜM VERİLERİ BULUTTAN İNDİRME MOTORU ---
         document.addEventListener("DOMContentLoaded", () => {
             let aktifKullanici = JSON.parse(localStorage.getItem('aktifKullanici'));
             if (!aktifKullanici) { window.location.href = "index.html"; return; }
@@ -390,62 +402,56 @@
                 jsonpFetch("getrandevular", "cb_ran")
             ]).then(([resDan, resKul, resRan]) => {
                 
-                // --- DANIŞANLARI ÇEK (Başlık kaymalarına karşı kolon index'li koruma) ---
+                // DANIŞANLAR
                 let safeDan = Array.isArray(resDan) ? resDan : [];
                 clients = safeDan.map(d => {
-                    const vals = Object.values(d);
                     return {
-                        id: String(d.id || d.ID || vals[0] || "-").trim(),
-                        name: String(d.danisanAdiSoyadi || d.adSoyad || vals[1] || "İsimsiz").trim(),
-                        phone: String(d.telefon || vals[3] || "").trim(),
-                        dob: String(d.dogumTarihi || vals[4] || "").trim(),
-                        note: String(d.not || vals[6] || "").trim(),
-                        fav: String(d.favoriIslem || vals[7] || "-").trim()
+                        id: String(d.id || d.ID || "-").trim(),
+                        name: String(d.danisanAdiSoyadi || d.adSoyad || d["Ad Soyad"] || "İsimsiz").trim(),
+                        phone: String(d.telefon || d.Telefon || "").trim(),
+                        dob: String(d.dogumTarihi || d["Doğum Tarihi"] || "").trim(),
+                        note: String(d.not || d.Not || "").trim(),
+                        fav: String(d.favoriIslem || d.fav || "-").trim()
                     }
                 }).filter(c => c.id !== "-");
 
-                // --- 🚨 RANDEVULARI ÇEK (Başlıklar boş olsa bile kesin 0,1,2 sırasıyla okur) ---
+                // 🚨 RANDEVULAR: KESİN VE NET BAŞLIK EŞLEŞTİRMESİ (vals dizisi tamamen çöpe atıldı)
                 let safeRan = Array.isArray(resRan) ? resRan : [];
                 appointments = safeRan.map(r => {
-                    const vals = Object.values(r);
                     return {
-                        id: String(r.randevuGunu || vals[0] || "-").trim(), 
-                        date: String(r.randevular || vals[1] || "-").trim(), 
-                        time: String(r.saat || vals[2] || "-").trim(), 
-                        staff: String(r.uzman || vals[3] || "-").trim(), 
-                        client: String(r.danisan || vals[4] || "-").trim(), 
-                        category: String(r.kategori || vals[5] || "-").trim(), 
-                        duration: parseInt(String(r.sure || vals[6] || "30").replace(/[^0-9]/g, '')) || 30
+                        id: String(r.randevuGunu || r.id || r.ID || "-").trim(), 
+                        date: String(r.randevular || r.tarih || r.Tarih || "-").trim(), 
+                        time: String(r.saat || r.Saat || "-").trim(), 
+                        staff: String(r.uzman || r.Uzman || "-").trim(), 
+                        client: String(r.danisan || r.Danisan || r["Danışan"] || "-").trim(), 
+                        category: String(r.kategori || r.Kategori || "-").trim(), 
+                        duration: parseInt(String(r.sure || r.Sure || r["Süre"] || "30").replace(/[^0-9]/g, '')) || 30
                     }
                 }).filter(r => r.id !== "-");
 
-                // --- 🚨 UZMANLARI ÇEK VE FİLTRELE ---
+                // 🚨 UZMANLAR: YALNIZCA UZMANLARI ÇEKME VE MÜDÜR/ADMİN GİZLEME
                 let safeKul = Array.isArray(resKul) ? resKul : [];
                 let experts = safeKul.filter(u => {
-                    const vals = Object.values(u);
-                    let name = String(u.adSoyad || u.adsoyad || vals[1] || "").trim();
-                    let rol = String(u.rol || u.Rol || vals[4] || "").toLowerCase().trim();
+                    let name = String(u.adSoyad || u.adsoyad || u["Ad Soyad"] || "").trim();
+                    let rol = String(u.rol || u.Rol || u.ROL || "").toLowerCase().trim();
                     
-                    // İçinde Bahar geçen kişi (Rolü ne olursa olsun) KESİN eklenecek
+                    // Bahar Sönmez rolü ne olursa olsun listeye mecburen girecek.
                     if (name.toLowerCase().includes("bahar")) return true;
                     
-                    // SADECE Uzman ve Estetisyen olanlar gelsin (Müdür, Yönetici, Admin GİZLENSİN)
+                    // SADECE Uzman veya Estetisyen kelimesi içerenleri al. (Admin, Yönetici, Müdür otomatik elenir)
                     if (rol.includes("uzman") || rol.includes("estetisyen")) return true;
                     
-                    return false;
-                }).map(u => {
-                    const vals = Object.values(u);
-                    return String(u.adSoyad || u.adsoyad || vals[1] || "").trim();
-                }).filter(n => n !== "");
+                    return false; // Diğer herkesi reddet
+                }).map(u => String(u.adSoyad || u.adsoyad || u["Ad Soyad"] || "").trim()).filter(n => n !== "");
 
-                // Bahar ismini mutlaka 1. Sıraya Sabitle!
+                // Bahar Sönmez'i EN BAŞA KİLİTLE!
                 experts.sort((a, b) => {
                     if (a.toLowerCase().includes("bahar")) return -1;
                     if (b.toLowerCase().includes("bahar")) return 1;
                     return 0;
                 });
                 
-                // Eski sistemden kalan, üzerine randevu yazılı kim varsa takvim bozulmasın diye onu mecburen tabloya çek!
+                // Eski sistemden kalan, üzerine randevu yazılı kim varsa takvim bozulmasın diye onu da çek
                 let staffWithApts = appointments.map(a => a.staff).filter(s => s !== "-" && s !== "");
                 let combinedStaff = [...new Set([...experts, ...staffWithApts])]; 
                 
@@ -545,7 +551,6 @@
                 th.innerText = staff.trim();
                 tr.appendChild(th);
             });
-            // 🚨 "+" Butonu Tamamen Silindi
         }
 
         function renderScheduleTable() {
@@ -594,13 +599,14 @@
         function populateAppointmentsOnGrid() {
             let currentDateStr = document.getElementById('aptDate').value; 
             
+            // Tüm randevuların formatlanmış yerel tarihi, seçili olan gün ile uyuşuyor mu?
             let todaysApts = appointments.filter(a => formatDateSafe(a.date) === currentDateStr);
             
             todaysApts.forEach(apt => {
                 let staffIndex = staffList.findIndex(s => s.trim() === apt.staff.trim());
                 if (staffIndex === -1) return; 
 
-                // Saatlerin eksik sıfırlarını ve boşluklarını temizleyerek kusursuz hücre eşleşmesi yap
+                // Saat kırılmalarını önle ve şaşmaz eşleştirme yap (Örn: "16:30 - 17:20" -> "16:30")
                 let startTimeRaw = apt.time.split('-')[0].trim().replace(/[^0-9:]/g, ''); 
                 let stParts = startTimeRaw.split(':');
                 let startTime = stParts.length === 2 ? `${stParts[0].padStart(2, '0')}:${stParts[1].padStart(2, '0')}` : startTimeRaw;
@@ -805,21 +811,23 @@
                     }
                 });
 
-                // Sessizce arka planda verileri tazele
+                // Sessizce arka planda verileri tazele ki sayfa değiştiğinde kayıtlar dursun
                 jsonpFetch("getrandevular", "cb_ran_refresh").then(resRan => {
                     let safeRan = Array.isArray(resRan) ? resRan : [];
                     appointments = safeRan.map(r => {
-                        const vals = Object.values(r);
                         return { 
-                            id: String(r.randevuGunu || vals[0] || "-").trim(), 
-                            date: String(r.randevular || vals[1] || "-").trim(), 
-                            time: String(r.saat || vals[2] || "-").trim(), 
-                            staff: String(r.uzman || vals[3] || "-").trim(), 
-                            client: String(r.danisan || vals[4] || "-").trim(), 
-                            category: String(r.kategori || vals[5] || "-").trim(), 
-                            duration: parseInt(String(r.sure || vals[6] || "30").replace(/[^0-9]/g, '')) || 30
+                            id: String(r.randevuGunu || r.id || "-").trim(), 
+                            date: String(r.randevular || r.tarih || "-").trim(), 
+                            time: String(r.saat || "-").trim(), 
+                            staff: String(r.uzman || "-").trim(), 
+                            client: String(r.danisan || "-").trim(), 
+                            category: String(r.kategori || "-").trim(), 
+                            duration: parseInt(String(r.sure || "30").replace(/[^0-9]/g, '')) || 30
                         }
                     }).filter(r => r.id !== "-");
+                    
+                    // İşlem bittikten sonra takvimi garantilemek için tekrar çizdirebiliriz
+                    renderScheduleTable();
                 });
 
                 clearFormAfterSchedule();
@@ -1005,14 +1013,13 @@
                 jsonpFetch("getdanisanlar", "cb_dan_ref").then(resDan => {
                     let safeDan = Array.isArray(resDan) ? resDan : [];
                     clients = safeDan.map(d => {
-                        const vals = Object.values(d);
                         return {
-                            id: String(vals[0] || "-").trim(),
-                            name: String(vals[1] || "İsimsiz").trim(),
-                            phone: String(vals[3] || "").trim(),
-                            dob: String(vals[4] || "").trim(),
-                            note: String(vals[6] || "").trim(),
-                            fav: String(vals[7] || "-").trim()
+                            id: String(d.id || d.ID || "-").trim(),
+                            name: String(d.danisanAdiSoyadi || d.adSoyad || d["Ad Soyad"] || "İsimsiz").trim(),
+                            phone: String(d.telefon || d.Telefon || "").trim(),
+                            dob: String(d.dogumTarihi || d["Doğum Tarihi"] || "").trim(),
+                            note: String(d.not || d.Not || "").trim(),
+                            fav: String(d.favoriIslem || d.fav || "-").trim()
                         }
                     }).filter(c => c.id !== "-");
                     renderClientTable();
