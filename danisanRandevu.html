@@ -171,9 +171,6 @@
 </head>
 <body>
 
-    <!-- Bildirim Kutusu -->
-    <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
-
     <div class="wrapper">
         <div class="global-page-header">
             <div class="global-header-title-area">
@@ -241,7 +238,7 @@
                     </select>
                 </div>
                 <div>
-                    <button class="btn-primary" id="btnSaveApt" style="width: 100%; height: 44px;" onclick="saveAppointment()"><i class="fas fa-save"></i> Randevuyu Kaydet</button>
+                    <button class="btn-primary" style="width: 100%; height: 44px;" onclick="saveAppointment()"><i class="fas fa-save"></i> Randevuyu Kaydet</button>
                 </div>
                 
                 <div class="form-group full-width" style="grid-column: 1 / -1; margin-top: 10px; margin-bottom:0;">
@@ -331,12 +328,12 @@
     </div>
 
     <script>
-        // --- BULUT API BAĞLANTI AYARLARI ---
-        const API_URL = "https://script.google.com/macros/s/AKfycbycLcqeKr2ERvi-HisKboLMM7cFfq1r_5tRfS60uWqTEaiBJN31D1odAkfShqYtaU4owQ/exec";
-        
-        let staffList = [];
-        let clients = [];
-        let appointments = []; 
+        // --- TEMEL VERİLER ---
+        let staffList = ["Estetisyen Ayşe", "Estetisyen Fatma", "Uzman Kerem", "Uzman Zeynep", "Uzman Buse"];
+        let clients = [
+            { id: 1, name: "Melik Çandar", phone: "0532 111 22 33", dob: "1990-05-15", note: "Lazer paketi var.", fav: "Lazer Epilasyon" },
+            { id: 2, name: "Ahmet Muhip Dıranas", phone: "0555 444 55 66", dob: "1985-10-22", note: "Cilt hassas.", fav: "Cilt Bakımı" }
+        ];
         let activeDate = new Date(); 
         
         let isDragging = false;
@@ -346,120 +343,6 @@
 
         const colColors = ["#00a8b5", "#f472b6", "#fbbf24", "#fb923c", "#fb7185", "#c084fc", "#2dd4bf"];
 
-        function showToast(msg) {
-            const container = document.getElementById('toastContainer');
-            container.innerHTML = '';
-            const toast = document.createElement('div');
-            toast.style.cssText = "background:#1e293b; color:white; padding:10px 20px; border-radius:8px; font-size:0.85rem; font-weight:bold; border-left:4px solid #10b981; box-shadow:0 4px 12px rgba(0,0,0,0.1);";
-            toast.innerHTML = `<i class="fas fa-check-circle" style="color:#34d399; margin-right:5px;"></i> ${msg}`;
-            container.appendChild(toast);
-            setTimeout(() => { if(toast.parentElement) toast.remove() }, 3000);
-        }
-
-        // Güvenli Veri Yakalayıcı (İndis Kaymalarını Önler)
-        function safeGet(v1, v2, fb = "-") {
-            if (v1 !== undefined && v1 !== null && String(v1).trim() !== "undefined" && String(v1).trim() !== "") return String(v1).trim();
-            if (v2 !== undefined && v2 !== null && String(v2).trim() !== "undefined" && String(v2).trim() !== "") return String(v2).trim();
-            return fb;
-        }
-
-        // Zaman Dilimi (Timezone) Kayma Engelleyicisi
-        function formatDateSafe(dStr) {
-            if(!dStr || dStr==="-") return "";
-            dStr = String(dStr).trim();
-            let isoMatch = dStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
-            if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
-            let trMatch = dStr.match(/^(\d{2})[\.\/](\d{2})[\.\/](\d{4})/);
-            if (trMatch) return `${trMatch[3]}-${trMatch[2]}-${trMatch[1]}`;
-            let d = new Date(dStr);
-            if (!isNaN(d.getTime())) {
-                let y = d.getFullYear();
-                let m = String(d.getMonth() + 1).padStart(2, '0');
-                let day = String(d.getDate()).padStart(2, '0');
-                return `${y}-${m}-${day}`;
-            }
-            return dStr.substring(0,10);
-        }
-
-        function jsonpFetch(action, callbackBaseName) {
-            return new Promise((resolve) => {
-                const uniqueHash = Math.random().toString(36).substring(2, 10);
-                const callbackName = callbackBaseName + "_" + uniqueHash;
-                const scriptId = "jsonp_script_" + uniqueHash;
-                window[callbackName] = function(response) {
-                    resolve(response && response.data ? response.data : response);
-                    const s = document.getElementById(scriptId);
-                    if(s) s.remove();
-                    delete window[callbackName];
-                };
-                const script = document.createElement('script');
-                script.id = scriptId;
-                script.src = `${API_URL}?action=${action}&callback=${callbackName}&_=${new Date().getTime()}`;
-                script.onerror = () => resolve([]); 
-                document.body.appendChild(script);
-            });
-        }
-
-        // 🎯 MERKEZİ BULUT VERİ YÜKLEME MOTORU
-        function buluttanVerileriYükle() {
-            Promise.all([
-                jsonpFetch("getdanisanlar", "cb_dan"),
-                jsonpFetch("getkullanicilar", "cb_kul"),
-                jsonpFetch("getrandevular", "cb_ran")
-            ]).then(([resDan, resKul, resRan]) => {
-                
-                // 1. Danışanları Çek (E-Tablo Alan İsimlerine Tam Kilitli)[cite: 1]
-                let safeDan = Array.isArray(resDan) ? resDan : [];
-                clients = safeDan.map(d => {
-                    return {
-                        id: safeGet(d.danisanid, Object.values(d)[0]),
-                        name: safeGet(d.danisanAdiSoyadi, Object.values(d)[1], "İsimsiz"),
-                        phone: safeGet(d.danisanTelefonu, Object.values(d)[3], ""),
-                        dob: safeGet(d.danisanDogumTarihi, Object.values(d)[4], ""),
-                        note: safeGet(d.notlarDanisan, Object.values(d)[6], ""),
-                        fav: safeGet(d.favoriHizmetDanisan, Object.values(d)[7], "-")
-                    }
-                }).filter(c => c.id && c.id.toLowerCase() !== "danisanid");
-
-                // 2. Randevuları Çek (Gerçek Sütun Başlıkları ile Eşleşme)[cite: 1]
-                let safeRan = Array.isArray(resRan) ? resRan : [];
-                appointments = safeRan.map(r => {
-                    return {
-                        id: safeGet(r.randevuGunu, Object.values(r)[0]),
-                        date: safeGet(r.randevular, Object.values(r)[1]),
-                        time: safeGet(r.saat, Object.values(r)[2]),
-                        staff: safeGet(r.uzman, Object.values(r)[3]),
-                        client: safeGet(r.danisan, Object.values(r)[4]),
-                        category: safeGet(r.kategori, Object.values(r)[5]),
-                        duration: parseInt(String(safeGet(r.sure, Object.values(r)[6], "30")).replace(/[^0-9]/g, '')) || 30
-                    }
-                }).filter(r => r.id && r.id.toLowerCase() !== "randevugunu");
-
-                // 3. Uzmanları Ayıkla (Yağmur Müdür Olduğu İçin Elenir, Bahar Sönmez[cite: 1] Uzman Olarak Eklenir)
-                let safeKul = Array.isArray(resKul) ? resKul : [];
-                let experts = safeKul.filter(u => {
-                    let name = safeGet(u.adSoyad, Object.values(u)[1], "").trim();
-                    let rol = safeGet(u.rol, Object.values(u)[4], "").toLowerCase().trim();
-                    if (!name || name.toLowerCase() === "adsoyad") return false;
-                    if (name.toLowerCase().includes("bahar")) return true; // Bahar Sönmez Her Zaman Kurtarılır[cite: 1]
-                    return rol.includes("uzman") || rol.includes("estetisyen");
-                }).map(u => safeGet(u.adSoyad, Object.values(u)[1], "").trim());
-
-                // Bahar Hanım'ı listenin tepesine çek[cite: 1]
-                experts.sort((a, b) => {
-                    if (a.toLowerCase().includes("bahar")) return -1;
-                    if (b.toLowerCase().includes("bahar")) return 1;
-                    return 0;
-                });
-                
-                if(experts.length > 0) staffList = experts;
-
-                renderClientTable();
-                selectDate(activeDate, activeDate.toISOString().split('T')[0]);
-            });
-        }
-
-        // --- TAKVİM ALGORİTMASI ---
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid');
             const container = document.getElementById('calendarContainer');
@@ -475,6 +358,7 @@
 
             let today = new Date();
             today.setHours(0,0,0,0);
+            
             let startDate = new Date(today);
             startDate.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) - 7); 
 
@@ -487,12 +371,23 @@
                 
                 let div = document.createElement('div');
                 div.className = 'calendar-day';
+                
                 let dateString = d.toISOString().split('T')[0];
                 
-                if (d.getTime() === today.getTime()) { div.classList.add('today'); todayElement = div; }
-                if (d.getTime() === activeDate.getTime()) { div.classList.add('active'); }
+                if (d.getTime() === today.getTime()) {
+                    div.classList.add('today');
+                    todayElement = div;
+                }
 
-                div.innerHTML = `<div class="day-num">${d.getDate()}</div><div class="day-month">${monthNames[d.getMonth()]}</div>`;
+                if (d.getTime() === activeDate.getTime()) {
+                    div.classList.add('active');
+                }
+
+                div.innerHTML = `
+                    <div class="day-num">${d.getDate()}</div>
+                    <div class="day-month">${monthNames[d.getMonth()]}</div>
+                `;
+                
                 div.onclick = () => selectDate(d, dateString);
                 grid.appendChild(div);
             }
@@ -503,6 +398,7 @@
                     container.scrollTop = todayElement.offsetTop - container.offsetTop - (rowHeight * 1); 
                 }
             }, 100);
+            
             updateSelectedDateText();
         }
 
@@ -576,67 +472,10 @@
 
                 let tdEmpty = document.createElement('td');
                 tr.appendChild(tdEmpty);
+
                 tbody.appendChild(tr);
                 rowIndex++;
             }
-
-            populateAppointmentsOnGrid(); // Randevuları çizelge üstüne boyar
-        }
-
-        // 🚨 GEÇMİŞ RANDEVULARI KUSURSUZ YERLEŞTİRME VE RENKLENDİRME MOTORU
-        function populateAppointmentsOnGrid() {
-            let currentDateStr = document.getElementById('aptDate').value;
-            let todaysApts = appointments.filter(a => formatDateSafe(a.date) === currentDateStr);
-            
-            todaysApts.forEach(apt => {
-                let staffIndex = staffList.indexOf(apt.staff);
-                if (staffIndex === -1) return; 
-
-                // Saat Format Eşitleyici (Örn: "15:30 - 16:30" verisinden ilk saati çekme)[cite: 1]
-                let startTimeRaw = apt.time.split('-')[0].trim().replace(/[^0-9:]/g, '');
-                let parts = startTimeRaw.split(':');
-                if (parts.length === 2) {
-                    startTimeRaw = parts[0].padStart(2, '0') + ':' + parts[1].padStart(2, '0');
-                }
-
-                let slotsCount = Math.max(1, Math.ceil(apt.duration / 30));
-                let startCell = document.querySelector(`.slot-cell[data-staff="${apt.staff}"][data-time="${startTimeRaw}"]`);
-                if (!startCell) return;
-                
-                let startRow = parseInt(startCell.dataset.row);
-                let boxColor = colColors[staffIndex % colColors.length];
-                
-                for (let i = 0; i < slotsCount; i++) {
-                    let cell = document.querySelector(`.slot-cell[data-staff="${apt.staff}"][data-row="${startRow + i}"]`);
-                    if (cell) {
-                        cell.classList.add('booked');
-                        cell.style.borderLeft = `4px solid ${boxColor}`;
-                        cell.style.borderRight = `4px solid ${boxColor}`;
-                        
-                        if (slotsCount === 1) {
-                            cell.style.borderTop = `4px solid ${boxColor}`;
-                            cell.style.borderBottom = `4px solid ${boxColor}`;
-                            cell.innerHTML = `<div style="font-size:0.7rem; font-weight:bold; color:#1e293b; line-height:1.2;">${apt.client}<br>${apt.category}<br>${apt.duration} Dk</div>`;
-                        } else {
-                            if (i === 0) {
-                                cell.style.borderTop = `4px solid ${boxColor}`;
-                                cell.style.borderBottom = `none`;
-                                cell.innerHTML = `<div style="font-size:0.75rem; font-weight:bold; color:#1e293b; padding:2px; line-height:1.3; margin-top:5px;">
-                                                    ${apt.client}<br>${apt.category}<br>${apt.duration} Dk
-                                                  </div>`;
-                            } else if (i === slotsCount - 1) {
-                                cell.style.borderBottom = `4px solid ${boxColor}`;
-                                cell.style.borderTop = `none`;
-                                cell.innerHTML = "";
-                            } else {
-                                cell.style.borderTop = `none`;
-                                cell.style.borderBottom = `none`;
-                                cell.innerHTML = "";
-                            }
-                        }
-                    }
-                }
-            });
         }
 
         function addNewStaffColumn() {
@@ -647,14 +486,15 @@
             }
         }
 
-        // --- ORİJİNAL SEÇİM VE DRAG-DROP ALGORİTMASI ---
         function handleMouseDown(e) {
             if(e.button !== 0) return; 
             if(e.target.classList.contains('booked')) return;
+
             isDragging = true;
             dragStartCol = parseInt(e.target.dataset.col);
             dragStartRow = parseInt(e.target.dataset.row);
             dragEndRow = dragStartRow;
+
             clearSelection();
             e.target.classList.add('selected');
         }
@@ -663,8 +503,10 @@
             if (!isDragging) return;
             let targetCol = parseInt(e.target.dataset.col);
             let targetRow = parseInt(e.target.dataset.row);
+
             if (targetCol !== dragStartCol) return;
             if(e.target.classList.contains('booked')) return;
+
             dragEndRow = targetRow;
             updateSelectionVisuals();
         }
@@ -675,24 +517,38 @@
             processSelection();
         }
 
-        document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; processSelection(); } });
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                processSelection();
+            }
+        });
 
-        function clearSelection() { document.querySelectorAll('.slot-cell.selected').forEach(cell => cell.classList.remove('selected')); }
+        function clearSelection() {
+            document.querySelectorAll('.slot-cell.selected').forEach(cell => {
+                cell.classList.remove('selected');
+            });
+        }
 
         function updateSelectionVisuals() {
             clearSelection();
             let start = Math.min(dragStartRow, dragEndRow);
             let end = Math.max(dragStartRow, dragEndRow);
-            document.querySelectorAll('.slot-cell').forEach(cell => {
+
+            let cells = document.querySelectorAll('.slot-cell');
+            cells.forEach(cell => {
                 let r = parseInt(cell.dataset.row);
                 let c = parseInt(cell.dataset.col);
-                if (c === dragStartCol && r >= start && r <= end) cell.classList.add('selected');
+                if (c === dragStartCol && r >= start && r <= end) {
+                    cell.classList.add('selected');
+                }
             });
         }
 
         function processSelection() {
             let selectedCells = document.querySelectorAll('.slot-cell.selected');
             if(selectedCells.length === 0) return;
+
             let firstCell = selectedCells[0];
             let lastCell = selectedCells[selectedCells.length - 1];
 
@@ -703,8 +559,10 @@
             if(endM >= 60) { endH += 1; endM -= 60; }
             let endTimeStr = `${endH.toString().padStart(2,'0')}:${endM.toString().padStart(2,'0')}`;
 
+            let staffName = firstCell.dataset.staff;
+
             document.getElementById('aptTime').value = `${startTimeStr} - ${endTimeStr}`;
-            document.getElementById('aptStaff').value = firstCell.dataset.staff;
+            document.getElementById('aptStaff').value = staffName;
             
             let aptTimeInput = document.getElementById('aptTime');
             aptTimeInput.style.backgroundColor = '#d1fae5';
@@ -720,57 +578,82 @@
             clearSelection();
         }
 
-        // --- 🚨 BULUTA VE SHEET'E HARFİYEN RANDEVU KAYDETME MOTORU ---
         function saveAppointment() {
-            let clientVal = document.getElementById('aptClient').value;
+            let client = document.getElementById('aptClient').value;
             let cat = document.getElementById('aptCategory').value;
+            
             let selectedCells = document.querySelectorAll('.slot-cell.selected');
             
-            if(!clientVal || selectedCells.length === 0 || !cat) {
+            if(!client || selectedCells.length === 0 || !cat) {
                 alert("Lütfen Danışan, Tablodan Saat ve Kategori seçtiğinizden emin olun!");
                 return;
             }
 
-            let cObj = clients.find(c => c.id == clientVal);
-            let cName = cObj ? cObj.name : "Bilinmiyor";
+            let colIndex = parseInt(selectedCells[0].dataset.col);
+            let boxColor = colColors[colIndex % colColors.length];
             let durationMins = selectedCells.length * 30;
+            let durationStr = durationMins + " Dk";
 
-            let aptDateInput = document.getElementById('aptDate').value;
-            let aptTimeInput = document.getElementById('aptTime').value;
-            let staffName = document.getElementById('aptStaff').value;
-            let note = document.getElementById('aptNote').value.trim();
+            let cObj = clients.find(c => c.id == client);
+            let cName = cObj ? cObj.name : "Bilinmiyor";
 
-            let query = [
-                `kaydetrandevu`,
-                `tarih=${encodeURIComponent(aptDateInput)}`,
-                `saat=${encodeURIComponent(aptTimeInput)}`,
-                `uzman=${encodeURIComponent(staffName)}`,
-                `danisan=${encodeURIComponent(cName)}`,
-                `kategori=${encodeURIComponent(cat)}`,
-                `sure=${encodeURIComponent(durationMins + " Dk")}`, 
-                `notlar=${encodeURIComponent(note)}`
-            ].join("&");
-
-            jsonpFetch(query, "cb_saveapt").then(() => {
-                showToast("Randevu başarıyla bulut tablosuna işlendi!");
-                buluttanVerileriYükle(); 
+            selectedCells.forEach((cell, index) => {
+                cell.classList.remove('selected');
+                cell.classList.add('booked');
+                
+                cell.style.borderLeft = `4px solid ${boxColor}`;
+                cell.style.borderRight = `4px solid ${boxColor}`;
+                
+                if (selectedCells.length === 1) {
+                    cell.style.borderTop = `4px solid ${boxColor}`;
+                    cell.style.borderBottom = `4px solid ${boxColor}`;
+                    cell.innerHTML = `<div style="font-size:0.7rem; font-weight:bold; color:#1e293b; line-height:1.2;">${cName}<br>${cat}<br>${durationStr}</div>`;
+                } else {
+                    if (index === 0) {
+                        cell.style.borderTop = `4px solid ${boxColor}`;
+                        cell.style.borderBottom = `none`;
+                        cell.innerHTML = `<div style="font-size:0.75rem; font-weight:bold; color:#1e293b; padding:2px; line-height:1.3; margin-top:5px;">
+                                            ${cName}<br>${cat}<br>${durationStr}
+                                          </div>`;
+                    } else if (index === selectedCells.length - 1) {
+                        cell.style.borderBottom = `4px solid ${boxColor}`;
+                        cell.style.borderTop = `none`;
+                        cell.innerHTML = "";
+                    } else {
+                        cell.style.borderTop = `none`;
+                        cell.style.borderBottom = `none`;
+                        cell.innerHTML = "";
+                    }
+                }
             });
+            
+            document.getElementById('aptCategory').value = "";
+            document.getElementById('aptNote').value = "";
+            document.getElementById('aptTime').value = "";
         }
 
         function fillClientPhone() {
             let clientId = document.getElementById('aptClient').value;
+            let phoneInput = document.getElementById('aptPhone');
+            
             if (clientId) {
                 let cObj = clients.find(c => c.id == clientId);
-                if (cObj) document.getElementById('aptPhone').value = cObj.phone;
-            } else { document.getElementById('aptPhone').value = ""; }
+                if (cObj) {
+                    phoneInput.value = cObj.phone;
+                }
+            } else {
+                phoneInput.value = ""; 
+            }
         }
 
-        // --- WHATSAPP MODÜLÜ ENTEGRASYONU ---
+        // --- WHATSAPP MODÜLÜ BAŞLANGICI ---
         window.selectClientForWhatsApp = function(id) {
             let selectBox = document.getElementById('aptClient');
             if(selectBox) {
                 selectBox.value = id;
-                fillClientPhone(); 
+                if(typeof fillClientPhone === 'function') {
+                    fillClientPhone(); 
+                }
                 document.querySelector('.appointment-action-bar').scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         };
@@ -781,7 +664,11 @@
             let time = document.getElementById('aptTime').value;
             let cat = document.getElementById('aptCategory').value;
 
-            if(!clientId) { alert("Lütfen önce bir danışan seçiniz."); return; }
+            if(!clientId) {
+                alert("Lütfen önce bir danışan seçiniz.");
+                return;
+            }
+
             let cObj = clients.find(c => c.id == clientId);
             if(!cObj) return;
 
@@ -791,35 +678,51 @@
             if (time && cat) {
                 let formattedDate = date ? date.split('-').reverse().join('.') : ""; 
                 messageText = `Merhaba ${firstName} Hanım,\n\n${formattedDate} tarihinde saat ${time} için *${cat}* randevunuz başarıyla oluşturulmuştur.\n\nSizi Bahar Beauty Studio'da ağırlamaktan mutluluk duyacağız. ✨`;
-            } else { messageText = `Merhaba ${firstName},\n\nBahar Beauty Studio'dan iletişime geçiyoruz. Size nasıl yardımcı olabiliriz? ✨`; }
+            } else {
+                messageText = `Merhaba ${firstName},\n\nBahar Beauty Studio'dan iletişime geçiyoruz. Size nasıl yardımcı olabiliriz? ✨`;
+            }
 
             let previewBox = document.getElementById('waMessagePreview');
             previewBox.innerText = messageText;
+            
             previewBox.contentEditable = "true";
             previewBox.style.outline = "none"; 
+            previewBox.style.cursor = "text"; 
             
             let inputPhone = document.getElementById('aptPhone') ? document.getElementById('aptPhone').value : "";
             document.getElementById('waTargetPhone').value = inputPhone || cObj.phone;
+            
             document.getElementById('waModal').style.display = 'flex';
         }
 
-        function closeWhatsAppPopup() { document.getElementById('waModal').style.display = 'none'; }
+        function closeWhatsAppPopup() {
+            document.getElementById('waModal').style.display = 'none';
+        }
 
         function sendWhatsAppMessage() {
             let phone = document.getElementById('waTargetPhone').value;
             let text = document.getElementById('waMessagePreview').innerText;
-            if(!phone) { alert("Geçerli bir telefon numarası bulunamadı!"); return; }
+            
+            if(!phone) {
+                alert("Geçerli bir telefon numarası bulunamadı!");
+                return;
+            }
 
             let cleanPhone = phone.replace(/[^0-9]/g, '');
-            if(cleanPhone.startsWith('0')) cleanPhone = cleanPhone.substring(1);
-            if(!cleanPhone.startsWith('90') && cleanPhone.length === 10) cleanPhone = '90' + cleanPhone;
+            if(cleanPhone.startsWith('0')) {
+                cleanPhone = cleanPhone.substring(1);
+            }
+            if(!cleanPhone.startsWith('90') && cleanPhone.length === 10) {
+                cleanPhone = '90' + cleanPhone;
+            }
 
             let waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
             window.open(waUrl, '_blank');
             closeWhatsAppPopup();
         }
+        // --- WHATSAPP MODÜLÜ BİTİŞİ ---
         
-        // --- DANIŞAN YÖNETİM MODÜLÜ ALGORİTMALARI ---
+        // --- DANIŞAN YÖNETİMİ ---
         function renderClientSelect() {
             const select = document.getElementById('aptClient');
             select.innerHTML = '<option value="">-- Danışan Seçiniz --</option>';
@@ -834,6 +737,7 @@
         function renderClientTable(filteredData = null) {
             const tbody = document.getElementById('clientTableBody');
             tbody.innerHTML = '';
+            
             let dataToRender = filteredData ? filteredData : [...clients].reverse();
 
             dataToRender.slice(0, 10).forEach(c => {
@@ -865,12 +769,29 @@
             let filtered = [...clients].reverse().filter(c => {
                 let cleanPhone = c.phone.toLowerCase().replace(/\s/g, '');
                 let matchPhone = cleanPhone.includes(phoneVal);
+                
                 let dobView = c.dob ? c.dob.split('-').reverse().join('.') : '';
                 let matchDob = dobView.includes(dobVal) || (c.dob && c.dob.includes(dobVal));
+                
                 let matchCat = (c.fav || '').toLowerCase().includes(catVal);
+
                 return matchPhone && matchDob && matchCat;
             });
+
             renderClientTable(filtered);
+        }
+
+        // --- AKILLI YAZDIRMA MOTORLARI ---
+        function printCalendar() {
+            document.body.classList.add('print-calendar'); 
+            window.print();
+            setTimeout(() => { document.body.classList.remove('print-calendar'); }, 1000);
+        }
+
+        function printClientList() {
+            document.body.classList.add('print-clients'); 
+            window.print();
+            setTimeout(() => { document.body.classList.remove('print-clients'); }, 1000);
         }
 
         function saveClient() {
@@ -880,36 +801,40 @@
             let dob = document.getElementById('clientDob').value;
             let note = document.getElementById('clientNote').value.trim();
 
-            if (!name || !phone) { alert("Lütfen en az Ad Soyad ve Telefon alanlarını doldurunuz."); return; }
+            if (!name || !phone) {
+                alert("Lütfen en az Ad Soyad ve Telefon alanlarını doldurunuz.");
+                return;
+            }
 
-            let btn = document.getElementById('btnSaveClient');
-            btn.disabled = true;
+            if (id) {
+                let idx = clients.findIndex(c => c.id == id);
+                if (idx > -1) {
+                    clients[idx] = { id: parseInt(id), name, phone, dob, note };
+                }
+                document.getElementById('btnSaveClient').innerHTML = '<i class="fas fa-check"></i> Danışanı Kaydet';
+            } else {
+                let newId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) + 1 : 1;
+                clients.push({ id: newId, name, phone, dob, note });
+            }
 
-            let query = (id) ? 
-                `guncelledanisan&id=${encodeURIComponent(id)}&adSoyad=${encodeURIComponent(name)}&telefon=${encodeURIComponent(phone)}&dogumTarihi=${encodeURIComponent(dob)}&not=${encodeURIComponent(note)}` : 
-                `kaydetdanisan&adSoyad=${encodeURIComponent(name)}&telefon=${encodeURIComponent(phone)}&dogumTarihi=${encodeURIComponent(dob)}&not=${encodeURIComponent(note)}`;
+            document.getElementById('editClientId').value = "";
+            document.getElementById('clientName').value = "";
+            document.getElementById('clientPhone').value = "";
+            document.getElementById('clientDob').value = "";
+            document.getElementById('clientNote').value = "";
 
-            jsonpFetch(query, "cb_savecli").then(() => {
-                showToast(id ? "Danışan başarıyla güncellendi." : "Yeni danışan eklendi.");
-                document.getElementById('editClientId').value = "";
-                document.getElementById('clientName').value = "";
-                document.getElementById('clientPhone').value = "";
-                document.getElementById('clientDob').value = "";
-                document.getElementById('clientNote').value = "";
-                btn.innerHTML = '<i class="fas fa-check"></i> Danışanı Kaydet';
-                btn.disabled = false;
-                buluttanVerileriYükle();
-            });
+            renderClientTable();
         }
 
         function editClient(id) {
-            let c = clients.find(x => x.id == id);
+            let c = clients.find(x => x.id === id);
             if(c) {
                 document.getElementById('editClientId').value = c.id;
                 document.getElementById('clientName').value = c.name;
                 document.getElementById('clientPhone').value = c.phone;
                 document.getElementById('clientDob').value = c.dob;
                 document.getElementById('clientNote').value = c.note;
+                
                 document.getElementById('btnSaveClient').innerHTML = '<i class="fas fa-sync"></i> Güncelle';
                 document.getElementById('clientName').scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
@@ -917,19 +842,16 @@
 
         function deleteClient(id) {
             if(confirm("Bu danışanı silmek istediğinize emin misiniz?")) {
-                jsonpFetch(`sildanisan&id=${id}`, "cb_delcli").then(() => {
-                    showToast("Danışan kaydı kalıcı olarak silindi.");
-                    buluttanVerileriYükle();
-                });
+                clients = clients.filter(c => c.id !== id);
+                renderClientTable();
             }
         }
 
-        function printCalendar() { document.body.classList.add('print-calendar'); window.print(); setTimeout(() => { document.body.classList.remove('print-calendar'); }, 1000); }
-        function printClientList() { document.body.classList.add('print-clients'); window.print(); setTimeout(() => { document.body.classList.remove('print-clients'); }, 1000); }
-
         window.onload = () => {
-            buluttanVerileriYükle();
+            selectDate(activeDate, activeDate.toISOString().split('T')[0]); 
+            renderClientTable();
         };
+
     </script>
 </body>
 </html>
