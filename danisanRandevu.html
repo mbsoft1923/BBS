@@ -157,7 +157,6 @@
 </head>
 <body>
 
-    <!-- 🚨 API VE BİLDİRİM İÇİN EKLENEN KUTUCUK -->
     <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
 
     <div class="wrapper">
@@ -349,19 +348,17 @@
             return fb;
         }
 
-        // 🚨 ZAMAN DİLİMİ (TIMEZONE) GÜVENLİK MOTORU: Tarayıcı saati ne olursa olsun yazan tarihi şaşmaz şekilde okur
+        // 🚨 YENİ NESİL ZAMAN DİLİMİ KORUYUCU: 
+        // Google'dan gelen "2026-06-16T21:00:00.000Z" gibi UTC formatları 
+        // Türkiye yerel saatine (+3 saat) dönüştürerek tarihi asıl olması gereken güne sabitler.
         function formatDateSafe(dStr) {
             if(!dStr || dStr==="-") return "";
             dStr = String(dStr).trim();
             
-            if (/^\d{4}-\d{2}-\d{2}/.test(dStr)) return dStr.substring(0, 10);
-            if (/^\d{2}\.\d{2}\.\d{4}/.test(dStr)) {
-                let p = dStr.split('.'); return `${p[2]}-${p[1]}-${p[0]}`;
-            }
-            if (/^\d{2}\/\d{2}\/\d{4}/.test(dStr)) {
-                let p = dStr.split('/'); return `${p[2]}-${p[1]}-${p[0]}`;
-            }
+            // Sadece YYYY-MM-DD ise direkt çevir
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) return dStr;
             
+            // Eğer Google Sheets'ten UTC zaman dilimi geliyorsa, yerel saate çevir
             let d = new Date(dStr);
             if (!isNaN(d.getTime())) {
                 let y = d.getFullYear();
@@ -369,6 +366,15 @@
                 let day = String(d.getDate()).padStart(2, '0');
                 return `${y}-${m}-${day}`;
             }
+
+            // TR Formatları (. veya / ayraçlı)
+            if (/^\d{2}\.\d{2}\.\d{4}/.test(dStr)) {
+                let p = dStr.split('.'); return `${p[2]}-${p[1]}-${p[0]}`;
+            }
+            if (/^\d{2}\/\d{2}\/\d{4}/.test(dStr)) {
+                let p = dStr.split('/'); return `${p[2]}-${p[1]}-${p[0]}`;
+            }
+            
             return dStr.substring(0,10);
         }
 
@@ -402,45 +408,41 @@
                 jsonpFetch("getrandevular", "cb_ran")
             ]).then(([resDan, resKul, resRan]) => {
                 
-                // Danışanları Çek
                 let safeDan = Array.isArray(resDan) ? resDan : [];
                 clients = safeDan.map(d => {
-                    const vals = Object.values(d);
                     return {
-                        id: safeGet(vals[0], d.id),
-                        name: safeGet(vals[1], d.danisanAdiSoyadi, "İsimsiz"),
-                        phone: safeGet(vals[3], d.telefon, ""),
-                        dob: safeGet(vals[4], d.dogumTarihi, ""),
-                        note: safeGet(vals[6], d.not, ""),
-                        fav: safeGet(vals[7], d.favoriIslem, "-")
+                        id: safeGet(d.id, d.ID),
+                        name: safeGet(d.danisanAdiSoyadi, d.adSoyad, "İsimsiz"),
+                        phone: safeGet(d.telefon, ""),
+                        dob: safeGet(d.dogumTarihi, ""),
+                        note: safeGet(d.not, ""),
+                        fav: safeGet(d.favoriIslem, "-")
                     }
                 }).filter(c => c.id !== "-");
 
-                // Randevuları Sütun Sırasıyla Kopmaz Şekilde Çek
+                // 🚨 RANDEVULAR: Başlık ismine bakmaksızın özellik anahtarlarıyla (keys) okunur
                 let safeRan = Array.isArray(resRan) ? resRan : [];
                 appointments = safeRan.map(r => {
-                    const vals = Object.values(r);
                     return {
-                        id: safeGet(vals[0], "-"), 
-                        date: safeGet(vals[1], "-"), 
-                        time: safeGet(vals[2], "-"), 
-                        staff: safeGet(vals[3], "-"), 
-                        client: safeGet(vals[4], "-"), 
-                        category: safeGet(vals[5], "-"), 
-                        duration: parseInt(String(safeGet(vals[6], "30")).replace(/[^0-9]/g, '')) || 30
+                        id: safeGet(r.randevuGunu, r.id, "-"), 
+                        date: safeGet(r.randevular, r.tarih, "-"), 
+                        time: safeGet(r.saat, "-"), 
+                        staff: safeGet(r.uzman, "-"), 
+                        client: safeGet(r.danisan, "-"), 
+                        category: safeGet(r.kategori, "-"), 
+                        duration: parseInt(String(safeGet(r.sure, "30")).replace(/[^0-9]/g, '')) || 30
                     }
                 }).filter(r => r.id !== "-");
 
-                // Uzmanları ve Estetisyenleri Çek, Yöneticileri Gizle! 
+                // 🚨 UZMANLAR: Yöneticiler gizlenir
                 let safeKul = Array.isArray(resKul) ? resKul : [];
                 let experts = safeKul.filter(u => {
-                    const vals = Object.values(u);
-                    let rol = safeGet(vals[4], "").toLowerCase().trim();
-                    return !rol.includes("admin") && !rol.includes("yönetici") && !rol.includes("yonetici");
-                }).map(u => safeGet(Object.values(u)[1], "")).filter(n => n !== "-" && n !== "");
+                    let rol = safeGet(u.rol, safeGet(u["Rol"], "")).toLowerCase().trim();
+                    return rol.includes("uzman") || rol.includes("estetisyen");
+                }).map(u => safeGet(u.adSoyad, safeGet(u["Ad Soyad"], ""))).filter(n => n !== "-" && n !== "");
                 
-                // 🚨 ZEKİ SİSTEM: Tabloda birinin randevusu varsa (Örn: Bahar Sönmez) ama rolü "Yönetici" olduğu için gizlendiyse, 
-                // Randevusu olduğu için o kişiyi MECBUREN takvime ekler! Böylece takvim asla boş kalmaz.
+                // 🚨 GARANTİCİ KALKAN: Tabloda üzerine randevu yazılı biri varsa (Bahar Sönmez gibi)
+                // rolü gizli olsa bile takvimdeki tablo eksik kalmasın diye mecburen ekrana eklenir.
                 let staffWithApts = appointments.map(a => a.staff).filter(s => s !== "-" && s !== "");
                 let combinedStaff = [...new Set([...experts, ...staffWithApts])]; 
                 
@@ -448,7 +450,7 @@
 
                 renderClientTable();
                 
-                // Başlangıç tarihini yerel saatte okuyarak başlat
+                // Yerel saate göre takvimi başlat
                 let y = activeDate.getFullYear();
                 let m = String(activeDate.getMonth() + 1).padStart(2, '0');
                 let dayStr = String(activeDate.getDate()).padStart(2, '0');
@@ -483,14 +485,13 @@
                 let d = new Date(startDate);
                 d.setDate(startDate.getDate() + i);
                 
-                let div = document.createElement('div');
-                div.className = 'calendar-day';
-                
-                // Zaman Kaymasını Önleyen Kopmaz Tarih Oluşturucu
                 let y = d.getFullYear();
                 let m = String(d.getMonth() + 1).padStart(2, '0');
                 let dayStr = String(d.getDate()).padStart(2, '0');
                 let dateString = `${y}-${m}-${dayStr}`;
+                
+                let div = document.createElement('div');
+                div.className = 'calendar-day';
                 
                 if (d.getTime() === today.getTime()) {
                     div.classList.add('today');
@@ -594,7 +595,9 @@
         }
 
         function populateAppointmentsOnGrid() {
-            let currentDateStr = document.getElementById('aptDate').value;
+            let currentDateStr = document.getElementById('aptDate').value; // Örn: 2026-06-17
+            
+            // Tüm randevuların formatlanmış yerel tarihi, seçili olan gün ile uyuşuyor mu?
             let todaysApts = appointments.filter(a => formatDateSafe(a.date) === currentDateStr);
             
             todaysApts.forEach(apt => {
@@ -810,24 +813,26 @@
                     }
                 });
 
-                // Sessizce arka planda verileri tazele
                 jsonpFetch("getrandevular", "cb_ran_refresh").then(resRan => {
                     let safeRan = Array.isArray(resRan) ? resRan : [];
                     appointments = safeRan.map(r => {
-                        const vals = Object.values(r);
                         return { 
-                            id: safeGet(vals[0], "-"), 
-                            date: safeGet(vals[1], "-"), 
-                            time: safeGet(vals[2], "-"), 
-                            staff: safeGet(vals[3], "-"), 
-                            client: safeGet(vals[4], "-"), 
-                            category: safeGet(vals[5], "-"), 
-                            duration: parseInt(String(safeGet(vals[6], "30")).replace(/[^0-9]/g, '')) || 30
+                            id: safeGet(r.randevuGunu, r.id, "-"), 
+                            date: safeGet(r.randevular, r.tarih, "-"), 
+                            time: safeGet(r.saat, "-"), 
+                            staff: safeGet(r.uzman, "-"), 
+                            client: safeGet(r.danisan, "-"), 
+                            category: safeGet(r.kategori, "-"), 
+                            duration: parseInt(String(safeGet(r.sure, "30")).replace(/[^0-9]/g, '')) || 30
                         }
                     }).filter(r => r.id !== "-");
                 });
 
                 clearFormAfterSchedule();
+                btn.innerHTML = oldText;
+                btn.disabled = false;
+            }).catch(err => {
+                alert("Bağlantı hatası! Lütfen internetinizi kontrol edip tekrar deneyin.");
                 btn.innerHTML = oldText;
                 btn.disabled = false;
             });
@@ -1006,14 +1011,13 @@
                 jsonpFetch("getdanisanlar", "cb_dan_ref").then(resDan => {
                     let safeDan = Array.isArray(resDan) ? resDan : [];
                     clients = safeDan.map(d => {
-                        const vals = Object.values(d);
                         return {
-                            id: safeGet(vals[0], d.id),
-                            name: safeGet(vals[1], d.danisanAdiSoyadi, "İsimsiz"),
-                            phone: safeGet(vals[3], d.telefon, ""),
-                            dob: safeGet(vals[4], d.dogumTarihi, ""),
-                            note: safeGet(vals[6], d.not, ""),
-                            fav: safeGet(vals[7], d.favoriIslem, "-")
+                            id: safeGet(d.id, d.ID),
+                            name: safeGet(d.danisanAdiSoyadi, d.adSoyad, "İsimsiz"),
+                            phone: safeGet(d.telefon, ""),
+                            dob: safeGet(d.dogumTarihi, ""),
+                            note: safeGet(d.not, ""),
+                            fav: safeGet(d.favoriIslem, "-")
                         }
                     }).filter(c => c.id !== "-");
                     renderClientTable();
