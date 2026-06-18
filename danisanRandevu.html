@@ -6,7 +6,7 @@
     <title>Bahar Beauty Studio - Randevu Sistemi</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght=0,400..900;1,400..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -69,9 +69,6 @@
         td:nth-child(7).slot-cell.selected { background-color: #c084fc; border: 1px solid #9333ea; } 
         td:nth-child(n+8).slot-cell.selected { background-color: #2dd4bf; border: 1px solid #0d9488; } 
         
-        .btn-add-col { background: #e0e7ff; color: #4f46e5; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
-        .btn-add-col:hover { background: #c7d2fe; }
-
         /* Randevu Kayıt Satırı */
         .appointment-action-bar { display: grid; grid-template-columns: 1.3fr 1fr 1fr 0.8fr 1.3fr auto; gap: 10px; align-items: end; background: #faf5ff; border: 1px dashed #d8b4fe; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
         @media (max-width: 1024px) { .appointment-action-bar { grid-template-columns: 1fr 1fr; } .appointment-action-bar > :last-child { grid-column: 1 / -1; } }
@@ -121,22 +118,13 @@
         @media print {
             @page { size: A4 portrait; margin: 0.5cm; }
             body { background-color: white !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            
             .wrapper { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
             .card { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; background: transparent !important; }
+            .global-page-header, button, .btn-primary, .wa-modal-overlay { display: none !important; }
 
-            /* ORTAK GİZLENECEK ÖĞELER */
-            .global-page-header, 
-            button, 
-            .btn-primary, 
-            .wa-modal-overlay { display: none !important; }
-
-            /* MOD 1: SADECE GÜNLÜK TAKVİM TABLOSUNU YAZDIRIR (.print-calendar) */
             body.print-calendar .client-management-card, 
             body.print-calendar .appointment-action-bar, 
-            body.print-calendar .calendar-container,
-            body.print-calendar .btn-add-col,
-            body.print-calendar .appointment-card > .card-title { display: none !important; }
+            body.print-calendar .calendar-container { display: none !important; }
             
             body.print-calendar #selectedDateDisplay { display: block !important; font-size: 14pt !important; font-weight: bold !important; text-align: center !important; color: #00a8b5 !important; margin-bottom: 15px !important; }
             body.print-calendar .schedule-container { display: block !important; border: none !important; overflow: visible !important; width: 100% !important; }
@@ -145,7 +133,6 @@
             body.print-calendar .schedule-table td { height: 26px !important; padding: 0 !important; font-size: 8pt !important; border: 1pt solid #cbd5e1 !important; color: black !important; }
             body.print-calendar .time-col { width: 50px !important; background-color: #f8fafc !important; display: table-cell !important; }
 
-            /* MOD 2: SADECE DANIŞAN LİSTESİNİ YAZDIRIR (.print-clients) */
             body.print-clients .appointment-card, 
             body.print-clients .client-management-card > .card-title, 
             body.print-clients .new-client-grid, 
@@ -234,7 +221,7 @@
                     </select>
                 </div>
                 <div>
-                    <button class="btn-primary" id="btnSaveApt" style="width: 100%; height: 44px;" onclick="saveAppointment()"><i class="fas fa-save"></i> Randevuyu Kaydet</button>
+                    <button class="btn-primary" style="width: 100%; height: 44px;" onclick="saveAppointment()"><i class="fas fa-save"></i> Randevuyu Kaydet</button>
                 </div>
                 
                 <div class="form-group full-width" style="grid-column: 1 / -1; margin-top: 10px; margin-bottom:0;">
@@ -326,7 +313,6 @@
     </div>
 
     <script>
-        // --- 🚨 API ENTEGRASYON MOTORU ---
         const API_URL = "https://script.google.com/macros/s/AKfycbycLcqeKr2ERvi-HisKboLMM7cFfq1r_5tRfS60uWqTEaiBJN31D1odAkfShqYtaU4owQ/exec";
         
         let staffList = ["Yükleniyor..."];
@@ -350,18 +336,10 @@
             setTimeout(() => { if(toast.parentElement) toast.remove() }, 3000);
         }
 
-        function safeGet(val1, val2, fallback = "-") {
-            if (val1 !== undefined && val1 !== null && String(val1).trim() !== "undefined" && String(val1).trim() !== "") return String(val1).trim();
-            if (val2 !== undefined && val2 !== null && String(val2).trim() !== "undefined" && String(val2).trim() !== "") return String(val2).trim();
-            return fallback;
-        }
-
-        // 🚨 ZAMAN DİLİMİ KORUYUCUSU: E-tablodaki tarihi ASLA kaydırmaz!
+        // --- ZAMAN DİLİMİ VE TARİH KORUYUCU (GECE 00:00 KAYMALARINI ÖNLER) ---
         function formatDateSafe(dStr) {
             if(!dStr || dStr==="-") return "";
             dStr = String(dStr).trim();
-            if (/^\d{4}-\d{2}-\d{2}/.test(dStr)) return dStr.substring(0, 10);
-            
             if (dStr.includes('T') && dStr.includes('Z')) {
                 let d = new Date(dStr);
                 if (!isNaN(d.getTime())) {
@@ -371,14 +349,10 @@
                     return `${y}-${m}-${day}`;
                 }
             }
-
-            if (/^\d{2}\.\d{2}\.\d{4}/.test(dStr)) {
-                let p = dStr.split('.'); return `${p[2]}-${p[1]}-${p[0]}`;
-            }
-            if (/^\d{2}\/\d{2}\/\d{4}/.test(dStr)) {
-                let p = dStr.split('/'); return `${p[2]}-${p[1]}-${p[0]}`;
-            }
-            
+            let isoMatch = dStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+            let trMatch = dStr.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
+            if (trMatch) return `${trMatch[3]}-${trMatch[2]}-${trMatch[1]}`;
             let d = new Date(dStr);
             if (!isNaN(d.getTime())) {
                 let y = d.getFullYear();
@@ -408,7 +382,7 @@
             });
         }
 
-        // --- 🎯 TÜM VERİLERİ BULUTTAN ÇEKME ---
+        // --- BÜTÜN VERİLERİ BULUTTAN ÇEKME (BAŞLIK İSİMLERİNE %100 SADIK) ---
         document.addEventListener("DOMContentLoaded", () => {
             let aktifKullanici = JSON.parse(localStorage.getItem('aktifKullanici'));
             if (!aktifKullanici) { window.location.href = "index.html"; return; }
@@ -419,58 +393,60 @@
                 jsonpFetch("getrandevular", "cb_ran")
             ]).then(([resDan, resKul, resRan]) => {
                 
-                // Danışanlar
-                let safeDan = Array.isArray(resDan) ? resDan : [];
-                clients = safeDan.map(d => {
-                    const vals = Object.values(d);
-                    return {
-                        id: safeGet(vals[0], d.id),
-                        name: safeGet(vals[1], d.danisanAdiSoyadi, "İsimsiz"),
-                        phone: safeGet(vals[3], d.telefon, ""),
-                        dob: safeGet(vals[4], d.dogumTarihi, ""),
-                        note: safeGet(vals[6], d.not, ""),
-                        fav: safeGet(vals[7], d.favoriIslem, "-")
-                    }
-                }).filter(c => c.id !== "-");
-
-                // Randevular (Sütun İndislerine Kilitli)
-                let safeRan = Array.isArray(resRan) ? resRan : [];
-                appointments = safeRan.map(r => {
-                    const vals = Object.values(r);
-                    return {
-                        id: safeGet(vals[0], r.id, "-"), 
-                        date: safeGet(vals[1], r.tarih, "-"), 
-                        time: safeGet(vals[2], r.saat, "-"), 
-                        staff: safeGet(vals[3], r.uzman, "-"), 
-                        client: safeGet(vals[4], r.danisan, "-"), 
-                        category: safeGet(vals[5], r.kategori, "-"), 
-                        duration: parseInt(String(safeGet(vals[6], r.sure, "30")).replace(/[^0-9]/g, '')) || 30
-                    }
-                }).filter(r => r.id !== "-");
-
-                // Uzman Listesi (Bahar En Başa, Müdür Yağmur Elenir)
+                // 1. UZMANLARI ÇEK (MÜDÜR, YÖNETİCİ ELENİR - SADECE UZMAN VE ESTETİSYEN)[cite: 1]
                 let safeKul = Array.isArray(resKul) ? resKul : [];
                 let experts = safeKul.filter(u => {
-                    const vals = Object.values(u);
-                    let name = safeGet(vals[1], u.adSoyad, "").trim();
-                    let rol = safeGet(vals[4], u.rol, "").toLowerCase().trim();
+                    let name = String(u.adSoyad || u.adsoyad || u["Ad Soyad"] || "").trim();
+                    let rol = String(u.rol || u.Rol || u.ROL || "").toLowerCase().trim();
                     
-                    if (!name) return false;
-                    if (name.toLowerCase().includes("bahar")) return true; // Bahar Kalkanı
-                    if (rol.includes("müdür") || rol.includes("mudur") || rol.includes("yönetici") || rol.includes("admin")) return false; // Yöneticileri ele
-                    if (rol.includes("uzman") || rol.includes("estetisyen")) return true; 
+                    if (!name || name.toLowerCase() === "adsoyad") return false;
+                    
+                    // Bahar Sönmez rolü ne olursa olsun listeye mecburen girecek.[cite: 1]
+                    if (name.toLowerCase().includes("bahar")) return true;
+                    
+                    // SADECE Uzman ve Estetisyen (Müdür Yağmur otomatik elenir)
+                    if (rol.includes("uzman") || rol.includes("estetisyen")) return true;
                     return false;
-                }).map(u => safeGet(Object.values(u)[1], u.adSoyad, "").trim());
+                }).map(u => String(u.adSoyad || u.adsoyad || u["Ad Soyad"] || "").trim());
 
+                // Bahar Sönmez'i EN BAŞA KİLİTLE!
                 experts.sort((a, b) => {
                     if (a.toLowerCase().includes("bahar")) return -1;
                     if (b.toLowerCase().includes("bahar")) return 1;
                     return 0;
                 });
-                
-                // Geçmiş randevusu olup rolü yüzünden elenmiş kişileri takvim çökmesin diye kurtar
+
+                // 2. DANIŞANLARI ÇEK
+                let safeDan = Array.isArray(resDan) ? resDan : [];
+                clients = safeDan.map(d => {
+                    return {
+                        id: String(d.danisanid || d.id || "-").trim(),
+                        name: String(d.danisanAdiSoyadi || d.adSoyad || "İsimsiz").trim(),
+                        phone: String(d.danisanTelefonu || d.telefon || "").trim(),
+                        dob: String(d.danisanDogumTarihi || d.dogumTarihi || "").trim(),
+                        note: String(d.notlarDanisan || d.not || "").trim(),
+                        fav: String(d.favoriHizmetDanisan || d.favoriIslem || "-").trim()
+                    }
+                }).filter(c => c.id !== "-" && c.id.toLowerCase() !== "danisanid");
+
+                // 3. RANDEVULARI ÇEK (Gerçek Sütun Başlıklarıyla Tam Uyumlu)[cite: 1]
+                let safeRan = Array.isArray(resRan) ? resRan : [];
+                appointments = safeRan.map(r => {
+                    return {
+                        id: String(r.randevuGunu || r.id || "-").trim(), 
+                        date: String(r.randevular || r.tarih || "-").trim(), 
+                        time: String(r.saat || "-").trim(), 
+                        staff: String(r.uzman || "-").trim(), 
+                        client: String(r.danisan || "-").trim(), 
+                        category: String(r.kategori || "-").trim(), 
+                        duration: parseInt(String(r.sure || "30").replace(/[^0-9]/g, '')) || 30
+                    }
+                }).filter(r => r.id !== "-" && r.id.toLowerCase() !== "randevugunu");
+
+                // Eski sistemden kalan, üzerine randevu yazılı kim varsa takvim bozulmasın diye onu da çek
                 let staffWithApts = appointments.map(a => a.staff).filter(s => s !== "-" && s !== "");
                 let combinedStaff = [...new Set([...experts, ...staffWithApts])]; 
+                
                 if(combinedStaff.length > 0) staffList = combinedStaff;
 
                 renderClientTable();
@@ -564,7 +540,7 @@
             tr.innerHTML = '<th class="time-col"><i class="far fa-clock"></i> Saat</th>';
             staffList.forEach((staff) => {
                 let th = document.createElement('th');
-                th.innerText = staff;
+                th.innerText = staff.trim();
                 tr.appendChild(th);
             });
         }
@@ -583,7 +559,7 @@
                 
                 let h = Math.floor(time / 60).toString().padStart(2, '0');
                 let m = (time % 60).toString().padStart(2, '0');
-                let timeStr = `${h}:${m}`; // 08:00
+                let timeStr = `${h}:${m}`;
                 
                 let tdTime = document.createElement('td');
                 tdTime.className = 'time-col';
@@ -612,7 +588,7 @@
             populateAppointmentsOnGrid();
         }
 
-        // 🚨 ESKİ RANDEVULARI HATASIZ ÇİZEN FONKSİYON (Saat Formatını Düzeltir)
+        // --- 🚨 ESKİ RANDEVULARI HATASIZ ÇİZEN FONKSİYON (Matematiksel Eşleşme) ---
         function populateAppointmentsOnGrid() {
             let currentDateStr = document.getElementById('aptDate').value; 
             let todaysApts = appointments.filter(a => formatDateSafe(a.date) === currentDateStr);
@@ -621,7 +597,7 @@
                 let staffIndex = staffList.findIndex(s => s.trim().toLowerCase() === apt.staff.trim().toLowerCase());
                 if (staffIndex === -1) return; 
 
-                // Gelen saat "8:30 - 10:00" bile olsa ilk tarafı ayırıp başına sıfır atar (08:30 yapar) ki tabloyla uyuşsun.
+                // Gelen saat "8:30" bile olsa başına sıfır atar (08:30 yapar) ki tabloyla uyuşsun.
                 let startTimeRaw = apt.time.split('-')[0].trim().replace(/[^0-9:]/g, ''); 
                 let stParts = startTimeRaw.split(':');
                 let startTime = stParts.length === 2 ? `${stParts[0].padStart(2, '0')}:${stParts[1].padStart(2, '0')}` : startTimeRaw;
@@ -759,7 +735,7 @@
             clearSelection();
         }
 
-        // --- 🚨 YENİ RANDEVUYU TABLOYA YAZMA İŞLEMİ ---
+        // --- 🚨 YENİ RANDEVUYU TABLOYA YAZMA İŞLEMİ (Şaşmaz Parametre İsimleriyle) ---
         function saveAppointment() {
             let clientId = document.getElementById('aptClient').value;
             let cat = document.getElementById('aptCategory').value;
@@ -779,11 +755,12 @@
             let staffName = document.getElementById('aptStaff').value;
             let note = document.getElementById('aptNote').value.trim();
             
-            let btn = document.getElementById('btnSaveApt');
+            let btn = document.querySelector('button[onclick="saveAppointment()"]');
             let oldText = btn.innerHTML;
             btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> İşleniyor...`;
             btn.disabled = true;
 
+            // Parametre İsimleri: tarih, saat, uzman, danisan, kategori, sure, notlar (Veritabanındakiyle aynı olmalı)[cite: 1]
             let query = [
                 `kaydetrandevu`,
                 `tarih=${encodeURIComponent(aptDateInput)}`,
@@ -828,20 +805,20 @@
                     }
                 });
 
+                // Sessizce arka planda verileri tazele ki sayfa değiştiğinde kayıtlar dursun
                 jsonpFetch("getrandevular", "cb_ran_refresh").then(resRan => {
                     let safeRan = Array.isArray(resRan) ? resRan : [];
                     appointments = safeRan.map(r => {
-                        const vals = Object.values(r);
                         return { 
-                            id: safeGet(vals[0], r.id, "-"), 
-                            date: safeGet(vals[1], r.tarih, "-"), 
-                            time: safeGet(vals[2], r.saat, "-"), 
-                            staff: safeGet(vals[3], r.uzman, "-"), 
-                            client: safeGet(vals[4], r.danisan, "-"), 
-                            category: safeGet(vals[5], r.kategori, "-"), 
-                            duration: parseInt(String(safeGet(vals[6], r.sure, "30")).replace(/[^0-9]/g, '')) || 30
+                            id: String(r.randevuGunu || r.id || "-").trim(), 
+                            date: String(r.randevular || r.tarih || "-").trim(), 
+                            time: String(r.saat || "-").trim(), 
+                            staff: String(r.uzman || "-").trim(), 
+                            client: String(r.danisan || "-").trim(), 
+                            category: String(r.kategori || "-").trim(), 
+                            duration: parseInt(String(r.sure || "30").replace(/[^0-9]/g, '')) || 30
                         }
-                    }).filter(r => r.id !== "-");
+                    }).filter(r => r.id !== "-" && r.id.toLowerCase() !== "randevugunu");
                 });
 
                 clearFormAfterSchedule();
@@ -865,7 +842,7 @@
             }
         }
 
-        // --- WHATSAPP MODÜLÜ ---
+        // --- WHATSAPP MODÜLÜ BAŞLANGICI ---
         window.selectClientForWhatsApp = function(id) {
             let selectBox = document.getElementById('aptClient');
             if(selectBox) {
@@ -1026,16 +1003,15 @@
                 jsonpFetch("getdanisanlar", "cb_dan_ref").then(resDan => {
                     let safeDan = Array.isArray(resDan) ? resDan : [];
                     clients = safeDan.map(d => {
-                        const vals = Object.values(d);
                         return {
-                            id: safeGet(vals[0], d.id),
-                            name: safeGet(vals[1], d.danisanAdiSoyadi, "İsimsiz"),
-                            phone: safeGet(vals[3], d.telefon, ""),
-                            dob: safeGet(vals[4], d.dogumTarihi, ""),
-                            note: safeGet(vals[6], d.not, ""),
-                            fav: safeGet(vals[7], d.favoriIslem, "-")
+                            id: String(d.danisanid || d.id || "-").trim(),
+                            name: String(d.danisanAdiSoyadi || d.adSoyad || "İsimsiz").trim(),
+                            phone: String(d.danisanTelefonu || d.telefon || "").trim(),
+                            dob: String(d.danisanDogumTarihi || d.dogumTarihi || "").trim(),
+                            note: String(d.notlarDanisan || d.not || "").trim(),
+                            fav: String(d.favoriHizmetDanisan || d.favoriIslem || "-").trim()
                         }
-                    }).filter(c => c.id !== "-");
+                    }).filter(c => c.id !== "-" && c.id.toLowerCase() !== "danisanid");
                     renderClientTable();
                     btn.innerHTML = '<i class="fas fa-check"></i> Danışanı Kaydet';
                     btn.disabled = false;
