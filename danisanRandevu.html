@@ -104,9 +104,6 @@
         .btn-print-list { height: 38px; padding: 0 15px; font-size: 0.85rem; background-color: #10b981; display: flex; align-items: center; gap: 6px; } 
         .btn-print-list:hover { background-color: #059669; }
 
-        /* =========================================================================
-           TAMAMEN ONARILAN KUSURSUZ RENKLİ A4 YAZDIRMA CSS AYARLARI
-           ========================================================================= */
         @media print {
             @page { size: A4 portrait; margin: 0.5cm; }
             body { background-color: white !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -124,7 +121,6 @@
             body.print-calendar .schedule-table td { height: 32px !important; max-height: 32px !important; padding: 0 !important; font-size: 8pt !important; border: 1pt solid #cbd5e1 !important; color: black !important; overflow: hidden !important; }
             body.print-calendar .time-col { width: 50px !important; background-color: #f8fafc !important; display: table-cell !important; }
             
-            /* 🚨 FIX: YAZDIRIRKEN KUTULARI VE RENKLERİ KESİNLİKLE KORU, SADECE İKONLARI GİZLE */
             body.print-calendar .slot-cell { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             body.print-calendar .slot-cell div { box-shadow: none !important; color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             body.print-calendar .slot-cell .apt-name { font-size: 8pt !important; white-space: nowrap !important; overflow: hidden !important; color: black !important; font-weight: bold !important; }
@@ -145,7 +141,6 @@
 </head>
 <body>
 
-    <!-- Bildirim Kutusu -->
     <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
 
     <div class="wrapper">
@@ -159,7 +154,7 @@
 
         <div class="card appointment-card">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
-                <div><i class="far fa-calendar-alt" style="color: #6b21a8;"></i> Randevu Çizelgesi (Bulut Senkronizasyonlu)</div>
+                <div><i class="far fa-calendar-alt" style="color: #6b21a8;"></i> Randevu Çizelgesi</div>
                 <button class="btn-primary" style="font-size: 0.85rem; padding: 8px 16px; background-color: #6b21a8;" onclick="printCalendar()">
                     <i class="fas fa-print"></i> Yazdır / PDF İndir
                 </button>
@@ -304,8 +299,8 @@
     </div>
 
     <script>
-        // Google Apps Script Web App URL (CORS hatasını önlemek için doğrudan Google bağını kullanıyoruz)
-        const API_URL = "https://script.google.com/macros/s/AKfycbycLcqeKr2ERvi-HisKboLMM7cFfq1r_5tRfS60uWqTEaiBJN31D1odAkfShqYtaU4owQ/exec"; 
+        // Google Apps Script Web App URL
+        const API_URL = "https://veri-baglantisi-s5vrh.bunny.run/"; 
 
         let staffList = ["Yükleniyor..."]; 
         let clients = []; 
@@ -328,27 +323,6 @@
             toast.innerHTML = `<i class="fas fa-check-circle" style="color:#34d399; margin-right:5px;"></i> ${msg}`;
             container.appendChild(toast);
             setTimeout(() => { if(toast.parentElement) toast.remove() }, 3000);
-        }
-
-        // 🚨 KOPMAZ VERİ AKIŞI: Google CORS Güvenliğini Aşmak İçin JSONP Kullanılır
-        function jsonpFetch(actionOrParams) {
-            return new Promise((resolve) => {
-                const uniqueHash = Math.random().toString(36).substring(2, 10);
-                const callbackName = "cb_" + uniqueHash;
-                const scriptId = "jsonp_script_" + uniqueHash;
-                window[callbackName] = function(response) {
-                    resolve(response && response.data ? response.data : response);
-                    const s = document.getElementById(scriptId);
-                    if(s) s.remove();
-                    delete window[callbackName];
-                };
-                const script = document.createElement('script');
-                script.id = scriptId;
-                let query = actionOrParams.includes('action=') ? actionOrParams : `action=${actionOrParams}`;
-                script.src = `${API_URL}?${query}&callback=${callbackName}&_=${new Date().getTime()}`;
-                script.onerror = () => resolve([]); 
-                document.body.appendChild(script);
-            });
         }
 
         function getLocalIsoDate(d) {
@@ -580,7 +554,7 @@
 
             if(editId) {
                 appointments = appointments.filter(a => a.id !== editId);
-                try { await jsonpFetch(`action=silrandevu&id=${encodeURIComponent(editId)}`); } catch(e) {}
+                try { await fetch(`${API_URL}?action=silrandevu&id=${encodeURIComponent(editId)}&_=${Date.now()}`); } catch(e) {}
             }
 
             let tempApt = { id: "temp-" + Date.now(), tarih: dateStr, saat: timeStr, uzman: staffStr, danisan: cName, kategori: cat, sure: durationStr, notlar: noteStr };
@@ -592,20 +566,24 @@
             btn.disabled = true;
 
             try {
-                let url = `action=kaydetrandevu&tarih=${encodeURIComponent(dateStr)}&saat=${encodeURIComponent(timeStr)}&uzman=${encodeURIComponent(staffStr)}&danisan=${encodeURIComponent(cName)}&kategori=${encodeURIComponent(cat)}&sure=${encodeURIComponent(durationStr)}&notlar=${encodeURIComponent(noteStr)}`;
-                let result = await jsonpFetch(url);
+                let url = `${API_URL}?action=kaydetrandevu&tarih=${encodeURIComponent(dateStr)}&saat=${encodeURIComponent(timeStr)}&uzman=${encodeURIComponent(staffStr)}&danisan=${encodeURIComponent(cName)}&kategori=${encodeURIComponent(cat)}&sure=${encodeURIComponent(durationStr)}&notlar=${encodeURIComponent(noteStr)}&_=${Date.now()}`;
+                let response = await fetch(url);
+                let result = await response.json();
 
                 if (result.status === "success") {
                     let idx = appointments.findIndex(a => a.id === tempApt.id);
                     if(idx > -1) appointments[idx].id = result.id;
+                    showToast("Randevu başarıyla takvime işlendi!");
 
                     // ========== YÖNLENDİRME (HİZMET KATEGORİSİ KONTROLÜ) ==========
                     if (hizmetKategorileri && hizmetKategorileri.includes(cat)) {
                         let cevap = confirm("✅ Seçilen işlem bir hizmettir.\nHizmet & Paket Yönetim Paneli sayfasına yönlendirilmek ister misiniz?");
                         if (cevap) {
+                            // Hedef sayfa: hizmet-paket-giris.html
                             window.location.href = "hizmet-paket-giris.html?hizmetAdi=" + encodeURIComponent(cat);
                         }
                     }
+                    // ============================================================
                     
                 } else { 
                     alert("Kayıt Hatası: " + result.message); 
@@ -624,8 +602,11 @@
 
         async function fetchKategoriler() {
             try {
-                const stokData = await jsonpFetch("action=getkategoriler");
-                const hizmetData = await jsonpFetch("action=gethizmetler");
+                const stokRes = await fetch(API_URL + "?action=getkategoriler&_=" + Date.now());
+                const stokData = await stokRes.json();
+                
+                const hizmetRes = await fetch(API_URL + "?action=gethizmetler&_=" + Date.now());
+                const hizmetData = await hizmetRes.json();
                 
                 let tumKategoriler = [];
                 hizmetKategorileri = [];
@@ -664,6 +645,9 @@
                         select.appendChild(option);
                     }
                 });
+                
+                console.log(`${tumKategoriler.length} kategori yüklendi (sarf malzemeler hariç). Hizmet olanlar:`, hizmetKategorileri);
+                
             } catch (error) {
                 console.error("Kategoriler yüklenirken hata:", error);
                 document.getElementById('aptCategory').innerHTML = '<option value="">-- Kategori yüklenemedi --</option>';
@@ -672,7 +656,8 @@
 
         async function fetchRandevular() {
             try {
-                const data = await jsonpFetch("action=getrandevular");
+                const response = await fetch(API_URL + "?action=getrandevular&_=" + Date.now());
+                const data = await response.json();
                 if (Array.isArray(data)) {
                     appointments = data.map(row => ({
                         id: row.randevuGunu || row.id,
@@ -709,6 +694,7 @@
         }
 
         function renderAppointmentsOnGrid() {
+            // Performans: staffList henüz yüklenmemişse çık
             if (!staffList || staffList.length === 0 || staffList[0] === "Yükleniyor...") return;
             
             renderScheduleTable(); 
@@ -724,12 +710,21 @@
                 if(colIndex === -1) return;
 
                 let timeParts = String(apt.saat).replace(/['"]/g, "").split('-');
-                if(timeParts.length < 2) return;
                 let sParts = timeParts[0].trim().split(':');
-                let eParts = timeParts[1].trim().split(':');
-
+                if(sParts.length < 2) return;
+                
                 let startRow = Math.round(((parseInt(sParts[0]) * 60 + parseInt(sParts[1])) - 480) / 30); 
-                let endRow = Math.round(((parseInt(eParts[0]) * 60 + parseInt(eParts[1])) - 480) / 30) - 1; 
+                let endRow = startRow;
+                
+                if (timeParts.length >= 2) {
+                    let eParts = timeParts[1].trim().split(':');
+                    if(eParts.length >= 2) {
+                        endRow = Math.round(((parseInt(eParts[0]) * 60 + parseInt(eParts[1])) - 480) / 30) - 1; 
+                    }
+                } else {
+                    let sureVal = parseInt(String(apt.sure).replace(/[^0-9]/g, '')) || 30;
+                    endRow = startRow + Math.max(1, Math.ceil(sureVal / 30)) - 1;
+                }
 
                 let boxColor = colColors[colIndex % colColors.length];
                 let cellNodes = [];
@@ -822,7 +817,7 @@
                 appointments = appointments.filter(a => a.id !== id);
                 renderAppointmentsOnGrid();
                 try {
-                    await jsonpFetch(`action=silrandevu&id=${encodeURIComponent(id)}`);
+                    await fetch(`${API_URL}?action=silrandevu&id=${encodeURIComponent(id)}&_=${Date.now()}`);
                 } catch(e) { console.error(e); }
             }
         }
@@ -892,22 +887,14 @@
         
         async function fetchUzmanPersonel() {
             try {
-                const data = await jsonpFetch("action=getkullanicilar");
+                const response = await fetch(API_URL + "?action=getkullanicilar&_=" + Date.now());
+                const data = await response.json();
                 if (data && Array.isArray(data)) {
                     let dinamikPersoneller = [];
                     data.forEach(kisi => {
                         let rol = kisi["Rol"] || kisi["rol"] || kisi["ROL"] || "";
                         let adSoyad = kisi["adSoyad"] || kisi["AdSoyad"] || kisi["adsoyad"] || "";
-                        if ((rol.toString().toLowerCase().trim().includes("uzman") || adSoyad.toLowerCase().includes("bahar")) && adSoyad) {
-                            if (!adSoyad.toLowerCase().includes("bahar") && (rol.toLowerCase().includes("müdür") || rol.toLowerCase().includes("mudur") || rol.toLowerCase().includes("yönetici") || rol.toLowerCase().includes("admin"))) return;
-                            if (!dinamikPersoneller.includes(adSoyad)) dinamikPersoneller.push(adSoyad);
-                        }
-                    });
-                    
-                    dinamikPersoneller.sort((a, b) => {
-                        if (a.toLowerCase().includes("bahar")) return -1;
-                        if (b.toLowerCase().includes("bahar")) return 1;
-                        return 0;
+                        if (rol.toString().toLowerCase().trim().includes("uzman") && adSoyad) dinamikPersoneller.push(adSoyad);
                     });
                     staffList = dinamikPersoneller.length > 0 ? dinamikPersoneller : ["Kayıtlı Uzman Yok"];
                 }
@@ -916,7 +903,8 @@
 
         async function fetchDanisanlar() {
             try {
-                const data = await jsonpFetch("action=getdanisanlar");
+                const response = await fetch(API_URL + "?action=getdanisanlar&_=" + Date.now());
+                const data = await response.json();
                 if (data && Array.isArray(data)) {
                     clients = []; 
                     data.forEach(kisi => {
@@ -998,6 +986,9 @@
             renderClientTable(filtered);
         }
 
+        function printCalendar() { document.body.classList.add('print-calendar'); window.print(); setTimeout(() => document.body.classList.remove('print-calendar'), 1000); }
+        function printClientList() { document.body.classList.add('print-clients'); window.print(); setTimeout(() => document.body.classList.remove('print-clients'), 1000); }
+
         async function saveClient() {
             let id = document.getElementById('editClientId').value || "";
             let name = document.getElementById('clientName').value.trim();
@@ -1013,9 +1004,10 @@
 
             try {
                 let action = id ? "guncelledanisan" : "kaydetdanisan";
-                let url = `action=${action}&id=${encodeURIComponent(id)}&adSoyad=${encodeURIComponent(name)}&telefon=${encodeURIComponent(phone)}&dogumTarihi=${encodeURIComponent(dob)}&not=${encodeURIComponent(note)}`;
+                let url = `${API_URL}?action=${action}&id=${encodeURIComponent(id)}&adSoyad=${encodeURIComponent(name)}&telefon=${encodeURIComponent(phone)}&dogumTarihi=${encodeURIComponent(dob)}&not=${encodeURIComponent(note)}&_=${Date.now()}`;
 
-                let result = await jsonpFetch(url);
+                let response = await fetch(url);
+                let result = await response.json();
 
                 if (result.status === "success") {
                     await new Promise(r => setTimeout(r, 800)); 
@@ -1055,22 +1047,19 @@
         async function deleteClient(id) {
             if(confirm("Bu danışanı kalıcı olarak silmek istediğinize emin misiniz?")) {
                 try {
-                    await jsonpFetch(`action=sildanisan&id=${encodeURIComponent(id)}`);
+                    await fetch(`${API_URL}?action=sildanisan&id=${encodeURIComponent(id)}&_=${Date.now()}`);
                     await new Promise(r => setTimeout(r, 600));
                     await fetchDanisanlar(); 
                 } catch (error) { console.error("Silme hatası:", error); }
             }
         }
 
-        function printCalendar() { document.body.classList.add('print-calendar'); window.print(); setTimeout(() => document.body.classList.remove('print-calendar'), 1000); }
-        function printClientList() { document.body.classList.add('print-clients'); window.print(); setTimeout(() => document.body.classList.remove('print-clients'), 1000); }
-
         // ========== SAYFA YÜKLENİRKEN PARALEL API ÇAĞRILARI ==========
         window.onload = async () => {
             let localDateStr = getLocalIsoDate(activeDate);
             selectDate(activeDate, localDateStr);
             
-            // Tüm API çağrılarını paralel çalıştır (CORS Bypassed)
+            // Tüm API çağrılarını paralel çalıştır
             await Promise.allSettled([
                 fetchUzmanPersonel(),
                 fetchRandevular(),
