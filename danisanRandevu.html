@@ -300,13 +300,26 @@
 
     <script>
         // Google Apps Script Web App URL
-        const API_URL = "https://veri-baglantisi-s5vrh.bunny.run/"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbxRpdfBeqzPTBkHUZd2_fepZdiKK-8G6-EPA0fvX0SXn4b-Z4Wt3UbH4dpsuLWCkQ47cw/exec"; 
+
+        // AKILLI VERİ OKUYUCU FONKSİYON (EXCEL İNDİS HATALARINI GİDERİR)
+        function getVal(obj, possibleKeys) {
+            if (!obj) return "";
+            let normalizedKeys = possibleKeys.map(k => String(k).toLowerCase().replace(/\s/g, ''));
+            for (let key in obj) {
+                let cleanKey = String(key).toLowerCase().replace(/\s/g, '');
+                if (normalizedKeys.includes(cleanKey)) {
+                    return obj[key] !== undefined && obj[key] !== null ? obj[key] : "";
+                }
+            }
+            return "";
+        }
 
         let staffList = ["Yükleniyor..."]; 
         let clients = []; 
         let appointments = []; 
         let activeDate = new Date(); 
-        let hizmetKategorileri = []; // Hizmet olan kategoriler
+        let hizmetKategorileri = []; 
         
         let isDragging = false;
         let dragStartCol = -1;
@@ -568,11 +581,9 @@
                     if (hizmetKategorileri && hizmetKategorileri.includes(cat)) {
                         let cevap = confirm("✅ Seçilen işlem bir hizmettir.\nHizmet & Paket Yönetim Paneli sayfasına yönlendirilmek ister misiniz?");
                         if (cevap) {
-                            // Hedef sayfa: hizmet-paket-giris.html
                             window.location.href = "hizmet-paket-giris.html?hizmetAdi=" + encodeURIComponent(cat);
                         }
                     }
-                    // ============================================================
                     
                 } else { 
                     alert("Kayıt Hatası: " + result.message); 
@@ -602,7 +613,7 @@
                 
                 if (Array.isArray(stokData)) {
                     stokData.forEach(item => {
-                        let kategoriAdi = item.kategoriAdi || item["kategoriAdi"] || "";
+                        let kategoriAdi = getVal(item, ["kategoriAdi", "kategori", "isim", "ad"]);
                         if (kategoriAdi && !kategoriAdi.toLowerCase().includes("sarf")) {
                             tumKategoriler.push(kategoriAdi);
                         }
@@ -611,7 +622,7 @@
                 
                 if (Array.isArray(hizmetData)) {
                     hizmetData.forEach(item => {
-                        let hizmetAdi = item.hizmetAdiid || item["hizmetAdiid"] || "";
+                        let hizmetAdi = getVal(item, ["hizmetAdiid", "hizmetAdi", "hizmet", "islem", "kategori"]);
                         if (hizmetAdi && !hizmetAdi.toLowerCase().includes("sarf")) {
                             tumKategoriler.push(hizmetAdi);
                             hizmetKategorileri.push(hizmetAdi);
@@ -635,8 +646,6 @@
                     }
                 });
                 
-                console.log(`${tumKategoriler.length} kategori yüklendi (sarf malzemeler hariç). Hizmet olanlar:`, hizmetKategorileri);
-                
             } catch (error) {
                 console.error("Kategoriler yüklenirken hata:", error);
                 document.getElementById('aptCategory').innerHTML = '<option value="">-- Kategori yüklenemedi --</option>';
@@ -644,20 +653,19 @@
         }
 
         async function fetchRandevular() {
-            if (API_URL === "https://veri-baglantisi-s5vrh.bunny.run/") return;
             try {
                 const response = await fetch(API_URL + "?action=getrandevular&_=" + Date.now());
                 const data = await response.json();
                 if (Array.isArray(data)) {
                     appointments = data.map(row => ({
-                        id: row.randevuGunu || row.id,
-                        tarih: row.randevular || row.tarih,
-                        saat: row.saat,
-                        uzman: row.uzman,
-                        danisan: row.danisan,
-                        kategori: row.kategori,
-                        sure: row.sure,
-                        notlar: row.notlar || ""
+                        id: getVal(row, ["randevuGunu", "id", "randevuid", "kayitno"]),
+                        tarih: getVal(row, ["randevular", "tarih", "randevutarihi"]),
+                        saat: getVal(row, ["saat", "randevusaati"]),
+                        uzman: getVal(row, ["uzman", "personel", "estetisyen"]),
+                        danisan: getVal(row, ["danisan", "hasta", "musteri"]),
+                        kategori: getVal(row, ["kategori", "islem", "hizmet"]),
+                        sure: getVal(row, ["sure", "süre", "dakika", "zaman"]),
+                        notlar: getVal(row, ["notlar", "not", "aciklama", ""])
                     }));
                 }
                 renderAppointmentsOnGrid(); 
@@ -684,7 +692,6 @@
         }
 
         function renderAppointmentsOnGrid() {
-            // Performans: staffList henüz yüklenmemişse çık
             if (!staffList || staffList.length === 0 || staffList[0] === "Yükleniyor...") return;
             
             renderScheduleTable(); 
@@ -873,9 +880,13 @@
                 if (data && Array.isArray(data)) {
                     let dinamikPersoneller = [];
                     data.forEach(kisi => {
-                        let rol = kisi["Rol"] || kisi["rol"] || kisi["ROL"] || "";
-                        let adSoyad = kisi["adSoyad"] || kisi["AdSoyad"] || kisi["adsoyad"] || "";
-                        if (rol.toString().toLowerCase().trim().includes("uzman") && adSoyad) dinamikPersoneller.push(adSoyad);
+                        let rol = getVal(kisi, ["rol", "role", "görev", "gorev"]).toString().toLowerCase().trim();
+                        let adSoyad = getVal(kisi, ["adSoyad", "ad", "isim", "personel", "kullanici", "kullaniciAdi"]).toString().trim();
+                        
+                        // Kural: Uzman olanlar VE isminde Bahar geçenler (Bahar yönetici olsa dahi listelenecek)
+                        if ((rol.includes("uzman") || adSoyad.toLowerCase().includes("bahar")) && adSoyad) {
+                            dinamikPersoneller.push(adSoyad);
+                        }
                     });
                     staffList = dinamikPersoneller.length > 0 ? dinamikPersoneller : ["Kayıtlı Uzman Yok"];
                 }
@@ -889,13 +900,14 @@
                 if (data && Array.isArray(data)) {
                     clients = []; 
                     data.forEach(kisi => {
-                        let id = kisi["id"] || kisi["danisanid"] || "";
+                        let id = getVal(kisi, ["id", "danisanid", "kayitno"]);
                         if (!id) return; 
 
-                        let rawPhone = (kisi["danisanTelefonu"] || kisi["Telefon"] || "").toString().trim();
-                        let rawDob = (kisi["danisanDogumTarihi"] || kisi["Doğum Tarihi"] || "").toString();
-                        let rawNote = (kisi["notlarDanisan"] || kisi["Not"] || "").toString().trim();
-                        let rawFav = (kisi["favoriHizmetDanisan"] || kisi["Favori İşlem"] || "").toString().trim();
+                        let rawPhone = getVal(kisi, ["danisanTelefonu", "telefon", "tel"]).toString().trim();
+                        let rawDob = getVal(kisi, ["danisanDogumTarihi", "dogumtarihi", "dtarih", "doğumtarihi"]).toString();
+                        let rawNote = getVal(kisi, ["notlarDanisan", "notlar", "not"]).toString().trim();
+                        let rawFav = getVal(kisi, ["favoriHizmetDanisan", "favoriislem", "favori", "işlem"]).toString().trim();
+                        let name = getVal(kisi, ["danisanAdiSoyadi", "adsoyad", "isim", "danisanadi"]).toString().trim() || "İsimsiz";
                         
                         let dob = rawDob.split('T')[0];
                         if (rawPhone === "0") rawPhone = "";
@@ -903,7 +915,7 @@
                         if (rawNote === "0") rawNote = "";
                         if (rawFav === "0" || rawFav === "") rawFav = "-";
 
-                        clients.push({ id: id, name: (kisi["danisanAdiSoyadi"] || kisi["Ad Soyad"] || "İsimsiz").toString().trim(), phone: rawPhone, dob: dob, note: rawNote, fav: rawFav });
+                        clients.push({ id: id, name: name, phone: rawPhone, dob: dob, note: rawNote, fav: rawFav });
                     });
                     renderClientTable();
                 }
@@ -1029,7 +1041,6 @@
         function printCalendar() { document.body.classList.add('print-calendar'); window.print(); setTimeout(() => document.body.classList.remove('print-calendar'), 1000); }
         function printClientList() { document.body.classList.add('print-clients'); window.print(); setTimeout(() => document.body.classList.remove('print-clients'), 1000); }
 
-        // ========== SAYFA YÜKLENİRKEN PARALEL API ÇAĞRILARI ==========
         window.onload = async () => {
             let localDateStr = getLocalIsoDate(activeDate);
             selectDate(activeDate, localDateStr);
