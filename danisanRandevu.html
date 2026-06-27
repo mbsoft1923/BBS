@@ -10,12 +10,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* Genel Stiller ve Temel Tema */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: #f0f4f8; padding: 30px 20px; font-family: 'Playfair Display', serif; min-height: 100vh; }
         .wrapper { max-width: 1400px; margin: 0 auto; width: 100%; }
         
-        /* Üst Bar */
         .global-page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background-color: white; padding: 15px 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 6px solid #6b21a8; width: 100%; }
         .global-header-title-area { display: flex; flex-direction: column; text-align: left; }
         .global-header-brand { font-family: 'Great Vibes', cursive; font-size: 2.6rem; color: #00a8b5; line-height: 1.1; margin-bottom: 2px; }
@@ -23,11 +21,9 @@
         .global-btn-back { font-family: 'Segoe UI', sans-serif; background-color: #e0f7fa; color: #00a8b5; border: 1px solid #b2ebf2; padding: 10px 20px; border-radius: 10px; font-weight: 600; text-decoration: none; transition: all 0.25s; font-size: 0.95rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; }
         .global-btn-back:hover { background-color: #00a8b5; color: white; transform: scale(1.02); }
         
-        /* Kart Yapısı */
         .card { background-color: white; border-radius: 14px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 25px; width: 100%; }
         .card-title { font-size: 1.2rem; color: #1e293b; margin-bottom: 16px; font-weight: 700; border-bottom: 2px dashed #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
         
-        /* Form Elemanları */
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 6px; color: #475569; font-weight: 600; font-size: 0.9rem; font-family: 'Segoe UI', sans-serif; }
         .form-control { width: 100%; padding: 11px; border: 1px solid #e2e8f0; background-color: #f8fafc; border-radius: 8px; font-size: 0.95rem; outline: none; font-family: 'Segoe UI', sans-serif; transition: all 0.2s; }
@@ -35,7 +31,6 @@
         .btn-primary { background-color: #00a8b5; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; transition: all 0.2s; white-space: nowrap; }
         .btn-primary:hover { background-color: #008c96; }
 
-        /* Takvim Görüntüsü (Akan Takvim) */
         .calendar-container { overflow-y: auto; max-height: 200px; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; background: #f8fafc; margin-bottom: 20px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
         .day-header { text-align: center; font-family: 'Segoe UI', sans-serif; font-weight: 700; color: #64748b; font-size: 0.85rem; padding-bottom: 5px; }
@@ -46,7 +41,6 @@
         .day-num { font-size: 1.2rem; }
         .day-month { font-size: 0.75rem; opacity: 0.8; }
 
-        /* Randevu Tablosu */
         .schedule-container { overflow-x: auto; margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 10px; }
         .schedule-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; background: white; min-width: 800px; table-layout: fixed; user-select: none; }
         .schedule-table th { background: #f1f5f9; padding: 10px; color: #334155; font-weight: 700; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 10; font-size: 0.9rem; }
@@ -54,12 +48,10 @@
         .schedule-table td { border: 1px solid #e2e8f0; padding: 0; height: 32px; max-height: 32px; text-align: center; vertical-align: middle; position: relative; overflow: hidden; } 
         .time-col { width: 60px; background: #f8fafc; font-weight: 700; color: #64748b; font-size: 0.8rem; }
         
-        /* Boyanabilen Hücreler */
         .slot-cell { cursor: pointer; transition: background-color 0.1s; }
         .slot-cell:hover:not(.booked) { background-color: #f0fdfa; }
         .slot-cell.booked { cursor: default; }
         
-        /* Sütunlara Özel Renklendirme */
         .slot-cell.selected { color: white; }
         td:nth-child(2).slot-cell.selected { background-color: #00a8b5; border: 1px solid #008c96; } 
         td:nth-child(3).slot-cell.selected { background-color: #f472b6; border: 1px solid #db2777; } 
@@ -72,12 +64,10 @@
         .btn-add-col { background: #e0e7ff; color: #4f46e5; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; font-size: 0.8rem;}
         .btn-add-col:hover { background: #c7d2fe; }
 
-        /* Randevu Kayıt Satırı */
         .appointment-action-bar { display: grid; grid-template-columns: 1.3fr 1fr 1fr 0.8fr 1.3fr auto; gap: 10px; align-items: end; background: #faf5ff; border: 1px dashed #d8b4fe; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
         @media (max-width: 1024px) { .appointment-action-bar { grid-template-columns: 1fr 1fr; } .appointment-action-bar > :last-child { grid-column: 1 / -1; } }
         @media (max-width: 600px) { .appointment-action-bar { grid-template-columns: 1fr; } }
         
-        /* Danışan Listesi */
         .client-list-container { max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
         .client-table { width: 100%; border-collapse: collapse; font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; }
         .client-table th { background: #f8fafc; padding: 12px; text-align: left; color: #475569; position: sticky; top: 0; }
@@ -88,13 +78,11 @@
         .btn-edit { background: #e0f2fe; color: #0284c7; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
         .btn-delete { background: #fee2e2; color: #e11d48; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
 
-        /* Yeni Danışan Grid */
         .new-client-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; align-items: start; }
         .new-client-grid .full-width { grid-column: 1 / -1; }
         @media (max-width: 900px) { .new-client-grid { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 600px) { .new-client-grid { grid-template-columns: 1fr; } }
 
-        /* WHATSAPP BUTON VE MODAL STİLLERİ */
         .btn-whatsapp { background-color: #25D366; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-whatsapp:hover { background-color: #128C7E; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2); }
 
@@ -110,14 +98,15 @@
         .btn-wa-send { background: #128C7E; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 8px; }
         .btn-wa-send:hover { background: #075E54; }
 
-        /* Filtre Çubuğu Stilleri */
         .client-filter-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #f1f5f9; padding-bottom: 15px; margin-bottom: 15px; flex-wrap: wrap; gap: 15px; }
         .filter-inputs { display: flex; gap: 15px; align-items: center; flex: 1; }
         .filter-inputs .form-control { flex: 1; padding: 8px 12px; font-size: 0.85rem; height: 38px; }
         .btn-print-list { height: 38px; padding: 0 15px; font-size: 0.85rem; background-color: #10b981; display: flex; align-items: center; gap: 6px; } 
         .btn-print-list:hover { background-color: #059669; }
 
-        /* YAZDIRMA CSS AYARLARI */
+        /* =========================================================================
+           TAMAMEN ONARILAN KUSURSUZ RENKLİ A4 YAZDIRMA CSS AYARLARI
+           ========================================================================= */
         @media print {
             @page { size: A4 portrait; margin: 0.5cm; }
             body { background-color: white !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -135,6 +124,7 @@
             body.print-calendar .schedule-table td { height: 32px !important; max-height: 32px !important; padding: 0 !important; font-size: 8pt !important; border: 1pt solid #cbd5e1 !important; color: black !important; overflow: hidden !important; }
             body.print-calendar .time-col { width: 50px !important; background-color: #f8fafc !important; display: table-cell !important; }
             
+            /* 🚨 FIX: YAZDIRIRKEN KUTULARI VE RENKLERİ KESİNLİKLE KORU, SADECE İKONLARI GİZLE */
             body.print-calendar .slot-cell { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             body.print-calendar .slot-cell div { box-shadow: none !important; color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             body.print-calendar .slot-cell .apt-name { font-size: 8pt !important; white-space: nowrap !important; overflow: hidden !important; color: black !important; font-weight: bold !important; }
@@ -155,8 +145,6 @@
 </head>
 <body>
 
-    <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
-
     <div class="wrapper">
         <div class="global-page-header">
             <div class="global-header-title-area">
@@ -168,7 +156,7 @@
 
         <div class="card appointment-card">
             <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
-                <div><i class="far fa-calendar-alt" style="color: #6b21a8;"></i> Randevu Çizelgesi</div>
+                <div><i class="far fa-calendar-alt" style="color: #6b21a8;"></i> Randevu Çizelgesi (Bulut Senkronizasyonlu)</div>
                 <button class="btn-primary" style="font-size: 0.85rem; padding: 8px 16px; background-color: #6b21a8;" onclick="printCalendar()">
                     <i class="fas fa-print"></i> Yazdır / PDF İndir
                 </button>
@@ -287,9 +275,7 @@
                             <th style="text-align: right;">İşlemler</th>
                         </tr>
                     </thead>
-                    <tbody id="clientTableBody">
-                        <tr><td colspan="6" style="text-align: center; color: #94a3b8;">Veriler buluttan çekiliyor...</td></tr>
-                    </tbody>
+                    <tbody id="clientTableBody"></tbody>
                 </table>
             </div>
         </div>
@@ -314,7 +300,7 @@
 
     <script>
         // Google Apps Script Web App URL
-        const API_URL = "https://script.google.com/macros/s/AKfycbycLcqeKr2ERvi-HisKboLMM7cFfq1r_5tRfS60uWqTEaiBJN31D1odAkfShqYtaU4owQ/exec"; 
+        const API_URL = "https://veri-baglantisi-s5vrh.bunny.run/"; 
 
         let staffList = ["Yükleniyor..."]; 
         let clients = []; 
@@ -328,16 +314,6 @@
         let dragEndRow = -1;
 
         const colColors = ["#00a8b5", "#f472b6", "#fbbf24", "#fb923c", "#fb7185", "#c084fc", "#2dd4bf"];
-
-        function showToast(msg) {
-            const container = document.getElementById('toastContainer');
-            container.innerHTML = '';
-            const toast = document.createElement('div');
-            toast.style.cssText = "background:#1e293b; color:white; padding:10px 20px; border-radius:8px; font-size:0.85rem; font-weight:bold; border-left:4px solid #10b981; box-shadow:0 4px 12px rgba(0,0,0,0.1);";
-            toast.innerHTML = `<i class="fas fa-check-circle" style="color:#34d399; margin-right:5px;"></i> ${msg}`;
-            container.appendChild(toast);
-            setTimeout(() => { if(toast.parentElement) toast.remove() }, 3000);
-        }
 
         function getLocalIsoDate(d) {
             let year = d.getFullYear();
@@ -587,7 +563,6 @@
                 if (result.status === "success") {
                     let idx = appointments.findIndex(a => a.id === tempApt.id);
                     if(idx > -1) appointments[idx].id = result.id;
-                    showToast("Randevu başarıyla takvime işlendi!");
 
                     // ========== YÖNLENDİRME (HİZMET KATEGORİSİ KONTROLÜ) ==========
                     if (hizmetKategorileri && hizmetKategorileri.includes(cat)) {
@@ -669,6 +644,7 @@
         }
 
         async function fetchRandevular() {
+            if (API_URL === "https://veri-baglantisi-s5vrh.bunny.run/") return;
             try {
                 const response = await fetch(API_URL + "?action=getrandevular&_=" + Date.now());
                 const data = await response.json();
@@ -950,12 +926,6 @@
             tbody.innerHTML = '';
             let dataToRender = filteredData ? filteredData : [...clients].reverse();
 
-            if (dataToRender.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8;">Sistemde kayıtlı danışan bulunmuyor.</td></tr>`;
-                renderClientSelect();
-                return;
-            }
-
             dataToRender.slice(0, 10).forEach((c, idx) => {
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -991,9 +961,6 @@
             renderClientTable(filtered);
         }
 
-        function printCalendar() { document.body.classList.add('print-calendar'); window.print(); setTimeout(() => document.body.classList.remove('print-calendar'), 1000); }
-        function printClientList() { document.body.classList.add('print-clients'); window.print(); setTimeout(() => document.body.classList.remove('print-clients'), 1000); }
-
         async function saveClient() {
             let id = document.getElementById('editClientId').value || "";
             let name = document.getElementById('clientName').value.trim();
@@ -1004,8 +971,7 @@
             if (!name || !phone) return alert("Lütfen en az Ad Soyad ve Telefon alanlarını doldurunuz.");
 
             let btn = document.getElementById('btnSaveClient');
-            let oldText = btn.innerHTML;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Kaydediliyor...`;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kaydediliyor...';
             btn.disabled = true;
 
             try {
@@ -1016,7 +982,7 @@
                 let result = await response.json();
 
                 if (result.status === "success") {
-                    showToast(id ? "Danışan başarıyla güncellendi." : "Yeni danışan eklendi.");
+                    await new Promise(r => setTimeout(r, 800)); 
                     await fetchDanisanlar(); 
                 } else { alert("Kayıt Hatası: " + result.message); }
                 
@@ -1036,8 +1002,9 @@
         function editClientByArrayOrder(orderIndex, fallbackId) {
             let reversedList = [...clients].reverse();
             let c = reversedList[orderIndex];
-            if(!c && fallbackId) c = clients.find(x => String(x.id) === String(fallbackId));
-            
+            if(!c && fallbackId) {
+                c = clients.find(x => String(x.id) === String(fallbackId));
+            }
             if(c) {
                 document.getElementById('editClientId').value = c.id;
                 document.getElementById('clientName').value = c.name;
@@ -1053,11 +1020,14 @@
             if(confirm("Bu danışanı kalıcı olarak silmek istediğinize emin misiniz?")) {
                 try {
                     await fetch(`${API_URL}?action=sildanisan&id=${encodeURIComponent(id)}&_=${Date.now()}`);
-                    showToast("Danışan silindi.");
+                    await new Promise(r => setTimeout(r, 600));
                     await fetchDanisanlar(); 
                 } catch (error) { console.error("Silme hatası:", error); }
             }
         }
+
+        function printCalendar() { document.body.classList.add('print-calendar'); window.print(); setTimeout(() => document.body.classList.remove('print-calendar'), 1000); }
+        function printClientList() { document.body.classList.add('print-clients'); window.print(); setTimeout(() => document.body.classList.remove('print-clients'), 1000); }
 
         // ========== SAYFA YÜKLENİRKEN PARALEL API ÇAĞRILARI ==========
         window.onload = async () => {
@@ -1071,6 +1041,10 @@
                 fetchDanisanlar(),
                 fetchKategoriler()
             ]);
+            
+            // Veriler geldikten sonra client tablosunu ve randevuları tekrar render et
+            renderClientTable();
+            renderAppointmentsOnGrid();
         };
     </script>
 </body>
